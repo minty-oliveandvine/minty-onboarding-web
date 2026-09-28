@@ -11,7 +11,7 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | # | Screen | Component | Writes |
 |---|---|---|---|
 | 1 | Basic Information — name, country, currency, phone, email | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
-| 2 | Select Module — Petty Cash, Payment Request; with subscriptions on, the price summary and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); while dark a plain pick | `StepSelectModule` | `POST /modules`, the `billing/*` routes when on |
+| 2 | Select Module — Petty Cash, Payment Request; with subscriptions on, the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); while dark a plain pick | `StepSelectModule` | `POST /modules`, the `billing/*` routes when on |
 | 3 | User Invite — invite colleagues with a role | `StepInvite` | `POST /invite`, `/invite/cancel` |
 | 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
 | 5 | Sales Setting — electronic and delivery methods, and the opening balance (the cash in the drawer on day one) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
@@ -26,6 +26,13 @@ Save & Next / Save & Exit buttons, the errors) is `components/steps/StepChrome.t
 shared fields in `components/steps/pettyCashFields.tsx`, the pricing in
 `components/steps/modulePricing.tsx`; selects and the date picker are the app's own
 (`MintySelect`, `MintyDatePicker`).
+
+A card's network mark is `components/CardBrand.tsx`: our own wordmark (Mastercard's circles
+drawn as circles), never the issuers' licensed artwork. It has two fits — `tile`, the picker
+chip's (`pm-brand`), and `mark`, cropped to the logo itself for the summary's slot
+(`sub-pay-mark`: 74 wide, as tall as the mark, at most 42, so 01-C's Mastercard lands 63 x 42
+against the frame's 68 x 42). minty-web's copy draws the same marks at the same size in its
+summaries; change the two together.
 
 ## Saving and resuming
 
@@ -63,7 +70,7 @@ words the wizard shows; the app never invents a message for a status it does not
 
 Unit (`npm test`): `lib/__tests__/wizardSteps.test.ts`, `validation.test.ts`, `invites.test.ts`,
 `components/__tests__/Stepper.test.tsx`, `StepChrome.test.tsx`, `pettyCashFields.test.tsx`,
-`MethodList.test.tsx`. Browser (`npm run test:e2e`): `e2e/stack.spec.ts` (the two backends
+`MethodList.test.tsx`, `CardBrand.test.tsx` (the two fits and their crops). Browser (`npm run test:e2e`): `e2e/stack.spec.ts` (the two backends
 answer), `resume.spec.ts` (the database decides the landing step; `saved_step` and
 `current_step` may disagree; an out-of-range step is refused), `xero.spec.ts`,
 `walk.spec.ts` (the whole wizard to All Set, Xero faked) — 23 on 2026-09-18 against the

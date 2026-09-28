@@ -267,7 +267,12 @@ export function ModuleSubscriptionSummary({
              `card.label` is the fallback for a method with no last4 to end in: a Link
              wallet exposes no card object at all, and "Link" is the true answer. */
           <span className="sub-pay-card">
-            <CardBrand brand={card.brand} label={card.brand_label} className="sub-pay-mark" />
+            <CardBrand
+              brand={card.brand}
+              label={card.brand_label}
+              className="sub-pay-mark"
+              fit="mark"
+            />
             <span className="sub-pay-name">
               {card.last4 ? `${card.brand_label} ending in ${card.last4}` : card.label}
             </span>

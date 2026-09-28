@@ -2703,13 +2703,15 @@ textarea {
   gap: 4px;
   text-align: right;
 }
-/* The mark, undressed — the picker's chip border and background belong to the picker.
-     64px rather than the frame's 70: that measurement is taken off Mastercard's own
-     artwork, which carries less padding inside its box than our viewBox does, so matching
-     the number would draw a visibly bigger mark. */
+/* The mark, undressed — the picker's chip border and background belong to the picker —
+     and CROPPED (`fit="mark"`): the chip's card-shaped field is cut away, so the logo
+     itself fills the width and the frame's numbers transfer directly. 74 wide and as tall
+     as the mark, never over 42: Mastercard lands 63 x 42 where 01-C draws its artwork
+     68 x 42, and VISA's letters 66 x 24 — minty-web's summaries (05·A, 07-D) use the same
+     slot, so a card is drawn the same size in both apps. */
 .sub-pay-mark {
   display: block;
-  width: 64px;
+  width: 74px;
   height: auto;
   border: 0;
   background: none;
@@ -2718,6 +2720,7 @@ textarea {
   display: block;
   width: 100%;
   height: auto;
+  max-height: 42px;
 }
 /* 14px bold is the picker's row label exactly, so the two places a card is named agree
      without a second type scale. */
