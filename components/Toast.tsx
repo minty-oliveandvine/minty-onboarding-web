@@ -2,13 +2,14 @@
 
 // Canonical flash toast — ONE source of truth for user-facing messages.
 //
-// Ported from the Flask/Jinja `flash_messages.html` partial so both repos show
-// the same thing: a fixed pill (5px border, fully rounded) that slides in from
-// off-screen top-right and auto-dismisses after 4 seconds. Four tones, each
-// swapping border / background / title / message colour and the icon.
+// The house toast, the same card in every Minty app (minty-web's
+// components/ui/Toast.tsx is the reference): a white card, a bold type label
+// (Success / Error / Warning / Information), the message in grey and a close
+// button, top-right. No per-type colour or icon by decision - the label carries
+// the type. Auto-dismisses after 4 seconds; errors are role=alert.
 //
 // The interface is `toast.error(message)` (and .success/.warning/.info). One
-// call per message you want shown. In the Flask app the equivalent channel was
+// call per message you want shown. In the Flask app the equivalent channel is
 // draining `get_flashed_messages()` on page load; here it's the `{ ok, error }`
 // result objects that OnboardingApp's submit functions already return.
 
@@ -21,95 +22,20 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type SVGProps,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useMounted } from '../lib/useMounted';
 
-// Each tone swaps four colours plus the icon. Values match the Flask template.
 export type Tone = 'success' | 'error' | 'warning' | 'info';
 
-type ToneStyle = { border: string; bg: string; title: string; sub: string; label: string };
-
-const TONES: Record<Tone, ToneStyle> = {
-  success: { border: '#a9d7cb', bg: '#f1fffc', title: '#017155', sub: '#92c6b9', label: 'Success' },
-  error: { border: '#ffcccc', bg: '#fff1f1', title: '#F03D3D', sub: '#f57e7e', label: 'Error' },
-  warning: { border: '#fee0aa', bg: '#fffaf1', title: '#DA8700', sub: '#e8b765', label: 'Warning' },
-  info: {
-    border: '#a9d3ff',
-    bg: '#f1f8ff',
-    title: '#006FE6',
-    sub: '#5ba2ee',
-    label: 'Information',
-  },
+const LABEL: Record<Tone, string> = {
+  success: 'Success',
+  error: 'Error',
+  warning: 'Warning',
+  info: 'Information',
 };
 
 const DISMISS_MS = 4000;
-
-// The four PNGs in the Flask app are inline SVG here: no assets to keep in sync,
-// no broken-image state, and the swap is synchronous — which is why this port
-// doesn't need the original's `icon.decode()` guard. That guard existed because
-// swapping an <img src> lets the *previous* tone's icon paint for one frame
-// (a green checkmark flashing on an error toast). React re-renders the whole
-// node, so there is no stale frame to guard against.
-function ToastIcon({ tone }: { tone: Tone }) {
-  const c = TONES[tone].title;
-  const common: SVGProps<SVGSVGElement> = {
-    width: 36,
-    height: 44,
-    viewBox: '0 0 36 44',
-    fill: 'none',
-    'aria-hidden': 'true',
-    className: 'shrink-0',
-  };
-  const ring = <circle cx="18" cy="22" r="11" fill={c} />;
-  if (tone === 'success') {
-    return (
-      <svg {...common}>
-        {ring}
-        <path
-          d="M13 22.2l3.4 3.4L23 18.8"
-          stroke="#fff"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  }
-  if (tone === 'error') {
-    return (
-      <svg {...common}>
-        {ring}
-        <path
-          d="M14.2 18.2l7.6 7.6M21.8 18.2l-7.6 7.6"
-          stroke="#fff"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-        />
-      </svg>
-    );
-  }
-  if (tone === 'warning') {
-    return (
-      <svg {...common}>
-        <path
-          d="M16.3 12.6a2 2 0 013.4 0l9.1 15.8a2 2 0 01-1.7 3H8.9a2 2 0 01-1.7-3l9.1-15.8z"
-          fill={c}
-        />
-        <path d="M18 18.4v5.2" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-        <circle cx="18" cy="27.4" r="1.4" fill="#fff" />
-      </svg>
-    );
-  }
-  return (
-    <svg {...common}>
-      {ring}
-      <path d="M18 21v5.4" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-      <circle cx="18" cy="17.4" r="1.4" fill="#fff" />
-    </svg>
-  );
-}
 
 /** `toast.error(message)` and friends. One call per message you want shown. */
 export type ToastApi = {
@@ -146,7 +72,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     // worth keeping in mind: an earlier iteration swept every `.toast` in the
     // DOM on a timer, which killed unrelated client-side validation toasts.
     if (timerRef.current) clearTimeout(timerRef.current);
-    setToast({ id: Date.now(), message, tone: tone in TONES ? tone : 'success' });
+    setToast({ id: Date.now(), message, tone: tone in LABEL ? tone : 'success' });
     setVisible(true);
     timerRef.current = setTimeout(() => setVisible(false), DISMISS_MS);
   }, []);
@@ -174,51 +100,35 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [show, hide],
   );
 
-  const tone = TONES[toast?.tone || 'success'];
-
+  // Only the card that is showing is in the DOM: a parked off-screen card would
+  // keep its stale role=alert where tests and screen readers can find it.
   const node = (
     <div
-      className="pointer-events-none fixed right-4 z-[400] transition-transform duration-500 ease-in-out"
-      style={{
-        top: 24,
-        // Parked fully off-screen (plus the 1.5rem gutter) until shown.
-        transform: visible ? 'translateX(0)' : 'translateX(calc(100% + 1.5rem))',
-      }}
+      className="pointer-events-none fixed right-4 top-4 z-[400] w-80 max-w-[calc(100vw-2rem)]"
       aria-live="polite"
       aria-atomic="true"
     >
-      <div
-        className="pointer-events-auto border-[5px] rounded-full flex justify-between items-center gap-3 w-[420px] max-w-[calc(100vw-2rem)] min-h-[64px] py-[6px] pl-[8px] pr-[20px] relative"
-        style={{ borderColor: tone.border, backgroundColor: tone.bg }}
-        role={toast?.tone === 'error' ? 'alert' : 'status'}
-      >
-        <ToastIcon tone={toast?.tone || 'success'} />
-        <div className="flex-1 min-w-0 text-[14px] flex flex-col items-start justify-center leading-snug">
-          <p className="font-[500] whitespace-nowrap" style={{ color: tone.title }}>
-            {tone.label}
-          </p>
-          <p className="font-[400] break-words w-full" style={{ color: tone.sub }}>
-            {toast?.message || ''}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="shrink-0 cursor-pointer"
-          onClick={hide}
-          aria-label="Dismiss"
+      {visible && toast ? (
+        <div
+          key={toast.id}
+          className="pointer-events-auto flex items-start gap-3 rounded border border-[#e5e7eb] bg-white p-3 text-sm text-[#171717] shadow"
+          role={toast.tone === 'error' ? 'alert' : 'status'}
+          data-toast-type={toast.tone}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="currentColor"
-            className="w-[14px] h-[14px] text-gray-500"
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{LABEL[toast.tone]}</p>
+            <p className="break-words text-[#6b7280]">{toast.message}</p>
+          </div>
+          <button
+            type="button"
+            className="cursor-pointer text-[#6b7280] hover:text-[#171717]"
+            onClick={hide}
+            aria-label="Dismiss"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+            ×
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 
