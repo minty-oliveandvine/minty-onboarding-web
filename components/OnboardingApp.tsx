@@ -36,6 +36,7 @@ import {
   isStepComplete,
 } from '../lib/wizardSteps';
 import Stepper from './Stepper';
+import { useToast } from './Toast';
 import type {
   AccountCodesResponse,
   ApiErrorBody,
@@ -68,6 +69,7 @@ const ACCENT_DEFAULTS = {
 };
 
 export default function OnboardingApp() {
+  const toast = useToast();
   const [current, setCurrent] = useState(1);
   const [state, setState] = useState(initialState);
   const [maxReached, setMaxReached] = useState(1);
@@ -1008,7 +1010,10 @@ export default function OnboardingApp() {
         headers: { Authorization: `Bearer ${token}` },
       },
     )
-      .then((res) => (res.ok ? (res.json() as Promise<AccountCodesResponse>) : null))
+      .then((res) => {
+        if (!res.ok) throw new Error(`account codes answered ${res.status}`);
+        return res.json() as Promise<AccountCodesResponse>;
+      })
       .then((data) => {
         if (!data || !data.connected) return;
         const bank = data.bank_accounts || [];
@@ -1064,9 +1069,13 @@ export default function OnboardingApp() {
           },
         }));
       })
-      .catch(() => {
-        /* leave the step empty if the fetch fails */
+      .catch((err) => {
+        // Loud, and retried on the next visit: an empty step would post no codes at all.
+        console.error('[onboarding] the account codes did not load', err);
+        accountLoadedRef.current = false;
+        toast.error("I couldn't load your account codes. Mind refreshing the page?");
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; reload on step/entity only
   }, [current, token, state.entity.id]);
 
   const submitAccountCodes = async (): Promise<Result> => {
@@ -1181,7 +1190,10 @@ export default function OnboardingApp() {
     fetch(urlFor(`/api/onboarding/bill-codes?entity_id=${encodeURIComponent(state.entity.id)}`), {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => (res.ok ? (res.json() as Promise<BillCodesResponse>) : null))
+      .then((res) => {
+        if (!res.ok) throw new Error(`bill codes answered ${res.status}`);
+        return res.json() as Promise<BillCodesResponse>;
+      })
       .then((data) => {
         if (!data || !data.connected) return;
         const bill = data.bill_codes || [];
@@ -1198,9 +1210,12 @@ export default function OnboardingApp() {
         }
         setState((prev) => ({ ...prev, bills: { ...prev.bills, billCodes: billCodesVal } }));
       })
-      .catch(() => {
-        /* leave the step empty if the fetch fails */
+      .catch((err) => {
+        console.error('[onboarding] the payment account codes did not load', err);
+        billLoadedRef.current = false;
+        toast.error("I couldn't load your payment account codes. Mind refreshing the page?");
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; reload on step/entity only
   }, [current, token, state.entity.id]);
 
   const submitBills = async (): Promise<Result> => {

@@ -1097,6 +1097,7 @@ export function StepAccountCode({
   const toast = useToast();
   const [showErrors, setShowErrors] = useState(false);
 
+  const expenseCodesRef = useRef<HTMLDivElement>(null);
   const pcAccountRef = useRef<HTMLDivElement>(null);
   const depositAccountRef = useRef<HTMLDivElement>(null);
   const directorCodeRef = useRef<HTMLDivElement>(null);
@@ -1117,7 +1118,15 @@ export function StepAccountCode({
     (opts.expense || []).map((e) => [e.code, e.name ? `${e.code} · ${e.name}` : e.code]),
   );
 
+  // At least one code stays ticked (Petty Cash Settings' rule; the API refuses none with 400):
+  // a petty cash expense can only use the ticked codes. No codes listed = nothing to tick.
+  const ec = p.expenseCodes || { all: true, selected: {} };
+  const codeOn = (c: string) =>
+    ec.all !== false ? (ec.selected || {})[c] !== false : (ec.selected || {})[c] === true;
+  const noCodeTicked = expenseCodes.length > 0 && !expenseCodes.some(codeOn);
+
   const missingFields = [
+    { key: 'expenseCodes', empty: noCodeTicked, ref: expenseCodesRef },
     { key: 'pcAccount', empty: !p.pcAccount, ref: pcAccountRef },
     { key: 'depositAccount', empty: !p.depositAccount, ref: depositAccountRef },
     { key: 'directorCode', empty: !p.directorCode, ref: directorCodeRef },
@@ -1166,12 +1175,19 @@ export function StepAccountCode({
             Only selected account code will appear when adding an expense in Petty Cash.
           </div>
         </div>
-        <AccountCodesCard
-          codes={expenseCodes}
-          labels={expenseLabels}
-          value={p.expenseCodes || { all: true, selected: {} }}
-          onChange={(v) => upd('expenseCodes', v)}
-        />
+        <div ref={expenseCodesRef}>
+          <AccountCodesCard
+            codes={expenseCodes}
+            labels={expenseLabels}
+            value={ec}
+            onChange={(v) => upd('expenseCodes', v)}
+          />
+          {showErrors && noCodeTicked && (
+            <div className="field-required" role="alert">
+              Pick at least one account code.
+            </div>
+          )}
+        </div>
 
         <PCSection
           title="Petty Cash Account"
@@ -1440,6 +1456,8 @@ export function StepBills({
     set({ bills: { ...b, [k]: v } });
   const [saving, setSaving] = useState(false);
   const toast = useToast();
+  const [showErrors, setShowErrors] = useState(false);
+  const billCodesRef = useRef<HTMLDivElement>(null);
 
   const billCodes = ((accountOptions || {}).bill || []).map((e) => e.code);
   const billLabels = Object.fromEntries(
@@ -1449,8 +1467,23 @@ export function StepBills({
     ]),
   );
 
+  // At least one code stays ticked (Payment Settings' rule; the API refuses none with 400).
+  // No codes listed = nothing to tick.
+  const bc = b.billCodes || { all: true, selected: {} };
+  const codeOn = (c: string) =>
+    bc.all !== false ? (bc.selected || {})[c] !== false : (bc.selected || {})[c] === true;
+  const noCodeTicked = billCodes.length > 0 && !billCodes.some(codeOn);
+
   const tryNext = async () => {
     if (saving) return;
+    if (noCodeTicked) {
+      setShowErrors(true);
+      requestAnimationFrame(() => {
+        billCodesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      return;
+    }
+    setShowErrors(false);
     if (typeof submitBills === 'function') {
       setSaving(true);
       const result = await submitBills();
@@ -1472,11 +1505,11 @@ export function StepBills({
         </p>
       </div>
 
-      <div className="pc-stack">
+      <div className="pc-stack" ref={billCodesRef}>
         <AccountCodesCard
           codes={billCodes}
           labels={billLabels}
-          value={b.billCodes || { all: true, selected: {} }}
+          value={bc}
           onChange={(v) => upd('billCodes', v)}
           // Bill searches the raw code and labels its checkboxes with the bare
           // code, unlike the Account Code step which uses the full label.
@@ -1495,6 +1528,11 @@ export function StepBills({
             </div>
           }
         />
+        {showErrors && noCodeTicked && (
+          <div className="field-required" role="alert">
+            Pick at least one account code.
+          </div>
+        )}
       </div>
 
       <StepNav
