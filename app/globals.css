@@ -900,14 +900,14 @@ textarea {
   animation: mintRipple 0.8s ease-out;
 }
 .pc-field.field-error .input-prefix {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 26%, transparent);
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 18%, transparent);
 }
 .field-required {
   margin-top: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--accent-ink);
+  color: var(--danger);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -916,7 +916,7 @@ textarea {
   content: '*';
   font-size: 15px;
   line-height: 1;
-  color: var(--accent);
+  color: var(--danger);
 }
 /* Invalid input (e.g. a malformed invite email) — flag the field border. */
 .field.field-error input,
@@ -1772,8 +1772,9 @@ textarea {
   color: var(--ink-2);
   margin-bottom: 6px;
 }
-.invite-field .req {
-  color: #e02d3c;
+/* Mandatory-field marker (red asterisk) — shared by every form. */
+.req {
+  color: var(--danger);
   margin-left: 2px;
 }
 .invite-actions {

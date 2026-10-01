@@ -1,6 +1,7 @@
 'use client';
 
-// Confetti pieces for the "All Set" celebration page.
+// Confetti pieces for the "All Set" celebration page, and the module step when both
+// modules are picked.
 // Each piece is an SVG drawn in a 100×100 viewBox so they scale uniformly.
 // Shapes are inspired by the colourful squiggles & dots in the brand palette.
 import { useState, type CSSProperties } from 'react';
@@ -71,7 +72,7 @@ export default function Confetti({ count = 36 }: { count?: number }) {
   // State with a lazy initialiser rather than useMemo: Math.random is impure, and a
   // memo still runs during render. The burst is generated once when the component
   // mounts and never re-rolled -- which is also what a burst should do. `count` is
-  // fixed by the one caller (StepAllSet), so it is read once on purpose.
+  // read once on purpose; a caller wanting a new burst remounts it with a new `key`.
   const [pieces] = useState(() => scatter(count));
 
   return (

@@ -245,9 +245,14 @@ export function StepSelectModule({
   // Multi-select toggle: clicking a card adds or removes it from the
   // selection. Continue is gated on sel.length > 0 so users must pick at
   // least one — both can be picked together for a full setup.
+  // The All Set confetti, fired by the click that completes the pair. A counter, not a
+  // flag: it keys the <Confetti> below, so every completion remounts it for a fresh
+  // shower, and re-entering the step with both already picked shows none.
+  const [burst, setBurst] = useState(0);
   const pick = (id: ModuleId) => {
     const next = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
     set({ modules: next });
+    if (next.length === MODULES.length) setBurst((b) => b + 1);
   };
   const [saving, setSaving] = useState(false);
   const toast = useToast();
@@ -377,6 +382,7 @@ export function StepSelectModule({
 
   return (
     <>
+      {burst > 0 && <Confetti key={burst} count={42} />}
       <div className={'page-head module-head' + wide}>
         <h2>Which free trial would you like to start today?</h2>
         <p>
@@ -386,9 +392,9 @@ export function StepSelectModule({
       </div>
       <div className={'module-layout' + wide}>
         <div className="module-grid module-grid-2">
-          {/* Two bursts flanking the pair, straight out of the 01-B frame. NOT the falling
-            Confetti component the All Set step uses — the design draws a moment, not a
-            shower, and the pieces are positioned artwork rather than generated. */}
+          {/* Two bursts flanking the pair, straight out of the 01-B frame: positioned
+            artwork that stays while both are ticked. The falling shower above is separate
+            and plays once per completing click. */}
           {bothPicked ? (
             <>
               <img
@@ -1033,7 +1039,9 @@ export function StepSalesSetting({
             )}
           </div>
           <div className={'pc-field' + (showBalanceError && balanceEmpty ? ' field-error' : '')}>
-            <div className="pc-sub">Choose the beginning petty cash balance of the day</div>
+            <div className="pc-sub">
+              Choose the beginning petty cash balance of the day<span className="req">*</span>
+            </div>
             <div className="field">
               <div className="input-prefix">
                 <div className="prefix">
