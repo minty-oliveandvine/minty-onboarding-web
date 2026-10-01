@@ -22,8 +22,8 @@ Two paths, both Minty's:
 - **Email OTP** — `POST {FLASK_BASE}/auth/email/check` (login mode refuses an unknown
   address before a code is sent), `POST …/request-code`, then `/auth/confirm` posts the
   code to `POST …/verify-code` (with the invite token and the terms agreement when there
-  is one); a new address completes sign-up with `POST …/auth/email/complete`. Because the
-  verify happens **cross-origin**, Minty answers with a `redirect_url` — a signed hand-off
+  is one); for a new address, that same call creates the account from the name the page
+  sends. Because the verify happens **cross-origin**, Minty answers with a `redirect_url` — a signed hand-off
   (`GET /auth/email/handoff`) — and the page follows it, so the session cookie is set on
   Minty's origin before the wizard is launched. The code is valid 60 s, five wrong tries lock the
   address for 15 minutes — the page shows Minty's wording for both.
