@@ -11,12 +11,12 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | # | Screen | Component | Writes |
 |---|---|---|---|
 | 1 | Basic Information — name, country, currency, phone, email | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
-| 2 | Select Module — Petty Cash, Payment Request; the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent) | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
-| 3 | User Invite — invite colleagues with a role | `StepInvite` | `POST /invite`, `/invite/cancel` |
+| 2 | Select Module — Petty Cash, Payment Request; the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
+| 3 | User Invite — invite colleagues with a role; on arrival a prompt recommends inviting the accountant (*Ok* stays to invite, *Skip* on its right goes on to step 4) | `StepInvite` | `POST /invite`, `/invite/cancel` |
 | 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
 | 5 | Sales Setting — electronic and delivery methods, and the opening balance (the cash in the drawer on day one) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
 | 6 | Account Code Setting — the expense accounts and the petty-cash account mapping | `StepAccountCode` | `POST /account-codes` |
-| 7 | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero) | `StepOthers` | `POST /contacts`, `/contacts/create` |
+| 7 | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero; the open list says to type a name to add one) | `StepOthers` | `POST /contacts`, `/contacts/create` |
 | 8 | Payment Settings — the bills' account codes | `StepBills` | `POST /bill-codes` |
 | 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival** |
 
@@ -70,7 +70,7 @@ words the wizard shows; the app never invents a message for a status it does not
 ## Tests
 
 Unit (`npm test`): `lib/__tests__/wizardSteps.test.ts`, `validation.test.ts`, `invites.test.ts`,
-`components/__tests__/Stepper.test.tsx`, `StepChrome.test.tsx`, `pettyCashFields.test.tsx`,
+`components/__tests__/Stepper.test.tsx`, `StepChrome.test.tsx`, `StepInvite.test.tsx` (the arrival prompt's Ok / Skip), `MintySelect.test.tsx` (the type-to-add hint), `pettyCashFields.test.tsx`,
 `MethodList.test.tsx`, `CardBrand.test.tsx` (the two fits and their crops). Browser (`npm run test:e2e`): `e2e/stack.spec.ts` (the two backends
 answer), `resume.spec.ts` (the database decides the landing step; `saved_step` and
 `current_step` may disagree; an out-of-range step is refused), `xero.spec.ts`,

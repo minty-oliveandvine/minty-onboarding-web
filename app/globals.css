@@ -799,6 +799,13 @@ textarea {
 .mselect-create .mselect-opt-label {
   color: var(--accent-ink);
 }
+/* Not an option: the "type to add" hint heading the list before anything is typed. */
+.mselect-create-hint {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
 .mselect-create-panel {
   padding: 12px;
   display: flex;
@@ -1321,6 +1328,11 @@ textarea {
 .confetti-stage {
   position: fixed;
   inset: 0;
+  /* It is a child of .page, whose `.page > *` caps every child at 720px and centres
+     it: without these the "full-screen" stage was a 720px column, every piece shifted
+     by its offset and anything outside it clipped. */
+  max-width: none;
+  margin: 0;
   pointer-events: none;
   overflow: hidden;
   z-index: 5;
@@ -1352,6 +1364,35 @@ textarea {
   100% {
     transform: translate(var(--end-x), var(--end-y)) rotate(var(--rot-end)) scale(0.9);
     opacity: 0;
+  }
+}
+/* Module step: pieces burst out of the card corners, fly and fade — gone in under two
+     seconds. The stage stays ON TOP (the shared z-index 5): put behind the cards it was
+     also behind the step's white layout box, which hid every piece flying away from the
+     pair. Each corner fans away from its card, so the pieces barely cross the cards. */
+.confetti-piece.is-pop {
+  animation-name: confettiPop;
+  animation-timing-function: cubic-bezier(0.12, 0.75, 0.3, 1);
+}
+@keyframes confettiPop {
+  0% {
+    transform: translate(0, 0) rotate(var(--rot-start)) scale(0.3);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--end-x), var(--end-y)) rotate(var(--rot-end)) scale(0.85);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece.is-pop {
+    display: none;
   }
 }
 /* Account codes selection card */
@@ -2274,57 +2315,12 @@ textarea {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
-/* 300 + 42 + 300 = 642, measured off 01-B. `position: relative` so the confetti
-     bursts below can hang off the pair rather than off the page. */
+/* 300 + 42 + 300 = 642, measured off 01-B. */
 .module-grid-2 {
-  position: relative;
   grid-template-columns: repeat(2, 300px);
   gap: 42px;
   justify-content: center;
   margin: 8px auto 0;
-}
-
-/* The celebration, and it is ARTWORK, not an animation: 01-B draws two bursts, one
-     off the top-left of the pair and one off the top-right, both bleeding outside it.
-     Inert and unselectable so they cannot swallow a click on a tick box underneath.
-
-     BEHIND EVERYTHING, which is how the frame paints it: the two confetti rects come
-     before both card groups in the export. A positioned element outranks ordinary flow
-     content regardless of source order, so the card, the tick box and the heading each
-     have to claim a layer above this one explicitly — see the z-index:1 rules below. */
-.module-burst {
-  position: absolute;
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-  animation: moduleBurstIn 0.35s ease both;
-}
-.module-burst.is-left {
-  left: -92px;
-  top: -67px;
-  width: 284px;
-}
-.module-burst.is-right {
-  right: -87px;
-  top: -62px;
-  width: 224px;
-}
-/* Fades in when the second module goes on and out when one comes off, rather than
-     expiring on a timer — the burst belongs to the state, not to the click. */
-@keyframes moduleBurstIn {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .module-burst {
-    animation: none;
-  }
 }
 
 /* Cards left, Subscription Summary right. This step needs more room than the
@@ -2348,8 +2344,8 @@ textarea {
      Both widths break out of the 720px `.page > *` cap by re-centring on the page's
      own axis with a calculated left margin — a margin, never a transform, so anything
      measuring itself inside here still reports where it really is. */
-/* The heading claims a layer too: a burst reaching up past the card row would
-     otherwise paint over the copy, positioned content beating flow content. */
+/* The heading claims a layer too: the confetti stage is positioned, so without one
+     the pieces flying up past the card row would paint over the copy. */
 .module-head {
   position: relative;
   z-index: 1;
@@ -2934,10 +2930,6 @@ textarea {
     gap: 28px;
     max-width: 320px;
   }
-  .module-burst {
-    display: none;
-  }
-
   /* 40px a side of a ~340px panel left 259px of content — the cat then covered half
        of it. 20px gives the text back 80px before anything else is touched. */
   .sub-summary {

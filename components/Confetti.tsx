@@ -1,7 +1,7 @@
 'use client';
 
-// Confetti pieces for the "All Set" celebration page, and the module step when both
-// modules are picked.
+// Confetti pieces: falling from the top on the "All Set" celebration page, or bursting
+// out of given screen points on the module step when both modules are picked.
 // Each piece is an SVG drawn in a 100×100 viewBox so they scale uniformly.
 // Shapes are inspired by the colourful squiggles & dots in the brand palette.
 import { useState, type CSSProperties } from 'react';
@@ -26,10 +26,15 @@ const CONFETTI_SHAPES: Shape[] = [
   { c: '#A18BE6', d: 'M25 60 Q 50 35, 75 55' }, // purple arc
 ];
 
-function ConfettiPiece({ shape, style }: { shape: Shape; style: PieceStyle }) {
+function ConfettiPiece({ shape, style, pop }: { shape: Shape; style: PieceStyle; pop: boolean }) {
   const stroke = !shape.solid;
   return (
-    <svg className="confetti-piece" viewBox="0 0 100 100" style={style} aria-hidden>
+    <svg
+      className={'confetti-piece' + (pop ? ' is-pop' : '')}
+      viewBox="0 0 100 100"
+      style={style}
+      aria-hidden
+    >
       <path
         d={shape.d}
         stroke={stroke ? shape.c : 'none'}
@@ -68,17 +73,57 @@ function scatter(count: number) {
   });
 }
 
-export default function Confetti({ count = 36 }: { count?: number }) {
+/** A viewport point to burst from, the fan of directions (screen degrees: 0 = right,
+ * 90 = down) its pieces fly in, and how far the farthest one goes (default 440px). */
+export type BurstOrigin = { x: number; y: number; from: number; to: number; reach?: number };
+
+/** Pieces shared out between the origins, each flung somewhere inside its origin's fan. */
+function burstFrom(count: number, origins: BurstOrigin[]) {
+  const rand = (a: number, b: number) => a + Math.random() * (b - a);
+  return Array.from({ length: count }, (_, i) => {
+    const shape = CONFETTI_SHAPES[i % CONFETTI_SHAPES.length];
+    const origin = origins[i % origins.length];
+    const size = rand(20, 44);
+    const angle = (rand(origin.from, origin.to) * Math.PI) / 180;
+    const reach = origin.reach ?? 440;
+    const dist = rand(reach * 0.27, reach);
+    return {
+      key: i,
+      shape,
+      style: {
+        left: origin.x - size / 2,
+        top: origin.y - size / 2,
+        width: size,
+        height: size,
+        '--end-x': `${Math.cos(angle) * dist}px`,
+        '--end-y': `${Math.sin(angle) * dist}px`,
+        '--rot-start': `${rand(-90, 90)}deg`,
+        '--rot-end': `${rand(360, 720) * (Math.random() > 0.5 ? 1 : -1)}deg`,
+        animationDuration: `${rand(1.1, 1.8)}s`,
+        animationDelay: `${rand(0, 0.12)}s`,
+      },
+    };
+  });
+}
+
+export default function Confetti({
+  count = 36,
+  origins,
+}: {
+  count?: number;
+  /** Burst out of these viewport points instead of falling from the top. */
+  origins?: BurstOrigin[];
+}) {
   // State with a lazy initialiser rather than useMemo: Math.random is impure, and a
   // memo still runs during render. The burst is generated once when the component
-  // mounts and never re-rolled -- which is also what a burst should do. `count` is
-  // read once on purpose; a caller wanting a new burst remounts it with a new `key`.
-  const [pieces] = useState(() => scatter(count));
+  // mounts and never re-rolled -- which is also what a burst should do. `count` and
+  // `origins` are read once on purpose; a caller wanting a new burst remounts with a new key.
+  const [pieces] = useState(() => (origins ? burstFrom(count, origins) : scatter(count)));
 
   return (
-    <div className="confetti-stage" aria-hidden>
+    <div className={'confetti-stage' + (origins ? ' is-pop' : '')} aria-hidden>
       {pieces.map((p) => (
-        <ConfettiPiece key={p.key} shape={p.shape} style={p.style} />
+        <ConfettiPiece key={p.key} shape={p.shape} style={p.style} pop={!!origins} />
       ))}
     </div>
   );

@@ -72,6 +72,9 @@ export default function MintySelect({
   const exactMatch =
     typed !== '' && items.some((o) => o.label.toLowerCase() === typed.toLowerCase());
   const canCreate = !!onCreate && searchable && typed !== '' && !exactMatch;
+  // Before anything is typed, say that typing is how a new one gets added -- the
+  // "+ Add" row only appears once there is a name to add. Heads the list.
+  const showCreateHint = !!onCreate && searchable && typed === '';
 
   const close = () => {
     setOpen(false);
@@ -316,6 +319,11 @@ export default function MintySelect({
       )}
       {open && creating === null && (
         <div className="mselect-menu" role="listbox" ref={menuRef}>
+          {showCreateHint && (
+            <div className="mselect-create-hint">
+              Type a {createNoun} name to add a new {createNoun}
+            </div>
+          )}
           {filtered.length === 0 && (
             <div className="mselect-empty">{onCreate ? 'No Xero contact found' : 'No matches'}</div>
           )}

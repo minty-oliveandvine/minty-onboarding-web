@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import Icon from './Icon';
 import MintySelect from './MintySelect';
 import MintyDatePicker from './MintyDatePicker';
-import Confetti from './Confetti';
+import Confetti, { type BurstOrigin } from './Confetti';
 import BillingSheet from './BillingSheet';
 import { useToast } from './Toast';
 import { fetchCountries, fetchCurrencies } from '@/lib/refData';
@@ -245,14 +245,37 @@ export function StepSelectModule({
   // Multi-select toggle: clicking a card adds or removes it from the
   // selection. Continue is gated on sel.length > 0 so users must pick at
   // least one — both can be picked together for a full setup.
-  // The All Set confetti, fired by the click that completes the pair. A counter, not a
-  // flag: it keys the <Confetti> below, so every completion remounts it for a fresh
-  // shower, and re-entering the step with both already picked shows none.
-  const [burst, setBurst] = useState(0);
+  // The celebration is a MOMENT fired by the click that completes the pair: confetti
+  // bursts out from behind the pair's two top corners (where 01-B draws its two bursts)
+  // and is gone. `n` keys the pieces, so every completion remounts them for a fresh
+  // burst; re-entering the step with both already picked shows nothing. The corners are
+  // read off the CARDS at that click — not the grid, which is wider than the pair.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [burst, setBurst] = useState<{ n: number; origins: BurstOrigin[] } | null>(null);
   const pick = (id: ModuleId) => {
     const next = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
     set({ modules: next });
-    if (next.length === MODULES.length) setBurst((b) => b + 1);
+    const cardEls = gridRef.current?.querySelectorAll('.mp-card');
+    if (next.length === MODULES.length && cardEls && cardEls.length >= 2) {
+      const left = cardEls[0].getBoundingClientRect();
+      const right = cardEls[cardEls.length - 1].getBoundingClientRect();
+      const inset = 10;
+      // Angles in screen degrees (0 = right, 90 = down). Side by side, each corner fans
+      // outward and up. Stacked (mobile) there is no room outside the cards, so each
+      // fans inward across its own card instead, and only as far as the screen allows.
+      const stacked = right.top >= left.bottom;
+      const reach = stacked ? Math.min(440, window.innerWidth * 0.85) : undefined;
+      const origins: BurstOrigin[] = stacked
+        ? [
+            { x: left.left + inset, y: left.top + inset, from: 280, to: 380, reach },
+            { x: right.right - inset, y: right.top + inset, from: 160, to: 260, reach },
+          ]
+        : [
+            { x: left.left + inset, y: left.top + inset, from: 165, to: 290 },
+            { x: right.right - inset, y: right.top + inset, from: 250, to: 375 },
+          ];
+      setBurst((b) => ({ n: (b?.n ?? 0) + 1, origins }));
+    }
   };
   const [saving, setSaving] = useState(false);
   const toast = useToast();
@@ -327,12 +350,6 @@ export function StepSelectModule({
     };
   }, [token, state?.entity?.id, cardEpoch]);
 
-  // Confetti is part of the SuperMinty STATE, not a one-shot animation: 01-B draws it
-  // in the frame, so it stays up for as long as both modules are ticked and goes the
-  // moment one is unticked. Derived, so it needs no state, no timer and no cleanup —
-  // and re-entering the step with both already picked shows it, as the frame does.
-  const bothPicked = sel.length === MODULES.length;
-
   /**
    * Save & Next — the only way forward, and the only route to billing.
    *
@@ -382,7 +399,6 @@ export function StepSelectModule({
 
   return (
     <>
-      {burst > 0 && <Confetti key={burst} count={42} />}
       <div className={'page-head module-head' + wide}>
         <h2>Which free trial would you like to start today?</h2>
         <p>
@@ -390,27 +406,9 @@ export function StepSelectModule({
           the full Minty experience. Any unselected module can be activated later.
         </p>
       </div>
+      {burst && <Confetti key={burst.n} count={80} origins={burst.origins} />}
       <div className={'module-layout' + wide}>
-        <div className="module-grid module-grid-2">
-          {/* Two bursts flanking the pair, straight out of the 01-B frame: positioned
-            artwork that stays while both are ticked. The falling shower above is separate
-            and plays once per completing click. */}
-          {bothPicked ? (
-            <>
-              <img
-                className="module-burst is-left"
-                src="/assets/confetti-left.png"
-                alt=""
-                aria-hidden="true"
-              />
-              <img
-                className="module-burst is-right"
-                src="/assets/confetti-right.png"
-                alt=""
-                aria-hidden="true"
-              />
-            </>
-          ) : null}
+        <div className="module-grid module-grid-2" ref={gridRef}>
           {MODULES.map((m) => {
             const I = m.icon ? Icon[m.icon] : null;
             const on = sel.includes(m.id);
@@ -1588,7 +1586,8 @@ export function StepInvite({
     setExpandedRows((prev) => ({ ...prev, [key]: !prev[key] }));
   // Confirmation modal nudging the user to invite an accountant — the later
   // steps need expertise. Shown automatically on arrival at the Invite step
-  // (right after Save & Next on Select Module) and again on "Skip for now".
+  // (right after Save & Next on Select Module). "Ok" stays here to invite;
+  // "Skip" moves on to the next step without inviting anyone.
   const [confirmSkip, setConfirmSkip] = useState(true);
   const [sending, setSending] = useState(false);
   // Portal the modal to <body> so its fixed overlay can't be clipped to a
@@ -1868,6 +1867,16 @@ export function StepInvite({
                   onClick={() => setConfirmSkip(false)}
                 >
                   Ok
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setConfirmSkip(false);
+                    next();
+                  }}
+                >
+                  Skip
                 </button>
               </div>
             </div>
