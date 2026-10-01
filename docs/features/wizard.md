@@ -11,7 +11,7 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | # | Screen | Component | Writes |
 |---|---|---|---|
 | 1 | Basic Information — name, country, currency, phone, email | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
-| 2 | Select Module — Petty Cash, Payment Request; with subscriptions on, the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); while dark a plain pick | `StepSelectModule` | `POST /modules`, the `billing/*` routes when on |
+| 2 | Select Module — Petty Cash, Payment Request; the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent) | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
 | 3 | User Invite — invite colleagues with a role | `StepInvite` | `POST /invite`, `/invite/cancel` |
 | 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
 | 5 | Sales Setting — electronic and delivery methods, and the opening balance (the cash in the drawer on day one) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
@@ -51,15 +51,10 @@ summaries; change the two together.
 
 Reaching step 9 runs `completeOnboarding()`: it submits the opening balance and posts
 `/finalize`, which flips the company from `onboarding` to live, enables the chosen modules
-and — only when subscriptions are on — starts the trials; the screen itself commits
+and starts the trials; the screen itself commits
 nothing, and *Go to Minty* leaves. **Never navigate a test straight to step 9**
 (`e2e/README.md`, `land()` in `e2e/onboardingApi.ts` refuses it); `walk.spec.ts` reaches it
 by clicking *Complete* on step 8 against the disposable entity.
-
-## Dark mode
-
-`state.subscriptions_enabled` (from `/state`) drives step 2 and step 9: no plans, no
-billing sheet, consent not required, the All Set wording states no trial.
 
 ## Copy and errors
 

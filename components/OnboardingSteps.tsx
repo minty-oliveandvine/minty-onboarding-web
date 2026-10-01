@@ -234,9 +234,6 @@ export function StepSelectModule({
   'state' | 'set' | 'next' | 'back' | 'submitModule' | 'modulePlans' | 'token' | 'saveAndExit'
 >) {
   const sel = state.modules.filter((id) => MODULES.some((m) => m.id === id));
-  // Subscriptions live? False is the cutover state (lib/api.ts): the modules are picked
-  // and switched on, and nothing here quotes, trials or asks for a card.
-  const subscriptionsOn = state.subscriptions_enabled !== false;
   // No per-card price lookup any more: the cards carry a trial status, not a figure,
   // and the ONE price on this step is the summary's "After trial" tile. It reads the
   // live catalog through priceSelection(), so there is nothing left here to drift.
@@ -300,10 +297,9 @@ export function StepSelectModule({
   // so the row does not flicker through the old answer on the way to the new one.
   const canAskAboutCard = !!token && !!state?.entity?.id;
   const [cardAnswered, setCardAnswered] = useState(false);
-  const cardLoading = subscriptionsOn && canAskAboutCard && !cardAnswered;
+  const cardLoading = canAskAboutCard && !cardAnswered;
   useEffect(() => {
     if (!token || !state?.entity?.id) return;
-    if (!subscriptionsOn) return; // dark: the billing routes are gone; nothing to ask
     let live = true;
     fetchBillingStatus(token, state.entity.id)
       .then((res) => {
@@ -319,7 +315,7 @@ export function StepSelectModule({
     return () => {
       live = false;
     };
-  }, [token, state?.entity?.id, cardEpoch, subscriptionsOn]);
+  }, [token, state?.entity?.id, cardEpoch]);
 
   // Confetti is part of the SuperMinty STATE, not a one-shot animation: 01-B draws it
   // in the frame, so it stays up for as long as both modules are ticked and goes the
@@ -377,23 +373,11 @@ export function StepSelectModule({
   return (
     <>
       <div className={'page-head module-head' + wide}>
-        {subscriptionsOn ? (
-          <>
-            <h2>Which free trial would you like to start today?</h2>
-            <p>
-              Each module includes its own {trialTermLabel} free trial. Start with one module or
-              unlock the full Minty experience. Any unselected module can be activated later.
-            </p>
-          </>
-        ) : (
-          <>
-            <h2>Which modules would you like to use?</h2>
-            <p>
-              Start with one module or use both. Any unselected module can be switched on later
-              from the company&apos;s settings.
-            </p>
-          </>
-        )}
+        <h2>Which free trial would you like to start today?</h2>
+        <p>
+          Each module includes its own {trialTermLabel} free trial. Start with one module or unlock
+          the full Minty experience. Any unselected module can be activated later.
+        </p>
       </div>
       <div className={'module-layout' + wide}>
         <div className="module-grid module-grid-2">
@@ -458,9 +442,7 @@ export function StepSelectModule({
                     beside a trial reads as one that is. It is in the summary, under
                     "After trial", where it is true. */}
                   <div className="mp-trial">
-                    {subscriptionsOn ? (
-                      <span className="mp-trial-term">{trialDaysLabel} free trial</span>
-                    ) : null}
+                    <span className="mp-trial-term">{trialDaysLabel} free trial</span>
                     <span className="mp-trial-state">{on ? 'Selected' : 'Available'}</span>
                   </div>
                 </div>
@@ -471,15 +453,13 @@ export function StepSelectModule({
             );
           })}
         </div>
-        {subscriptionsOn ? (
-          <ModuleSubscriptionSummary
-            catalog={modulePlans}
-            selected={sel}
-            card={savedCard}
-            cardLoading={cardLoading}
-            onOpenBilling={() => setBillingOpen(true)}
-          />
-        ) : null}
+        <ModuleSubscriptionSummary
+          catalog={modulePlans}
+          selected={sel}
+          card={savedCard}
+          cardLoading={cardLoading}
+          onOpenBilling={() => setBillingOpen(true)}
+        />
       </div>
       {/* WHERE "nothing is charged today" NOW LIVES. The summary panel used to carry a
           "Due today" line saying it explicitly; the design replaced that panel with four
@@ -487,18 +467,9 @@ export function StepSelectModule({
           all — the only other place is the billing dialog, which a payer can finish the
           step without ever opening. */}
       <p className={'module-caption' + wide}>
-        {subscriptionsOn ? (
-          <>
-            Each module comes with its own {trialTermLabel} free trial. Start with one module today,
-            or unlock both and enjoy the complete Minty experience. You can always activate the
-            other trial later. No payment is required today.
-          </>
-        ) : (
-          <>
-            Start with one module today, or use both and enjoy the complete Minty experience. You
-            can switch either on or off later from the company&apos;s settings.
-          </>
-        )}
+        Each module comes with its own {trialTermLabel} free trial. Start with one module today, or
+        unlock both and enjoy the complete Minty experience. You can always activate the other trial
+        later. No payment is required today.
       </p>
       <div className={'step-nav module-nav' + wide}>
         <button className="btn btn-ghost" onClick={back}>
@@ -1205,15 +1176,7 @@ export function StepAccountCode({
               label: (
                 <>
                   Select Bank account in Xero that will record petty cash movement. You may need to
-                  first add a bank account in Xero.{' '}
-                  <a
-                    href="https://my.xero.com/"
-                    className="pc-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    (Link)
-                  </a>
+                  first add a bank account in Xero.
                 </>
               ),
               value: p.pcAccount || '',
@@ -1887,9 +1850,6 @@ export function StepAllSet({
   // summary was just fixed for.
   const [hasConsent, setHasConsent] = useState<boolean | null>(null);
   const toast = useToast();
-  // Subscriptions live? False is the cutover state (lib/api.ts): the modules are simply
-  // on, there is no trial date to state and no card to ask for.
-  const subscriptionsOn = state.subscriptions_enabled !== false;
 
   /* COMMITTED ONCE, AND THE HANDLE IS KEPT. This ref does two jobs.
    *
@@ -1930,7 +1890,6 @@ export function StepAllSet({
   // confirmation, which is the only thing here that can change the answer.
   useEffect(() => {
     if (!token || !state?.entity?.id) return;
-    if (!subscriptionsOn) return; // dark: nothing to nudge about and no billing route to ask
     let live = true;
     fetchBillingStatus(token, state.entity.id)
       .then((res) => {
@@ -1947,7 +1906,7 @@ export function StepAllSet({
     // Read ONCE. It used to re-run after a confirmation, through a `cardEpoch` counter the
     // billing sheet's onDone bumped — but confirming now leaves the page, so there is no
     // longer a moment where this screen has to notice the answer changing under it.
-  }, [token, state?.entity?.id, subscriptionsOn]);
+  }, [token, state?.entity?.id]);
 
   /* "Petty Cash", "Payment Request", or — with both — "SuperMinty", the name step 2 gives
      the pair. One line covers the sentence and the Module enabled row, so the two cannot
@@ -1964,9 +1923,7 @@ export function StepAllSet({
   /* Both requests in, so the block can be drawn. `committing` covers the trial date and
      `hasConsent === null` covers the nudge and the buttons; either outstanding means part
      of what is about to be shown is still unknown. */
-  // Dark: there is no consent to read, so the answer is simply "nothing to ask for".
-  const consent = subscriptionsOn ? hasConsent : true;
-  const ready = !committing && consent !== null;
+  const ready = !committing && hasConsent !== null;
 
   const trialEndLabel = trialEnd
     ? formatDate(new Date(trialEnd), {
@@ -2032,9 +1989,7 @@ export function StepAllSet({
       {ready ? (
         <div className="allset-facts">
           <p className="allset-lede">
-            {subscriptionsOn
-              ? `Your ${trialDays}-day ${moduleLabel} trial has started.`
-              : `${moduleLabel} is ready to use.`}
+            Your {trialDays}-day {moduleLabel} trial has started.
           </p>
 
           <dl className="allset-grid">
@@ -2054,7 +2009,7 @@ export function StepAllSet({
           {/* Nothing to nudge someone about who has already authorised this entity. Gated on
             CONSENT, not on owning a card: a payer can hold a card this entity was never
             authorised against, and only consent decides whether the trial converts. */}
-          {consent === false ? (
+          {hasConsent === false ? (
             <p className="allset-nudge">Avoid interruption by adding a payment method today.</p>
           ) : null}
         </div>
@@ -2064,7 +2019,7 @@ export function StepAllSet({
           billing status decides, so the row arrives assembled with the facts above it. */}
       {ready ? (
         <div className="allset-actions">
-          {consent ? null : (
+          {hasConsent ? null : (
             <button
               type="button"
               className="btn btn-primary allset-pay"
@@ -2078,7 +2033,7 @@ export function StepAllSet({
               a link. */}
           <button
             type="button"
-            className={consent ? 'btn btn-primary allset-pay' : 'allset-exit'}
+            className={hasConsent ? 'btn btn-primary allset-pay' : 'allset-exit'}
             onClick={exitToEntityList}
             disabled={committing}
           >
