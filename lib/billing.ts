@@ -181,11 +181,10 @@ export function confirmCardSetup(
     body: {
       setup_intent: setupIntent,
       make_default: !!makeDefault,
-      // The billing account, and every field of it is optional. `billingGroupId` puts the
-      // card on an account the payer already has; an email or a company without one OPENS
-      // an account named that way, which is the "New billing account" form's whole job.
-      // Passing nothing keeps the pre-accounts behaviour: the card is saved, and that is
-      // all that happens.
+      // The billing account is REQUIRED: a card is only ever saved onto one. `billingGroupId`
+      // puts the card on an account the payer already has; an email AND a company without one
+      // OPEN an account named that way, which is the "New billing account" form's whole job.
+      // Passing neither is refused (422 "Choose a billing account for this card.").
       //
       // PASS THE ID BACK ON A RETRY. Two accounts on one card are legal, so Minty cannot
       // tell a retried request from a deliberate second account — naming the one you got

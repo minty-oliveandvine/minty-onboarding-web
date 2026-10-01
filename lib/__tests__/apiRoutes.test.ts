@@ -64,8 +64,6 @@ const TO_DJANGO = [
   '/api/onboarding/bill-codes?entity_id=abc',
   '/api/onboarding/modules',
   '/api/onboarding/payment-method?entity_id=abc',
-  '/api/onboarding/payment-method/setup',
-  '/api/onboarding/payment-method/complete',
   '/api/onboarding/billing/payment-methods',
   '/api/onboarding/billing/payment-methods/setup-intent',
   '/api/onboarding/billing/payment-methods/confirm',
