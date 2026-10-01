@@ -14,7 +14,8 @@ import { acceptAmountInput, formatAmount, toAmountEditString } from '@/lib/amoun
 import { formatDate } from '@/lib/date';
 import { fetchBillingStatus } from '@/lib/billing';
 import { urlFor } from '../lib/apiRoutes';
-import { isEmail } from '../lib/validation';
+import { EMAIL_ASCII_HINT, isEmail } from '../lib/validation';
+import { useEmailInput } from '../lib/emailInput';
 import { toIsoDate } from '../lib/date';
 import { SaveExitLink, StepNav } from './steps/StepChrome';
 import {
@@ -40,6 +41,7 @@ export function StepCreateEntity({
   const s = state.entity;
   const upd = <K extends keyof EntityForm>(k: K, v: EntityForm[K]) =>
     set({ entity: { ...s, [k]: v } });
+  const businessEmail = useEmailInput((v) => upd('email', v));
   // Phone and email are optional — but if the user does type something, it must
   // still be valid (Module 1 create-entity: 8–11 digits; standard email shape).
   const emailOk = s.email.trim() === '' || isEmail(s.email);
@@ -194,13 +196,16 @@ export function StepCreateEntity({
             Business Email <span className="field-optional">(optional)</span>
           </label>
           <input
-            type="email"
+            {...businessEmail.props}
             name="email"
-            autoComplete="email"
             placeholder="Please enter your business email"
             value={s.email}
-            onChange={(e) => upd('email', e.target.value)}
           />
+          {businessEmail.rejected && (
+            <div className="field-required" role="status">
+              {EMAIL_ASCII_HINT}
+            </div>
+          )}
         </div>
       </div>
       <div className="cta-stack">
@@ -1545,6 +1550,7 @@ export function StepInvite({
   // part of the page on desktop). Guarded for SSR — body isn't there yet.
   const mounted = useMounted();
   const setF = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v });
+  const inviteEmail = useEmailInput((v) => setF('email', v));
   // Show the "invalid email" hint only once the user has interacted with the
   // field, so a pristine empty form doesn't start out shouting an error.
   const [emailTouched, setEmailTouched] = useState(false);
@@ -1667,14 +1673,18 @@ export function StepInvite({
             </label>
             <div className={'field' + (emailInvalid ? ' field-error' : '')}>
               <input
-                type="email"
+                {...inviteEmail.props}
                 placeholder="Enter email address"
                 value={form.email}
-                onChange={(e) => setF('email', e.target.value)}
                 onBlur={() => setEmailTouched(true)}
                 aria-invalid={emailInvalid}
               />
             </div>
+            {inviteEmail.rejected && (
+              <div className="field-required" role="status">
+                {EMAIL_ASCII_HINT}
+              </div>
+            )}
           </div>
           <div className="invite-field">
             <label>

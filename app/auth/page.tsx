@@ -7,7 +7,8 @@ import AuthTopbar from '@/components/AuthTopbar';
 import TermsModal from '@/components/TermsModal';
 import { FLASK_BASE } from '@/lib/flaskBase';
 import { friendlyError } from '@/lib/errorCopy';
-import { isEmail } from '@/lib/validation';
+import { EMAIL_ASCII_HINT, isEmail } from '@/lib/validation';
+import { useEmailInput } from '@/lib/emailInput';
 
 function AuthContent() {
   const router = useRouter();
@@ -56,6 +57,7 @@ function AuthContent() {
   const recoveredFirstName = prefilledFirstName || recovered?.firstName || '';
   const recoveredLastName = prefilledLastName || recovered?.lastName || '';
   const [email, setEmail] = useState(prefilledEmail);
+  const emailInput = useEmailInput(setEmail);
   // Self-serve signup collects the name up front (the User model requires a
   // first/last name). In login/invite mode these stay as the prefilled values.
   const [firstName, setFirstName] = useState(recoveredFirstName);
@@ -267,16 +269,18 @@ function AuthContent() {
               <label htmlFor="auth-email">Email</label>
               <input
                 id="auth-email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
+                {...emailInput.props}
                 placeholder="jane@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 readOnly={emailLocked}
                 aria-readonly={emailLocked}
                 title={emailLocked ? 'This invite was sent to this address' : undefined}
               />
+              {emailInput.rejected && (
+                <div className="field-required" role="status">
+                  {EMAIL_ASCII_HINT}
+                </div>
+              )}
             </div>
 
             {showTermsBox && (

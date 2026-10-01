@@ -9,8 +9,25 @@
 // UI hint for the same field were two separate copies of the rule and could disagree about
 // whether a form was valid.
 
-/** One "@", something either side, a dot in the domain. */
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** One "@", something either side, a dot in the domain - printable ASCII only: email fields
+ *  take English and nothing else (the user's call, 2026-10-01; lib/emailInput.ts). */
+export const EMAIL_RE = /^[\x21-\x3F\x41-\x7E]+@[\x21-\x3F\x41-\x7E]+\.[\x21-\x3F\x41-\x7E]+$/;
+
+/** Shown when an email field drops a character it does not take. */
+export const EMAIL_ASCII_HINT = 'Email can only contain English letters, numbers and symbols.';
+
+const NOT_EMAIL_CHAR = /[^\x21-\x7E]/g;
+const NON_ASCII = /[^\x00-\x7F]/;
+
+/** True when `value` holds a character no email field accepts (Korean, accents, emoji...). */
+export function hasNonAsciiEmailChar(value: string): boolean {
+  return NON_ASCII.test(value);
+}
+
+/** Drops everything but printable ASCII - whitespace included, which no address contains. */
+export function sanitizeEmailInput(value: string): string {
+  return value.replace(NOT_EMAIL_CHAR, '');
+}
 
 /** True when `value` looks like an email address. Empty is NOT valid — callers that treat
  *  an empty field as acceptable check for that themselves, because "optional" is their

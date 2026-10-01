@@ -4,7 +4,14 @@
 // both callers; the cases below pin what that rule accepts.
 
 import { describe, expect, it } from 'vitest';
-import { EMAIL_RE, UUID_RE, isEmail, isUuid } from '../validation';
+import {
+  EMAIL_RE,
+  UUID_RE,
+  hasNonAsciiEmailChar,
+  isEmail,
+  isUuid,
+  sanitizeEmailInput,
+} from '../validation';
 
 describe('isEmail', () => {
   it.each([
@@ -27,6 +34,9 @@ describe('isEmail', () => {
     ['user@example', 'no dot in the domain'],
     ['user @example.com', 'a space'],
     ['a@b@c.com', 'two @'],
+    ['홍길동@example.com', 'Korean before the @'],
+    ['user@회사.com', 'Korean after the @ (the browser would have let this through)'],
+    ['josé@example.com', 'an accent'],
   ])('rejects %s (%s)', (value) => {
     expect(isEmail(value)).toBe(false);
   });
@@ -90,5 +100,18 @@ describe('isUuid', () => {
   it('treats null and undefined as not a uuid', () => {
     expect(isUuid(null)).toBe(false);
     expect(isUuid(undefined)).toBe(false);
+  });
+});
+
+describe('sanitizeEmailInput', () => {
+  it('keeps printable ASCII on both sides of the @ and drops the rest, spaces included', () => {
+    expect(sanitizeEmailInput('한user@회사example.com')).toBe('user@example.com');
+    expect(sanitizeEmailInput(' é a@b.co ')).toBe('a@b.co');
+    expect(sanitizeEmailInput("o'brien+x@example.ie")).toBe("o'brien+x@example.ie");
+  });
+
+  it('says when a character was not English', () => {
+    expect(hasNonAsciiEmailChar('user@회사.com')).toBe(true);
+    expect(hasNonAsciiEmailChar('user@example.com')).toBe(false);
   });
 });

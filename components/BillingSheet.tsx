@@ -30,7 +30,8 @@ import {
 } from '@/lib/billing';
 import CardBrand from './CardBrand';
 import Icon from './Icon';
-import { isEmail } from '../lib/validation';
+import { EMAIL_ASCII_HINT, isEmail } from '../lib/validation';
+import { useEmailInput } from '../lib/emailInput';
 
 /**
  * The billing sheet — pick the card, agree to be billed for this entity.
@@ -217,6 +218,13 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
   const [fieldErrors, setFieldErrors] = useState({ email: '', company: '' });
+  /* The error clears as soon as they start fixing it. Left until the next submit,
+     a message sits under a field the payer has already corrected. */
+  const emailInput = useEmailInput((v) => {
+    setEmail(v);
+    if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: '' }));
+  });
+  const emailMessage = fieldErrors.email || (emailInput.rejected ? EMAIL_ASCII_HINT : '');
 
   /* Both fields are REQUIRED, and this runs before Stripe is touched at all.
    *
@@ -317,24 +325,17 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
         <input
           id="billing-email"
           className={'billing-input' + (fieldErrors.email ? ' is-invalid' : '')}
-          type="email"
+          {...emailInput.props}
           required
-          autoComplete="email"
           placeholder="name@company.com"
           value={email}
-          /* The error clears as soon as they start fixing it. Left until the next submit,
-             a message sits under a field the payer has already corrected. */
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: '' }));
-          }}
           disabled={busy}
           aria-invalid={fieldErrors.email ? true : undefined}
-          aria-describedby={fieldErrors.email ? 'billing-email-error' : undefined}
+          aria-describedby={emailMessage ? 'billing-email-error' : undefined}
         />
-        {fieldErrors.email ? (
+        {emailMessage ? (
           <p className="billing-fielderror" id="billing-email-error">
-            {fieldErrors.email}
+            {emailMessage}
           </p>
         ) : null}
       </div>
