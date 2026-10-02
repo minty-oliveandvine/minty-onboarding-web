@@ -1,8 +1,8 @@
 // StepInvite's arrival prompt -- "The following setup steps require accounting expertise".
 //
-// It opens on its own every time the step mounts. "Ok" only closes it (the user stays to
-// invite someone); "Skip" closes it AND advances, so a user with nobody to invite is not
-// made to dismiss the prompt and then find "Add later" at the foot of the page.
+// It opens on its own every time the step mounts, in minty-web's modal design. Its one
+// button, "Ok", only closes it (the user stays to invite someone); so do Escape and a click
+// on the backdrop. There is no Skip: a user with nobody to invite uses "Add later".
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -44,10 +44,23 @@ describe('StepInvite arrival prompt', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('Skip closes it and moves on to the next step', async () => {
+  it('has no Skip button and no "invite users now?" question', () => {
+    renderStep();
+    expect(screen.queryByRole('button', { name: 'Skip' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/invite users now/i)).not.toBeInTheDocument();
+  });
+
+  it('Escape closes it and stays on the step', async () => {
     const { next } = renderStep();
-    await userEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    await userEvent.keyboard('{Escape}');
     expect(prompt()).not.toBeInTheDocument();
-    expect(next).toHaveBeenCalledOnce();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('a click on the backdrop closes it and stays on the step', async () => {
+    const { next } = renderStep();
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(prompt()).not.toBeInTheDocument();
+    expect(next).not.toHaveBeenCalled();
   });
 });

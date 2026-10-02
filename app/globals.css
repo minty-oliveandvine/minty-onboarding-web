@@ -706,6 +706,95 @@ textarea {
 }
 
 /* Skip-confirmation modal (Step 3: Invite) */
+/* minty-web's modal (PORT of its ModalFrame + ConfirmDialog card, Figma 04-G / section 06):
+     the page blurred under a pale backdrop and one white card. components/ModalFrame.tsx.
+     New dialogs use this; the older .skip-modal ones change when their page is next touched. */
+.mw-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.mw-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  cursor: default;
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.mw-modal-card {
+  position: relative;
+  width: 100%;
+}
+.mw-dialog {
+  max-width: 435px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: #fff;
+  padding: 48px;
+  box-shadow:
+    0 4px 8px rgba(15, 23, 42, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.1);
+}
+.mw-dialog-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #000;
+}
+.mw-dialog-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 20px;
+}
+.mw-dialog-body {
+  margin: 20px 0 0;
+  font-size: 15px;
+  line-height: 1.375;
+  color: var(--ink-2);
+}
+.mw-dialog-actions {
+  margin-top: 32px;
+  display: flex;
+  gap: 20px;
+}
+.mw-dialog-actions.is-single {
+  justify-content: center;
+}
+.mw-dialog-btn {
+  height: 66px;
+  flex: 1;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 18px;
+  line-height: 1.25;
+  cursor: pointer;
+}
+.mw-dialog-actions.is-single .mw-dialog-btn {
+  flex: 0 0 169px;
+}
+.mw-dialog-btn.is-teal {
+  background: #4fc7c7;
+  color: #fff;
+  font-weight: 700;
+}
+.mw-dialog-btn.is-teal:hover {
+  opacity: 0.9;
+}
+@media (max-width: 480px) {
+  .mw-dialog {
+    padding: 32px 24px;
+  }
+}
+
 .skip-modal-overlay {
   position: fixed;
   inset: 0;

@@ -2,12 +2,12 @@
 
 // Step content components. Each receives { state, set, next, back }.
 import { useState, useRef, useEffect, type CSSProperties } from 'react';
-import ReactDOM from 'react-dom';
 import Icon from './Icon';
 import MintySelect from './MintySelect';
 import MintyDatePicker from './MintyDatePicker';
 import Confetti, { type BurstOrigin } from './Confetti';
 import BillingSheet from './BillingSheet';
+import { ModalFrame } from './ModalFrame';
 import { useToast } from './Toast';
 import { fetchCountries, fetchCurrencies } from '@/lib/refData';
 import { acceptAmountInput, formatAmount, toAmountEditString } from '@/lib/amount';
@@ -26,7 +26,6 @@ import {
 } from './steps/modulePricing';
 import { AccountCodesCard, MethodList, PCSection, currencyCode } from './steps/pettyCashFields';
 import type { BillsForm, EntityForm, PettyCashForm, StepProps } from '../lib/types';
-import { useMounted } from '../lib/useMounted';
 import type { CurrencyRow } from '../lib/refData';
 import type { PaymentMethod } from '../lib/billing';
 import type { ModuleId, Result } from '../lib/api';
@@ -1564,16 +1563,12 @@ export function StepInvite({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const toggleExpanded = (key: string) =>
     setExpandedRows((prev) => ({ ...prev, [key]: !prev[key] }));
-  // Confirmation modal nudging the user to invite an accountant — the later
-  // steps need expertise. Shown automatically on arrival at the Invite step
-  // (right after Save & Next on Select Module). "Ok" stays here to invite;
-  // "Skip" moves on to the next step without inviting anyone.
-  const [confirmSkip, setConfirmSkip] = useState(true);
+  // The prompt nudging the user to invite an accountant: the later steps need expertise.
+  // Shown automatically on arrival at the Invite step. Its one button, "Ok", only closes it
+  // and the user stays here; there is no Skip (a user with nobody to invite uses "Add later"
+  // at the foot of the page).
+  const [accountantPrompt, setAccountantPrompt] = useState(true);
   const [sending, setSending] = useState(false);
-  // Portal the modal to <body> so its fixed overlay can't be clipped to a
-  // transformed/overflow ancestor (which left the grey backdrop covering only
-  // part of the page on desktop). Guarded for SSR — body isn't there yet.
-  const mounted = useMounted();
   const setF = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v });
   const inviteEmail = useEmailInput((v) => setF('email', v));
   // Show the "invalid email" hint only once the user has interacted with the
@@ -1793,76 +1788,30 @@ export function StepInvite({
         </div>
       </div>
 
-      {confirmSkip &&
-        mounted &&
-        ReactDOM.createPortal(
-          <div
-            className="skip-modal-overlay"
-            role="presentation"
-            onClick={() => setConfirmSkip(false)}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 20,
-              background: 'rgba(15, 23, 27, 0.45)',
-            }}
-          >
-            <div
-              className="skip-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="skip-modal-title"
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: '#f1f3f4',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--radius)',
-                boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22)',
-                padding: '26px 26px 22px',
-                maxWidth: 440,
-                width: '100%',
-              }}
+      {accountantPrompt && (
+        <ModalFrame
+          labelledBy="accountant-prompt-title"
+          onDismiss={() => setAccountantPrompt(false)}
+          className="mw-dialog"
+        >
+          <h2 id="accountant-prompt-title" className="mw-dialog-title">
+            The following setup steps require accounting expertise.
+          </h2>
+          <img src="/assets/minty-ollie.webp" alt="" className="mw-dialog-art" />
+          <p className="mw-dialog-body">
+            Xero recommends you invite your accountant or bookkeeper to assist you with these steps.
+          </p>
+          <div className="mw-dialog-actions is-single">
+            <button
+              type="button"
+              className="mw-dialog-btn is-teal"
+              onClick={() => setAccountantPrompt(false)}
             >
-              <p id="skip-modal-title" className="skip-modal-lead">
-                The following setup steps require accounting expertise.
-              </p>
-              <p className="skip-modal-body">
-                Xero recommends you invite your accountant or bookkeeper to assist you with these
-                steps.
-              </p>
-              <p className="skip-modal-body" style={{ marginBottom: 32 }}>
-                Do you want to invite users now?
-              </p>
-              <div
-                className="skip-modal-actions"
-                style={{ display: 'flex', justifyContent: 'center', gap: 10 }}
-              >
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setConfirmSkip(false)}
-                >
-                  Ok
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => {
-                    setConfirmSkip(false);
-                    next();
-                  }}
-                >
-                  Skip
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+              Ok
+            </button>
+          </div>
+        </ModalFrame>
+      )}
     </>
   );
 }
