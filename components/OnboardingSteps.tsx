@@ -768,18 +768,10 @@ export function StepSalesSetting({
   back,
   submitSalesMethods,
   submitOpeningBalance,
-  fetchExistingSalesMethods,
   saveAndExit,
 }: Pick<
   StepProps,
-  | 'state'
-  | 'set'
-  | 'next'
-  | 'back'
-  | 'submitSalesMethods'
-  | 'submitOpeningBalance'
-  | 'fetchExistingSalesMethods'
-  | 'saveAndExit'
+  'state' | 'set' | 'next' | 'back' | 'submitSalesMethods' | 'submitOpeningBalance' | 'saveAndExit'
 >) {
   // Save everything on this step: sales methods AND the opening balance/date.
   // submitOpeningBalance no-ops when the balance is empty, so a blank balance
@@ -908,7 +900,10 @@ export function StepSalesSetting({
     'Amex',
     'Octopus',
   ];
-  const DEFAULT_DELIVERY = ['Foodpanda', 'Deliveroo', 'KeeTa'];
+  // Flask's own default set and catalogue names, so Auto Fill links the existing catalogue
+  // rows instead of minting near-duplicates. Nothing is pre-seeded: both lists start empty
+  // on a new company and only this button fills them.
+  const DEFAULT_DELIVERY = ['Food Panda', 'Keeta', 'OpenRice'];
   const todayIso = toIsoDate(new Date());
   const sameList = (a: string[], b: string[]) =>
     a.length === b.length && a.every((x, i) => x === b[i]);
@@ -916,8 +911,7 @@ export function StepSalesSetting({
     sameList(p.electronicMethods || [], DEFAULT_ELECTRONIC) &&
     sameList(p.deliveryMethods || [], DEFAULT_DELIVERY);
 
-  const [autoFilling, setAutoFilling] = useState(false);
-  const resetDefaults = async () => {
+  const resetDefaults = () => {
     if (isAutofilled) {
       set({
         pettyCash: {
@@ -928,29 +922,15 @@ export function StepSalesSetting({
       });
       return;
     }
-    if (autoFilling) return;
-    setAutoFilling(true);
-    let electronic = [...DEFAULT_ELECTRONIC];
-    let delivery = [...DEFAULT_DELIVERY];
-    if (typeof fetchExistingSalesMethods === 'function') {
-      const existing = await fetchExistingSalesMethods();
-      if (existing && Array.isArray(existing.electronic) && existing.electronic.length > 0) {
-        electronic = existing.electronic;
-      }
-      if (existing && Array.isArray(existing.delivery) && existing.delivery.length > 0) {
-        delivery = existing.delivery;
-      }
-    }
     set({
       pettyCash: {
         ...p,
-        electronicMethods: electronic,
-        deliveryMethods: delivery,
+        electronicMethods: [...DEFAULT_ELECTRONIC],
+        deliveryMethods: [...DEFAULT_DELIVERY],
         expenseCodes: { all: true, selected: {} },
         openingDate: openingMaxDate || todayIso,
       },
     });
-    setAutoFilling(false);
   };
   return (
     <>

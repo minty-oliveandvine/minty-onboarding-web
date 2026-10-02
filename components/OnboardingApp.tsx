@@ -1401,22 +1401,6 @@ export default function OnboardingApp() {
     window.location.href = urlFor(`/entity`);
   };
 
-  const fetchExistingSalesMethods = async () => {
-    if (!token || !state.entity.id) return null;
-    try {
-      const res = await fetch(
-        urlFor(`/api/onboarding/sales-methods?entity_id=${encodeURIComponent(state.entity.id)}`),
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (!res.ok) return null;
-      return await res.json();
-    } catch {
-      return null;
-    }
-  };
-
   // Avatar initials — prefer the connected user, fall back to entity name.
   const profileInitials = (() => {
     if (user.first || user.last) {
@@ -1466,7 +1450,6 @@ export default function OnboardingApp() {
     clearXeroConflict: () => setXeroConflict(''),
     submitSalesMethods,
     submitOpeningBalance,
-    fetchExistingSalesMethods,
     accountOptions,
     submitAccountCodes,
     submitContacts,

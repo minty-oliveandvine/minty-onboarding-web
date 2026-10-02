@@ -26,7 +26,6 @@ import type {
   ModuleId,
   PlanCatalog,
   Result,
-  SalesMethods,
 } from './api';
 
 //  ── Wizard state ────────────────────────────────────────────────────
@@ -205,7 +204,6 @@ export type StepProps = {
   submitModule: () => Promise<Result>;
   submitSalesMethods: () => Promise<Result>;
   submitOpeningBalance: () => Promise<Result>;
-  fetchExistingSalesMethods: () => Promise<SalesMethods | null>;
   submitAccountCodes: () => Promise<Result>;
   submitContacts: () => Promise<Result>;
   createContact: (name: string) => Promise<ContactResult>;
