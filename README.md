@@ -1,28 +1,29 @@
-# Onboarding wizard
+# minty-onboarding-web
 
-The nine-step wizard a new customer walks to create a company, pick modules, connect Xero and
-start a trial. Next.js 16 (App Router, Turbopack) + React 19, on **port 3001**.
+The nine-step onboarding wizard a new customer walks to create a company, pick modules, connect
+Xero and start a trial. Next.js 16 (App Router, Turbopack) + React 19, on **port 3030**.
 
 ```bash
 npm install
-cp docker/.env.example .env.local   # then point the two base URLs at your backends
-npm run dev                          # http://localhost:3001
+cp docker/.env.example .env.local   # optional - the defaults are the local stack's ports
+npm run dev                          # http://localhost:3030
 ```
 
 ## It talks to two backends
 
-| Paths                                                                            | Service                                              | Base URL                         |
-| -------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
-| `/api/onboarding/*`                                                              | the extracted onboarding service (Django, port 8001) | `NEXT_PUBLIC_ONBOARDING_API_URL` |
-| `/auth/email/*`, `/legal/*`, `/xero_auth`, `/xero_connect`, `/logout`, `/entity` | Minty (Flask, port 5001)                             | `NEXT_PUBLIC_MODULE1_API_URL`    |
+| Paths                                                                            | Service                                              | Base URL (default)                         |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
+| `/api/onboarding/*`                                                              | minty-onboarding-api (Django, port 8030)             | `ONBOARDING_API_URL` (`http://localhost:8030`) |
+| `/auth/email/*`, `/legal/*`, `/xero_auth`, `/xero_connect`, `/logout`, `/entity` | Petty Cash — Minty (Flask, port 8010)                | `PETTY_CASH_URL` (`http://localhost:8010`) |
 
-**Which service answers a path is decided in exactly one place — [`lib/apiRoutes.js`](lib/apiRoutes.js).**
+**Which service answers a path is decided in exactly one place — [`lib/apiRoutes.ts`](lib/apiRoutes.ts).**
 Nothing else reads a base URL. Moving an endpoint between the two is adding or deleting one line
 there; `urlFor(path)` is used for fetches and for navigations alike.
 
-Set both vars explicitly in any deployed environment. `NEXT_PUBLIC_*` is resolved at build time
-and an unset var silently falls back to `localhost` — a failure this app has shipped before, which
-is why [`lib/flaskBase.js`](lib/flaskBase.js) carries a note about it.
+Set both vars explicitly in any deployed environment. [`next.config.ts`](next.config.ts) lists
+them under `env`, so they are inlined at build time, and an unset var silently falls back to
+`localhost` — a failure this app has shipped before, which is why
+[`lib/flaskBase.ts`](lib/flaskBase.ts) carries a note about it.
 
 There is no cookie involved: every call carries the onboarding JWT as a bearer token, so no
 `credentials: 'include'`.
@@ -31,7 +32,7 @@ There is no cookie involved: every call carries the onboarding JWT as a bearer t
 
 |                                   |                                                                              |
 | --------------------------------- | ---------------------------------------------------------------------------- |
-| `npm run dev`                     | dev server on 3001                                                           |
+| `npm run dev`                     | dev server on 3030                                                           |
 | `npm run dev:clean`               | dev server with a cleared `.next` cache                                      |
 | `npm run dev:poke`                | wake the dev server (`scripts/dev-poke.mjs`)                                 |
 | `npm test`                        | unit + component tests (vitest, jsdom) — **the per-commit gate**             |

@@ -14,12 +14,12 @@ never as _passed_.
 
 | Service                 | Port | Repo                        |
 | ----------------------- | ---- | --------------------------- |
-| Next (the wizard)       | 3001 | this one — `npm run dev`    |
-| Flask (Minty)           | 5001 | `C:\Github\Minty`              |
-| Onboarding API (Django) | 8001 | `C:\Github\onboarding-backend` |
+| Next (the wizard)       | 3030 | this one — `npm run dev`    |
+| Flask (Minty)           | 8010 | `C:\Github\Minty`              |
+| Onboarding API (Django) | 8030 | `C:\Github\minty-onboarding-api` |
 | PostgreSQL              | 5432 | —                           |
 
-Override any of them with `E2E_BASE_URL`, `E2E_FLASK_URL`, `E2E_ONBOARDING_API_URL`.
+Override any of them with `E2E_BASE_URL`, `E2E_PETTY_CASH_URL`, `E2E_ONBOARDING_API_URL`.
 
 ## The authenticated specs
 

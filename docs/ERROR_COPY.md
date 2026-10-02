@@ -1,7 +1,7 @@
 # Error copy
 
 How a failure becomes something a user can read. The copy standard is shared
-across Minty, billing-backend, billing-frontend and onboarding; the canonical
+across Minty, minty-payment-request-api, minty-payment-request-web and minty-onboarding-web; the canonical
 write-up lives in the Minty repo as `docs/features/ERROR_MESSAGE_LEAKS.md`.
 
 ## The standard
@@ -21,10 +21,10 @@ House fallback: `Something went wrong on my end. Mind trying again?`
 
 ## The mechanism
 
-This app talks to **two** backends: the Minty Flask app (`NEXT_PUBLIC_MODULE1_API_URL`)
+This app talks to **two** backends: the Minty Flask app (`PETTY_CASH_URL`)
 for auth, legal and the Xero hand-off, and the extracted onboarding service
-(`NEXT_PUBLIC_ONBOARDING_API_URL`) for `/api/onboarding/*`. Which one answers a given path
-is decided in `lib/apiRoutes.js`. Both speak the same `{error}` shape, so the copy rules
+(`ONBOARDING_API_URL`) for `/api/onboarding/*`. Which one answers a given path
+is decided in `lib/apiRoutes.ts`. Both speak the same `{error}` shape, so the copy rules
 below are unchanged -- and the onboarding service deliberately uses `error` rather than
 Django's conventional `detail` for exactly that reason.
 

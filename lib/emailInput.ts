@@ -1,5 +1,5 @@
 // COPY of minty-web/lib/emailInput.ts's hook (2026-10-01); the rules it uses live in
-// lib/validation.ts here. Change every copy (minty-web, billing-frontend, the landing page,
+// lib/validation.ts here. Change every copy (minty-web, minty-payment-request-web, the landing page,
 // Flask static/js/email_input.js) until @minty/shared.
 
 /**

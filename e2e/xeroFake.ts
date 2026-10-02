@@ -50,7 +50,7 @@ const API = '/api/onboarding/';
 /**
  * A JSON reply the wizard's cross-origin fetch will accept.
  *
- * The wizard runs on 3001 and calls 8001 with an Authorization header, so every synthetic
+ * The wizard runs on 3030 and calls 8030 with an Authorization header, so every synthetic
  * response needs the CORS headers the real service would have sent, and a preflight has
  * to be answered too. (The `/state` route sidesteps this by reusing the real response.)
  */

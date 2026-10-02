@@ -4,7 +4,7 @@
 `initialState()` and the step rules in `lib/wizardSteps.ts`), `components/OnboardingSteps.tsx`
 the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 `/api/onboarding/*` through `lib/api.ts` with the launch token
-(`onboarding-backend/docs/features/wizard-api.md` is the contract).
+(`minty-onboarding-api/docs/features/wizard-api.md` is the contract).
 
 ## The steps (`lib/wizardSteps.STEPS`)
 
@@ -46,10 +46,10 @@ summaries; change the two together.
   and using it as the landing step once jumped people straight to *Connect to
   Accounting*. Never make the two orderings one.
 - `fresh=1` starts a brand-new company even when an unfinished one exists.
-- **Left unfinished, it is mailed about (2026-10-01).** minty-billing-api's daily pass sends
+- **Left unfinished, it is mailed about (2026-10-01).** minty-subscription-api's daily pass sends
   whoever started a company still in setup a "Finish setting up {Company} on Minty" email 1, 3
   and 7 days after its last save, listing the steps from `saved_step` on; its button opens
-  Flask's `/entity/{id}`, which brings them back here at that step (minty-billing-api
+  Flask's `/entity/{id}`, which brings them back here at that step (minty-subscription-api
   `docs/features/subscriptions-api.md`, "The setup reminder"). Renumbering the steps means
   updating `notify.ONBOARDING_STEPS` there too.
 

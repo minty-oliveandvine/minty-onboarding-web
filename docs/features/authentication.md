@@ -2,7 +2,7 @@
 
 The wizard has two ways of being entered, and both end with a Minty-minted JWT in the
 URL. Nothing is verified here: every call carries the token to a backend that checks it
-(`onboarding-backend/docs/features/authentication.md`), and the sign-in screens are thin
+(`minty-onboarding-api/docs/features/authentication.md`), and the sign-in screens are thin
 clients of Minty's own endpoints (`Minty/docs/features/authentication.md`).
 
 ## 1. Launched from Minty
@@ -42,10 +42,10 @@ Self-serve sign-up collects first and last name up front (the user row requires 
 
 ## Where the calls go
 
-`lib/flaskBase.ts`: `NEXT_PUBLIC_MODULE1_API_URL` — Minty; `lib/apiRoutes.ts`:
-`NEXT_PUBLIC_ONBOARDING_API_URL` — onboarding-backend, for the paths listed in
+`lib/flaskBase.ts`: `PETTY_CASH_URL` — Minty; `lib/apiRoutes.ts`:
+`ONBOARDING_API_URL` — minty-onboarding-api, for the paths listed in
 `DJANGO_PATHS`; everything else (`/auth/email/*`, `/legal/*`, `/xero_auth`,
-`/xero_connect`, `/logout`, `/entity`) is Minty. Both are inlined at build time — an unset
+`/xero_connect`, `/logout`, `/entity`) is Minty. Both are inlined at build time (`next.config.ts` `env`) — an unset
 value silently means `localhost` and breaks the OTP and Xero calls in a deployment.
 
 ## Tests
