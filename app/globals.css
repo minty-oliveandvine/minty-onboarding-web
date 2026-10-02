@@ -806,11 +806,13 @@ textarea {
   color: var(--muted);
   border-bottom: 1px solid var(--line);
 }
-.mselect-create-panel {
-  padding: 12px;
+/* Both classes: the panel is also a .mselect-menu, whose `padding: 6px` comes later in this
+     file and otherwise wins the tie. */
+.mselect-menu.mselect-create-panel {
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 .mselect-create-label {
   font-size: 13px;
@@ -819,7 +821,7 @@ textarea {
 }
 .mselect-create-input {
   width: 100%;
-  padding: 9px 11px;
+  padding: 12px 14px;
   border: 1.5px solid var(--line-strong);
   border-radius: 10px;
   font-size: 14px;
@@ -836,7 +838,8 @@ textarea {
 }
 .mselect-create-actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  margin-top: 4px; /* a little more air above the buttons than between label and input */
 }
 .mselect-create-btn {
   flex: 1;
