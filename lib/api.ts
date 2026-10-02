@@ -1,11 +1,11 @@
 // The onboarding API contract, as the wizard reads it.
 //
 // These are the shapes that come back from `/api/onboarding/*` -- the Django service in
-// ../onboarding-backend for the ported endpoints, Flask behind it for the proxied ones.
+// ../minty-onboarding-api for the ported endpoints, Flask behind it for the proxied ones.
 // Before this file every one of the 21 fetch sites read a bare `res.json()` and the
 // component code was the only record of what it expected. Now the record is here, and
 // the source of truth for the ported endpoints is the service's own return dicts
-// (onboarding-backend/onboarding/services/state.py, plans.py, invites.py).
+// (minty-onboarding-api/onboarding/services/state.py, plans.py, invites.py).
 //
 // TWO THINGS ARE DELIBERATELY NOT HERE
 //
@@ -13,7 +13,7 @@
 //     the amount the user typed lives in `opening_balance`. OnboardingApp documents that
 //     the field "must NOT be used"; leaving it out of the type is what makes the
 //     compiler enforce that sentence.
-//   * A thrown `ApiError` in the billing-frontend style. The wizard's submit functions
+//   * A thrown `ApiError` in the minty-payment-request-web style. The wizard's submit functions
 //     return `{ ok, error }` bags and its steps switch on them; changing that would be a
 //     behaviour change, and this is a typing pass. See `Result`.
 

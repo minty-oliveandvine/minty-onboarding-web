@@ -13,7 +13,7 @@
 //     actually calls the host that function returns.
 
 import { expect, test } from '@playwright/test';
-import { BASE_URL, FLASK_URL, ONBOARDING_API_URL } from './urls';
+import { BASE_URL, PETTY_CASH_URL, ONBOARDING_API_URL } from './urls';
 import { reachable } from './helpers';
 
 test.beforeEach(async () => {
@@ -108,7 +108,7 @@ test.describe('the onboarding API is reachable from the browser origin', () => {
 
 test('the shipped bundle addresses each service the way lib/apiRoutes says', async ({ page }) => {
   // lib/apiRoutes is unit-tested as a function. This asserts the BUNDLE built from it
-  // points at the hosts that function returns -- a wrong NEXT_PUBLIC_* at build time
+  // points at the hosts that function returns -- a wrong PETTY_CASH_URL / ONBOARDING_API_URL at build time
   // would pass every unit test and still send every call to the wrong place.
   //
   // Read from the requests the app actually issues, because the bundle's modules are
@@ -133,8 +133,8 @@ test('the shipped bundle addresses each service the way lib/apiRoutes says', asy
 });
 
 test('Flask is up, because the wizard hands off to it for auth and Xero', async ({ request }) => {
-  test.skip(!(await reachable(FLASK_URL)), `Flask is not answering on ${FLASK_URL}`);
-  const res = await request.get(`${FLASK_URL}/legal/current`, { maxRedirects: 0 });
+  test.skip(!(await reachable(PETTY_CASH_URL)), `Flask is not answering on ${PETTY_CASH_URL}`);
+  const res = await request.get(`${PETTY_CASH_URL}/legal/current`, { maxRedirects: 0 });
   // Any answered status: the point is that the host is serving, not what this route says.
   expect(res.status()).toBeLessThan(500);
 });

@@ -32,7 +32,7 @@ import { watch } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-const PORT = process.env.PORT ?? '3001';
+const PORT = process.env.PORT ?? '3030';
 const ORIGIN = `http://localhost:${PORT}`;
 const ROOTS = ['app', 'components', 'lib'];
 const WATCHED = /\.(css|jsx?|tsx?|mjs)$/;

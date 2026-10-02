@@ -6,15 +6,16 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
-      # host:container — dev server runs on 3001 (distinct from billing FE 3000).
-      - '3001:3001'
+      # host:container — dev server runs on 3030 (minty-web is 3000,
+      # minty-payment-request-web 3020).
+      - '3030:3030'
     environment:
       # Backend URLs the frontend calls. These MUST come from the environment
       # (never hardcoded) so the orchestrator can inject shared values later.
-      # Primary base URL used across the app:
-      - NEXT_PUBLIC_MODULE1_API_URL=${NEXT_PUBLIC_MODULE1_API_URL}
-      # The extracted onboarding API. See lib/apiRoutes.js.
-      - NEXT_PUBLIC_ONBOARDING_API_URL=${NEXT_PUBLIC_ONBOARDING_API_URL}
+      # Petty Cash (the Minty Flask app). See lib/flaskBase.ts.
+      - PETTY_CASH_URL=${PETTY_CASH_URL}
+      # The extracted onboarding API. See lib/apiRoutes.ts.
+      - ONBOARDING_API_URL=${ONBOARDING_API_URL}
       # Improves file-watching reliability for hot-reload inside containers.
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
@@ -26,6 +27,6 @@ services:
       - /app/node_modules
       # Don't leak the host's build cache into the container.
       - /app/.next
-    # Load NEXT_PUBLIC_* (and any future shared values) from docker/.env.
+    # Load PETTY_CASH_URL / ONBOARDING_API_URL (and any future shared values) from docker/.env.
     env_file:
       - .env

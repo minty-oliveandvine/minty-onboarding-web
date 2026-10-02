@@ -8,7 +8,7 @@ import { errorCopy, HOUSE_FALLBACK } from './errorCopy';
  * These hit `/api/onboarding/billing/*` on Minty, which are thin mirrors of the payer
  * portal's `/api/me/billing/payment-methods*`. Same service code underneath; they exist
  * separately because the portal's routes send `Access-Control-Allow-Origin:
- * FRONTEND_APP_URL`, so calling them from this origin is blocked by the browser before
+ * PAYMENT_REQUEST_WEB_URL`, so calling them from this origin is blocked by the browser before
  * the bearer token is ever looked at. Do not "simplify" this to the /api/me routes.
  *
  * Every call carries the onboarding JWT the wizard already holds. There is no cookie

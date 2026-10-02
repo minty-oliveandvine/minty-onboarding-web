@@ -1,8 +1,8 @@
 # Features — the onboarding wizard
 
-`onboarding` is the Next.js wizard a person walks to create a company in Minty: nine
+`minty-onboarding-web` is the Next.js wizard a person walks to create a company in Minty: nine
 steps from the company name to a live company, entered with a token Minty minted. It
-talks to two backends — `onboarding-backend` for `/api/onboarding/*` and Minty for
+talks to two backends — `minty-onboarding-api` for `/api/onboarding/*` and Minty for
 sign-in, legal text and the Xero connection — and never verifies anything itself.
 
 | Feature | Document |
@@ -18,9 +18,9 @@ the invite (step 8) and the billing email spread `useEmailInput` (`lib/emailInpu
 rules, `EMAIL_RE`, `sanitizeEmailInput` and `EMAIL_ASCII_HINT`, are in `lib/validation.ts`).
 The inputs are `type="text" inputMode="email"`, because the browser's `type="email"` let Hangul
 through after the "@". Anything outside printable ASCII is dropped once an IME composition
-ends, and the field says why. onboarding-backend and Flask refuse it again with a 400.
+ends, and the field says why. minty-onboarding-api and Flask refuse it again with a 400.
 
-Running it and the two `NEXT_PUBLIC_*` variables: the repo `README.md` (port 3001). Tests:
+Running it and the two variables (`PETTY_CASH_URL`, `ONBOARDING_API_URL`): the repo `README.md` (port 3030). Tests:
 `npm test` (Vitest) and `npm run test:e2e` (Playwright against a running stack —
 `e2e/README.md`; 23 on 2026-09-18 against the deployed hosts, Xero faked at the browser).
 The cleanse log is in `../code_cleanse/`.

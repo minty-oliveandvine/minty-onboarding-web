@@ -1,7 +1,7 @@
 // Which service answers each path.
 //
 // The onboarding API is being extracted from the Flask app into a separate Django
-// service (../onboarding-backend). Both speak the SAME paths — `/api/onboarding/*`,
+// service (../minty-onboarding-api). Both speak the SAME paths — `/api/onboarding/*`,
 // byte for byte — so moving an endpoint between them is a change of base URL and
 // nothing else. This module is that switch, and it is the only place the decision
 // lives.
@@ -27,11 +27,10 @@ import { FLASK_BASE } from './flaskBase';
 
 const strip = (url: string | undefined): string => (url || '').replace(/\/$/, '');
 
-// Where the extracted onboarding API lives. Defaults to the port its docker service
-// and `manage.py runserver` both use.
-export const ONBOARDING_API_BASE = strip(
-  process.env.NEXT_PUBLIC_ONBOARDING_API_URL || 'http://localhost:8001',
-);
+// Where the extracted onboarding API lives — ONBOARDING_API_URL, inlined at build time
+// (next.config.ts `env`). Defaults to the port its docker service and
+// `manage.py runserver` both use.
+export const ONBOARDING_API_BASE = strip(process.env.ONBOARDING_API_URL || 'http://localhost:8030');
 
 const FLASK = strip(FLASK_BASE);
 

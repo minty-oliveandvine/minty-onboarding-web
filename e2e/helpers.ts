@@ -17,7 +17,7 @@
 import { createHmac } from 'node:crypto';
 import { test } from '@playwright/test';
 
-/** Claims the Django service requires: see onboarding-backend/core/auth.py. */
+/** Claims the Django service requires: see minty-onboarding-api/core/auth.py. */
 const SCOPE = 'onboarding';
 
 const b64url = (input: Buffer | string) =>

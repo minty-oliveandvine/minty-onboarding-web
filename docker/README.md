@@ -1,6 +1,6 @@
-# Onboarding Frontend — Docker (local dev)
+# minty-onboarding-web — Docker (local dev)
 
-Run the onboarding frontend locally with one command.
+Run the onboarding wizard locally with one command.
 
 ## Prerequisites
 
@@ -13,13 +13,13 @@ cp .env.example .env      # from this docker/ folder
 cd docker && docker compose up
 ```
 
-Then open http://localhost:3001.
+Then open http://localhost:3030.
 
 > If you copied `.env` while already inside `docker/`, just run `docker compose up`.
 
 ## What you get
 
-- Next.js dev server on **port 3001** (distinct from the billing frontend on 3000).
+- Next.js dev server on **port 3030** (minty-web is 3000, minty-payment-request-web 3020).
 - **Hot-reload**: the repo source is bind-mounted, so edits on your host reload
   in the browser. The container keeps its own `node_modules` and `.next`.
 
@@ -28,10 +28,10 @@ Then open http://localhost:3001.
 Backend URLs are read from the environment (never hardcoded). Edit `.env` to
 point the frontend at a different backend:
 
-| Variable                         | Default                 | Purpose                                                                        |
-| -------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
-| `NEXT_PUBLIC_MODULE1_API_URL`    | `http://localhost:5001` | Primary base URL of the pettycash (Flask) backend, read by `lib/flaskBase.ts`. |
-| `NEXT_PUBLIC_ONBOARDING_API_URL` | `http://localhost:8001` | The extracted onboarding API (Django). Routing lives in `lib/apiRoutes.ts`.    |
+| Variable             | Default                 | Purpose                                                                          |
+| -------------------- | ----------------------- | -------------------------------------------------------------------------------- |
+| `PETTY_CASH_URL`     | `http://localhost:8010` | Petty Cash (the Minty Flask app), read by `lib/flaskBase.ts`.                    |
+| `ONBOARDING_API_URL` | `http://localhost:8030` | minty-onboarding-api (Django). Routing lives in `lib/apiRoutes.ts`.              |
 
 `.env.example` ships with safe local defaults — a new dev just copies it.
 

@@ -1,7 +1,7 @@
 // End-to-end tests. These run against a STACK THAT IS ALREADY UP -- they start nothing.
 //
-// Deliberately no `webServer` block: the wizard needs Next (3001), Flask (5001), the
-// onboarding Django service (8001) and a real Postgres, and three of those four live in
+// Deliberately no `webServer` block: the wizard needs Next (3030), Flask (8010), the
+// onboarding Django service (8030) and a real Postgres, and three of those four live in
 // other repos. Booting them from here would hide which one is broken when a test fails,
 // and would make a failure to start look like a failed assertion. Specs check the stack
 // is reachable first and skip with a readable reason when it is not.

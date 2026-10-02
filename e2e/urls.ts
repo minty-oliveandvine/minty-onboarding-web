@@ -5,6 +5,6 @@
 // use import statement outside a module" -- which reads like a broken test file rather
 // than a module-format problem.
 
-export const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3001';
-export const FLASK_URL = process.env.E2E_FLASK_URL || 'http://localhost:5001';
-export const ONBOARDING_API_URL = process.env.E2E_ONBOARDING_API_URL || 'http://localhost:8001';
+export const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3030';
+export const PETTY_CASH_URL = process.env.E2E_PETTY_CASH_URL || 'http://localhost:8010';
+export const ONBOARDING_API_URL = process.env.E2E_ONBOARDING_API_URL || 'http://localhost:8030';

@@ -25,8 +25,8 @@ const FLASK = 'https://flask.example';
 
 async function loadRoutes() {
   vi.resetModules();
-  vi.stubEnv('NEXT_PUBLIC_MODULE1_API_URL', FLASK);
-  vi.stubEnv('NEXT_PUBLIC_ONBOARDING_API_URL', DJANGO);
+  vi.stubEnv('PETTY_CASH_URL', FLASK);
+  vi.stubEnv('ONBOARDING_API_URL', DJANGO);
   return import('../apiRoutes');
 }
 
@@ -164,8 +164,8 @@ describe('the properties the list alone does not show', () => {
 
   it('strips a trailing slash from either base URL', async () => {
     vi.resetModules();
-    vi.stubEnv('NEXT_PUBLIC_MODULE1_API_URL', FLASK + '/');
-    vi.stubEnv('NEXT_PUBLIC_ONBOARDING_API_URL', DJANGO + '/');
+    vi.stubEnv('PETTY_CASH_URL', FLASK + '/');
+    vi.stubEnv('ONBOARDING_API_URL', DJANGO + '/');
     const { urlFor } = await import('../apiRoutes');
     // Without the strip these come out with a doubled slash, which some proxies 404
     // and others silently redirect -- losing the request body on a POST.
@@ -173,13 +173,22 @@ describe('the properties the list alone does not show', () => {
     expect(urlFor('/entity')).toBe(FLASK + '/entity');
   });
 
-  it('defaults the onboarding base to localhost:8001 when unset', async () => {
+  it('defaults the onboarding base to localhost:8030 when unset', async () => {
     vi.resetModules();
-    vi.stubEnv('NEXT_PUBLIC_MODULE1_API_URL', FLASK);
-    vi.stubEnv('NEXT_PUBLIC_ONBOARDING_API_URL', '');
+    vi.stubEnv('PETTY_CASH_URL', FLASK);
+    vi.stubEnv('ONBOARDING_API_URL', '');
     const { ONBOARDING_API_BASE } = await import('../apiRoutes');
     // The port its docker service and `manage.py runserver` both use.
-    expect(ONBOARDING_API_BASE).toBe('http://localhost:8001');
+    expect(ONBOARDING_API_BASE).toBe('http://localhost:8030');
+  });
+
+  it('defaults the Petty Cash base to localhost:8010 when unset', async () => {
+    vi.resetModules();
+    vi.stubEnv('PETTY_CASH_URL', '');
+    vi.stubEnv('ONBOARDING_API_URL', DJANGO);
+    const { urlFor } = await import('../apiRoutes');
+    // Flask's own port (Minty main.py), the one the stack publishes.
+    expect(urlFor('/entity')).toBe('http://localhost:8010/entity');
   });
 
   it('inserts a slash for a path given without a leading one', async () => {
