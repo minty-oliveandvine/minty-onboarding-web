@@ -427,32 +427,32 @@ export function StepSelectModule({
                   }
                 }}
               >
-                <div className="mp-card">
-                  <div
-                    className="mp-art"
-                    style={
-                      {
-                        '--art-accent': m.accent,
-                        '--art-tile': m.tile,
-                        '--art-size': m.art + 'px',
-                      } as CSSProperties
-                    }
-                  >
-                    {m.img ? (
-                      <img src={m.img} alt="" className="mp-img" />
-                    ) : I ? (
-                      <I width={m.art} height={m.art} />
-                    ) : null}
-                  </div>
-                  <div className="mp-name">{m.title}</div>
-                  {/* The card's whole status line. "Available" and "Selected" are the two
+                {/* The frame is the card's border: grey, or the teal gradient when picked. */}
+                <div className="mp-frame">
+                  <div className="mp-card" style={{ '--art-accent': m.accent } as CSSProperties}>
+                    <div className="mp-art">
+                      {m.img ? (
+                        <img src={m.img} alt="" className="mp-img" />
+                      ) : I ? (
+                        <I width={72} height={72} />
+                      ) : null}
+                    </div>
+                    <div className="mp-name">{m.title}</div>
+                    {/* The card's whole status line. "Available" and "Selected" are the two
                     states this screen actually has — the price is deliberately not here
                     any more, because nothing on this step is being charged and a figure
                     beside a trial reads as one that is. It is in the summary, under
                     "After trial", where it is true. */}
-                  <div className="mp-trial">
-                    <span className="mp-trial-term">{trialDaysLabel} free trial</span>
-                    <span className="mp-trial-state">{on ? 'Selected' : 'Available'}</span>
+                    <div className="mp-trial">
+                      <span className="mp-trial-term">{trialDaysLabel} free trial</span>
+                      <span className="mp-trial-state">{on ? 'Selected' : 'Available'}</span>
+                    </div>
+                    {/* What the module does, over the whole card on hover or keyboard focus.
+                    Inert, so a click still lands on the card and toggles it. */}
+                    <div className="mp-hover">
+                      <div className="mp-title">{m.title}</div>
+                      <div className="mp-desc">{m.desc}</div>
+                    </div>
                   </div>
                 </div>
                 <div className="mp-circle" aria-hidden>

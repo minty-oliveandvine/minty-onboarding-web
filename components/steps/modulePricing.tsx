@@ -26,8 +26,6 @@ export type ModuleCard = {
   desc: string;
   img: string;
   accent: string;
-  tile: string;
-  art: number;
   price: string;
   /** An Icon member to draw instead of `img`. No card sets it today. */
   icon?: keyof typeof Icon;
@@ -42,8 +40,6 @@ export const MODULES: ModuleCard[] = [
     desc: 'Track and reimburse small office expenses with receipt capture and instant approvals.',
     img: '/pettycash-icon.png',
     accent: '#f5b945',
-    tile: '#FFF7EC',
-    art: 80,
     price: '280 HKD per Month',
   },
   {
@@ -52,8 +48,6 @@ export const MODULES: ModuleCard[] = [
     desc: 'Capture vendor payments, schedule payments, and reconcile with your accounting ledger.',
     img: '/payment-icon.png',
     accent: '#3aa6f5',
-    tile: '#EDF5FC',
-    art: 95,
     price: '280 HKD per Month',
   },
 ];

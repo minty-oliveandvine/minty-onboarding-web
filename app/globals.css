@@ -2300,7 +2300,6 @@ textarea {
 :root {
   --pick-line: #4fc7c7; /* selected card border, checkbox fill */
   --pick-ink: #18c4c7; /* "Selected", SuperMinty, the price */
-  --pick-tint: #f5ffff; /* selected card fill */
   --pick-tile: #e9f8f8; /* the "After trial" tile */
   /* Summary panel, sampled from frame 01-A rather than mapped onto the app palette —
        these are colours the design uses only here, and rounding them to --ink-2 / --accent
@@ -2403,66 +2402,67 @@ textarea {
   cursor: pointer;
   user-select: none;
 }
-.mp-card {
+/* THE CARD, PORTED FROM THE OLD LIVE APP (onboarding-old, LIVE07072026): a soft wash of the
+     module's own accent, the illustration filling the top, the description over the card
+     on hover, and a teal gradient frame when picked. The frame is a 3px padded wrapper, not
+     a border: a gradient border cannot follow a border-radius. */
+.mp-frame {
   position: relative;
   z-index: 1; /* above the confetti */
   width: 100%;
-  height: 366px;
-  /* 2px in both states, not 1px growing to 2px on select — an odd border would move
-       every glyph on the card by half a pixel the moment it is ticked. */
-  border: 2px solid var(--line);
-  border-radius: 20px;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 31px 0 0;
+  padding: 3px;
+  border-radius: 23px;
+  background: var(--line);
   transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.25s ease,
-    transform 0.2s ease;
+    background 0.25s ease,
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
 }
-.module-pick:hover .mp-card {
+.module-pick:hover .mp-frame {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(15, 20, 25, 0.08);
 }
-.module-pick.selected .mp-card {
-  border-color: var(--pick-line);
-  background: var(--pick-tint);
-  /* The teal glow, read off the card export: two stacked drop shadows, the outer one
-       with a 4px spread. It is what makes a ticked card look lit rather than merely
-       outlined, and it is the piece a plain border-colour swap misses. */
-  box-shadow:
-    0 4px 20px 4px rgba(69, 214, 214, 0.2),
-    0 4px 12px rgba(69, 214, 214, 0.1);
+.module-pick.selected .mp-frame {
+  background: linear-gradient(90deg, #00cbc6 0%, #00d5bf 100%);
+  box-shadow: 0 12px 32px rgba(0, 203, 198, 0.28);
 }
-.module-pick.selected:hover .mp-card {
-  box-shadow:
-    0 6px 24px 5px rgba(69, 214, 214, 0.26),
-    0 4px 12px rgba(69, 214, 214, 0.12);
+.mp-card {
+  position: relative;
+  width: 100%;
+  /* 360 + the frame's 2 x 3px = the 366px the row was laid out for. */
+  height: 360px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(
+    150deg,
+    color-mix(in oklab, var(--art-accent) 12%, white),
+    white 65%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-/* The art tile. Keeps the per-module --art-accent the cards have always used, so
-     Petty Cash stays warm and Payment Request stays cool. */
+/* Takes whatever height the title and the pinned status line leave. */
 .mp-art {
-  width: 167px;
-  height: 120px;
-  border-radius: 13px;
-  background: var(--art-tile);
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px 20px 0;
   color: var(--art-accent);
-  flex: 0 0 auto;
 }
 .mp-img {
-  width: var(--art-size);
-  height: var(--art-size);
+  width: 92%;
+  max-height: 100%;
   object-fit: contain;
   display: block;
 }
 .mp-name {
-  margin-top: 22px;
+  margin-top: 8px;
+  /* Room for .mp-trial, which is pinned to the bottom 26px and two lines tall. */
+  margin-bottom: 86px;
   /* THE TITLE IS INSET, WHICH IS WHAT LETS IT WRAP.
 
        With no padding the text had the card's full 296px and ran nearly edge to edge
@@ -2498,6 +2498,55 @@ textarea {
 }
 .module-pick.selected .mp-trial {
   color: var(--pick-ink);
+}
+
+/* The description, over the whole card on hover and on keyboard focus. Inert, so a
+     click lands on the card underneath and toggles it. */
+.mp-hover {
+  position: absolute;
+  inset: 0;
+  z-index: 2; /* over the pinned status line */
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.96);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+  pointer-events: none;
+}
+.module-pick:hover .mp-hover,
+.module-pick:focus-visible .mp-hover {
+  opacity: 1;
+  transform: none;
+}
+.mp-title {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: #16202e;
+}
+.mp-desc {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mp-frame,
+  .mp-hover {
+    transition: none;
+  }
+  .module-pick:hover .mp-frame {
+    transform: none;
+  }
+  .mp-hover {
+    transform: none;
+  }
 }
 
 .mp-circle {
