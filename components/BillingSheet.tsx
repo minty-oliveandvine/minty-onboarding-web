@@ -7,12 +7,15 @@ import {
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js';
-import {
-  loadStripe,
-  type Appearance,
-  type Stripe,
-  type StripeAddressElementOptions,
-  type StripePaymentElementOptions,
+// `/pure`: the main entry injects js.stripe.com as soon as it is IMPORTED, and this sheet
+// is imported by the wizard's first page - so Stripe's script ran on every launch, with the
+// launch token still in the URL. `/pure` loads it only when the sheet calls loadStripe.
+import { loadStripe } from '@stripe/stripe-js/pure';
+import type {
+  Appearance,
+  Stripe,
+  StripeAddressElementOptions,
+  StripePaymentElementOptions,
 } from '@stripe/stripe-js';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import ReactDOM from 'react-dom';
@@ -271,7 +274,8 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
     // only redirect left is 3-D Secure, which Stripe runs in its own modal.
     const { error: confirmError, setupIntent: confirmed } = await stripe.confirmSetup({
       elements,
-      confirmParams: { return_url: window.location.href },
+      // The page without its query: nothing in the address bar is Stripe's business.
+      confirmParams: { return_url: window.location.origin + window.location.pathname },
       redirect: 'if_required',
     });
 

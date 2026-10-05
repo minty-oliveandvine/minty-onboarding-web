@@ -9,10 +9,16 @@ clients of Minty's own endpoints (`Minty/docs/features/authentication.md`).
 
 Minty's *Create company* (and *resume*) send the browser to `/?token=<jwt>[&entity_id=…]
 [&entity_name=…][&fresh=1]` — the 60-minute `scope: "onboarding"` token
-(`components/OnboardingApp.tsx` reads `token`, `entity_id`, `entity_name`, `fresh` from
-the query). The app keeps the token in memory and, with the state and the step reached,
-in `sessionStorage` (survives a reload, not a new tab) — the **database is the source of
-truth** for resume; the browser copy is a cache (`GET /api/onboarding/state`).
+(`lib/wizardSession.ts::takeLaunchParams` reads `token`, `entity_id`, `entity_name`, `fresh`
+and the Xero-return parameters ONCE and clears them from the address bar before anything else
+runs - until 2026-10-05 a fresh launch left `?token=` there for the whole wizard, and Stripe's
+`return_url` carried it). The token lives in memory and in this tab's `sessionStorage`
+(`minty_onboarding_token`: survives a reload, not a new tab); the state and the step reached
+are cached in `localStorage` WITHOUT the token. The **database is the source of truth** for
+resume; the browser copy is a cache (`GET /api/onboarding/state`). `?profile_url=` is no longer
+read: Flask never sent it, and the avatar followed it into `location.href`, so a `javascript:`
+value ran on click. Stripe.js is imported from `@stripe/stripe-js/pure` and loads when the
+billing sheet opens; its `return_url` is the page without a query.
 
 ## 2. The sign-in page (`/auth`, `app/auth/page.tsx`; `/auth/confirm`)
 
@@ -23,8 +29,13 @@ Two paths, both Minty's:
   address before a code is sent), `POST …/request-code`, then `/auth/confirm` posts the
   code to `POST …/verify-code` (with the invite token and the terms agreement when there
   is one); for a new address, that same call creates the account from the name the page
-  sends. Because the verify happens **cross-origin**, Minty answers with a `redirect_url` — a signed hand-off
-  (`GET /auth/email/handoff`) — and the page follows it, so the session cookie is set on
+  sends. `/auth` reads its query once and clears the address bar; it hands the email, invite,
+  names and Terms answer to `/auth/confirm` in `sessionStorage` (`lib/authHandover.ts`), not
+  the URL, and `/auth/confirm` opened without that handover goes back to `/auth`. The invite's
+  Terms check is `POST /legal/invite-terms-status` with the token in the body. Because the
+  verify happens **cross-origin**, Minty answers with a `redirect_url` — a signed hand-off
+  (`GET /auth/email/handoff`) — and the page follows it only when it is on Flask's origin
+  (anything else goes to Flask's home, logged), so the session cookie is set on
   Minty's origin before the wizard is launched. The code is valid 60 s, five wrong tries lock the
   address for 15 minutes — the page shows Minty's wording for both.
 - **Sign in with Xero** — `window.location = {FLASK_BASE}/xero_auth[?invite=…]`; Xero

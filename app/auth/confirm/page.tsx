@@ -1,7 +1,8 @@
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { clearConfirmContext, readConfirmContext, type ConfirmContext } from '@/lib/authHandover';
 import { friendlyError } from '@/lib/errorCopy';
 import AuthTopbar from '@/components/AuthTopbar';
 import { FLASK_BASE } from '@/lib/flaskBase';
@@ -20,19 +21,42 @@ const maskEmail = (email: string) => {
   return `${local[0]}${'*'.repeat(Math.max(local.length - 1, 3))}@${domain}`;
 };
 
+function flaskDestination(redirectUrl: unknown): string {
+  if (typeof redirectUrl !== 'string' || !redirectUrl) return FLASK_BASE;
+  try {
+    const target = new URL(redirectUrl, FLASK_BASE);
+    if (target.origin === new URL(FLASK_BASE).origin) return target.toString();
+  } catch {
+    /* unparseable: fall through */
+  }
+  console.error('[auth/confirm] refused an off-site redirect_url from the server:', redirectUrl);
+  return FLASK_BASE;
+}
+
 function ConfirmContent() {
-  const searchParams = useSearchParams();
-  const email = searchParams.get('email') || '';
-  const inviteToken = searchParams.get('invite') || '';
-  const firstName = searchParams.get('fn') || '';
-  const lastName = searchParams.get('ln') || '';
-  // Terms agreement, carried from /auth where the tick box lives. Account
-  // creation happens on THIS page's verify-code call, so the agreement has to
-  // travel with it. These are a claim, not proof — the server decides for
-  // itself whether to record anything (see _terms_consent_for_signup) and, once
-  // REQUIRE_TERMS_AT_SIGNUP is on, whether to refuse the sign-up outright.
-  const termsAccepted = searchParams.get('ta') === '1';
-  const termsVersion = searchParams.get('tv') || '';
+  const router = useRouter();
+  // Handed over by /auth in this tab's storage (lib/authHandover), never in the URL: it
+  // carries the invite token. Read after mount - storage does not exist during server
+  // render. The Terms agreement rides along because account creation happens on THIS
+  // page's verify-code call; it is a claim, not proof - the server decides for itself
+  // whether to record anything (see _terms_consent_for_signup).
+  const [handover, setHandover] = useState<ConfirmContext | null>(null);
+  useEffect(() => {
+    const context = readConfirmContext();
+    if (context) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- browser storage, post-hydration only
+      setHandover(context);
+    } else {
+      // Opened directly, or in another tab: there is no code to confirm here.
+      router.replace('/auth');
+    }
+  }, [router]);
+  const email = handover?.email ?? '';
+  const inviteToken = handover?.invite ?? '';
+  const firstName = handover?.firstName ?? '';
+  const lastName = handover?.lastName ?? '';
+  const termsAccepted = handover?.termsAccepted ?? false;
+  const termsVersion = handover?.termsVersion ?? '';
   const emailDisplay = maskEmail(email);
 
   const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
@@ -136,12 +160,10 @@ function ConfirmContent() {
         setVerifying(false);
         return;
       }
-      // Flask returns an absolute or relative redirect — both resolve fine.
-      const target =
-        typeof data.redirect_url === 'string' && data.redirect_url
-          ? new URL(data.redirect_url, FLASK_BASE).toString()
-          : FLASK_BASE;
-      window.location.href = target;
+      // Flask returns an absolute or relative redirect. Followed only when it stays on
+      // Flask's origin; anything else (another site, a `javascript:` URL) goes to Flask's home.
+      clearConfirmContext();
+      window.location.href = flaskDestination(data.redirect_url);
     } catch {
       setError("I couldn't reach the server. Mind trying again?");
       setVerifying(false);

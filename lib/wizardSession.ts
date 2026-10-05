@@ -13,16 +13,81 @@ import type { WizardState, WizardUser } from './types';
 // so it does NOT persist across an ordinary refresh.
 export const XERO_RESUME_KEY = 'minty_onboarding_xero_resume';
 
-/** What OnboardingApp writes under a session key. `savedAt` orders competing blobs. */
+/** What OnboardingApp writes under a session key. `savedAt` orders competing blobs.
+ * `token` is only ever READ here, from blobs written before 2026-10-05: the token now lives
+ * in this tab's sessionStorage (`TAB_TOKEN_KEY`), never in localStorage. */
 export type SavedSession = {
   current?: number;
   maxReached?: number;
   state: WizardState;
   token?: string;
-  profileUrl?: string;
   user?: WizardUser;
   savedAt: number;
 };
+
+// The launch token is a bearer credential for the onboarding API. localStorage kept it for
+// every tab and after the browser closed; sessionStorage keeps it to this tab only.
+export const TAB_TOKEN_KEY = 'minty_onboarding_token';
+
+export function readTabToken(): string {
+  try {
+    return window.sessionStorage.getItem(TAB_TOKEN_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+/** Store the token for this tab. An empty token is ignored rather than clearing it: the
+ * wizard's first render (and StrictMode's second effect pass) persists before the token
+ * state is set. Finishing onboarding removes it explicitly. */
+export function writeTabToken(token: string): void {
+  if (!token) return;
+  try {
+    window.sessionStorage.setItem(TAB_TOKEN_KEY, token);
+  } catch {
+    /* storage blocked: the token lives in memory for this page only */
+  }
+}
+
+// Everything a launch, resume or Xero return can put in the address bar.
+const LAUNCH_PARAMS = [
+  'token',
+  'entity_id',
+  'entity_name',
+  'entity',
+  'first',
+  'last',
+  'name',
+  'fresh',
+  'profile_url',
+  'xero',
+  'step',
+  'org',
+  'expected',
+  'conflict',
+  'conflict_entity',
+];
+
+let launchParams: URLSearchParams | null = null;
+
+/**
+ * The launch parameters, read once - and taken OUT of the address bar before anything
+ * else runs, so the token never sits in history, in a bookmark, or in the URL any
+ * third-party script on the page (Stripe) can see.
+ */
+export function takeLaunchParams(): URLSearchParams {
+  // Cached: StrictMode runs the init effect twice, and the second run must see what the
+  // first one took out of the address bar.
+  if (launchParams) return launchParams;
+  const params = new URLSearchParams(window.location.search);
+  launchParams = params;
+  if (LAUNCH_PARAMS.some((key) => params.has(key))) {
+    const url = new URL(window.location.href);
+    LAUNCH_PARAMS.forEach((key) => url.searchParams.delete(key));
+    window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+  }
+  return params;
+}
 
 export const STORAGE_KEY = 'minty_onboarding_session';
 

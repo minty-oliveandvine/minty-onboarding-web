@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { savePendingInvite, readPendingInvite, clearPendingInvite } from '../../lib/pendingInvite';
+import { saveConfirmContext } from '@/lib/authHandover';
 import AuthTopbar from '@/components/AuthTopbar';
 import TermsModal from '@/components/TermsModal';
 import { FLASK_BASE } from '@/lib/flaskBase';
@@ -13,15 +14,30 @@ import { useEmailInput } from '@/lib/emailInput';
 function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const urlInviteToken = searchParams.get('invite') || '';
-  const urlEmail = searchParams.get('email') || '';
-  const signupMode = searchParams.get('mode') === 'signup';
-  const prefilledFirstName = searchParams.get('fn') || '';
-  const prefilledLastName = searchParams.get('ln') || '';
-  // Set by the backend when it bounces a wrong-account user back here after a
-  // forced logout (?error=wrong_account). The Flask flash explaining why can't
-  // cross origins to this page, so we reconstruct the message from the params.
-  const bouncedWrongAccount = searchParams.get('error') === 'wrong_account';
+  // Read once on arrival and kept in state: the address bar is cleared just below, because
+  // `invite` is a secret (whoever holds it joins the company) and should not sit in history.
+  const [arrival] = useState(() => ({
+    invite: searchParams.get('invite') || '',
+    email: searchParams.get('email') || '',
+    signup: searchParams.get('mode') === 'signup',
+    firstName: searchParams.get('fn') || '',
+    lastName: searchParams.get('ln') || '',
+    // Set by the backend when it bounces a wrong-account user back here after a
+    // forced logout (?error=wrong_account). The Flask flash explaining why can't
+    // cross origins to this page, so we reconstruct the message from the params.
+    wrongAccount: searchParams.get('error') === 'wrong_account',
+  }));
+  const urlInviteToken = arrival.invite;
+  const urlEmail = arrival.email;
+  const signupMode = arrival.signup;
+  const prefilledFirstName = arrival.firstName;
+  const prefilledLastName = arrival.lastName;
+  const bouncedWrongAccount = arrival.wrongAccount;
+  useEffect(() => {
+    if (window.location.search) {
+      window.history.replaceState(window.history.state, '', window.location.pathname);
+    }
+  }, []);
 
   // After a Xero logout/login hop, Xero redirects to the *bare* /auth (its
   // registered redirect URI), so invite/email may be missing from the URL. We
@@ -114,7 +130,12 @@ function AuthContent() {
   // has no token and no confirmed email yet, so it always shows the box.
   useEffect(() => {
     if (!isSignupFlow || !inviteToken) return;
-    fetch(`${FLASK_BASE}/legal/invite-terms-status?invite=${encodeURIComponent(inviteToken)}`)
+    // POST with the token in the body: as a query string it landed in every access log.
+    fetch(`${FLASK_BASE}/legal/invite-terms-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite: inviteToken }),
+    })
       .then((r) => r.json())
       .then((d) => {
         if (d.terms_required === false) setTermsRequired(false);
@@ -183,23 +204,29 @@ function AuthContent() {
         setSending(false);
         return;
       }
-      const qs = new URLSearchParams();
-      if (inviteToken) qs.set('invite', inviteToken);
-      qs.set('email', email);
-      if (firstName) qs.set('fn', firstName);
-      if (lastName) qs.set('ln', lastName);
-      // Carry the agreement to /auth/confirm, which is where verify-code (and
-      // therefore account creation) actually happens. These params are only a
-      // claim — the server records nothing it has not been told explicitly,
-      // and enforces the requirement itself.
-      if (showTermsBox && termsAccepted) {
-        qs.set('ta', '1');
-        if (termsVersion) qs.set('tv', termsVersion);
+      // Hand everything to /auth/confirm in this tab's storage, never its URL
+      // (lib/authHandover). The Terms answer travels too: account creation happens on
+      // verify-code there. It is only a claim — the server records nothing it has not
+      // been told explicitly, and enforces the requirement itself.
+      const handedOver = saveConfirmContext({
+        email,
+        invite: inviteToken,
+        firstName,
+        lastName,
+        termsAccepted: showTermsBox && termsAccepted,
+        termsVersion: showTermsBox && termsAccepted ? termsVersion : '',
+      });
+      if (!handedOver) {
+        setError(
+          "Your browser is blocking site storage, so I can't take you to the next step. Mind allowing it and trying again?",
+        );
+        setSending(false);
+        return;
       }
-      // The invite now travels in the /auth/confirm URL, so the storage
-      // fallback has done its job — clear it so it can't resurface later.
+      // The invite is in the handover now, so the Xero-hop fallback has done its job —
+      // clear it so it can't resurface later.
       clearPendingInvite();
-      router.push(`/auth/confirm?${qs.toString()}`);
+      router.push('/auth/confirm');
     } catch {
       setError("I couldn't reach the server. Mind trying again?");
       setSending(false);

@@ -25,7 +25,11 @@ import {
   XERO_RESUME_KEY,
   findLatestSession,
   readJwtClaims,
+  TAB_TOKEN_KEY,
+  readTabToken,
   sessionKey,
+  takeLaunchParams,
+  writeTabToken,
 } from '../lib/wizardSession';
 import {
   STEPS,
@@ -82,8 +86,6 @@ export default function OnboardingApp() {
   });
   // Short-lived JWT from Module 1 used to create the entity on Step 1.
   const [token, setToken] = useState('');
-  // Module 2 profile handoff URL (no entity context) passed in by Module 1.
-  const [profileUrl, setProfileUrl] = useState('');
   const [accountOptions, setAccountOptions] = useState<AccountOptions>({
     bank: [],
     cashSale: [],
@@ -256,14 +258,14 @@ export default function OnboardingApp() {
     if (!hydratedRef.current) return;
     try {
       const key = sessionKey(state.entity.id);
+      // The token goes to this tab's sessionStorage only, never into the localStorage blob.
+      writeTabToken(token);
       window.localStorage.setItem(
         key,
         JSON.stringify({
           current,
           maxReached,
           state,
-          token,
-          profileUrl,
           user,
           savedAt: Date.now(),
         }),
@@ -274,7 +276,7 @@ export default function OnboardingApp() {
     } catch {
       /* ignore quota / serialization errors */
     }
-  }, [current, maxReached, state, token, profileUrl, user]);
+  }, [current, maxReached, state, token, user]);
 
   // Cold resume: rehydrate the whole wizard from the backend `entities` row
   // (status='onboarding') instead of localStorage, so resume works in a fresh
@@ -423,7 +425,8 @@ export default function OnboardingApp() {
       hydratedRef.current = true;
     }
     function hydrateOnce() {
-      const p = new URLSearchParams(window.location.search);
+      // Read once, and out of the address bar before anything else runs (lib/wizardSession).
+      const p = takeLaunchParams();
 
       // Module 1 sends ?fresh=1 when the user clicks "+" (create new entity).
       // fresh and entity_id are mutually exclusive. Start clean: drop any saved
@@ -483,7 +486,6 @@ export default function OnboardingApp() {
         const blocked = xeroParam === 'mismatch' || xeroParam === 'conflict';
         if (resumed) {
           if (resumed.token) setToken(resumed.token);
-          if (resumed.profileUrl) setProfileUrl(resumed.profileUrl);
           if (resumed.user) setUser(resumed.user);
           setState((prev) => ({
             ...prev,
@@ -510,19 +512,6 @@ export default function OnboardingApp() {
         }
         setCurrent(4);
         setMaxReached((m) => Math.max(m, 4));
-        // Strip the params so an ordinary refresh doesn't re-trigger the resume.
-        try {
-          const url = new URL(window.location.href);
-          url.searchParams.delete('xero');
-          url.searchParams.delete('step');
-          url.searchParams.delete('org');
-          url.searchParams.delete('expected');
-          url.searchParams.delete('conflict');
-          url.searchParams.delete('conflict_entity');
-          window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-        } catch {
-          /* ignore */
-        }
         return;
       }
 
@@ -546,24 +535,8 @@ export default function OnboardingApp() {
           setState((prev) => ({ ...prev, entity: { ...prev.entity, name: rEntityName } }));
         }
         // Not awaited — the init effect stays synchronous; setters land on the
-        // next render. Strip resume params so a later refresh doesn't replay.
+        // next render. The params are already out of the address bar (takeLaunchParams).
         resumeFromServer(resumeEntityId, resumeUrlToken);
-        try {
-          const url = new URL(window.location.href);
-          [
-            'entity_id',
-            'token',
-            'entity_name',
-            'entity',
-            'first',
-            'last',
-            'name',
-            'profile_url',
-          ].forEach((k) => url.searchParams.delete(k));
-          window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-        } catch {
-          /* ignore */
-        }
         return;
       }
 
@@ -585,7 +558,9 @@ export default function OnboardingApp() {
         if (!saved) saved = findLatestSession();
       }
       if (saved) {
-        const savedClaims = readJwtClaims(saved.token);
+        // A blob written before 2026-10-05 still carries the token; newer ones never do.
+        const savedToken = saved.token || readTabToken();
+        const savedClaims = readJwtClaims(savedToken);
         const urlClaims = readJwtClaims(urlToken);
         const now = Math.floor(Date.now() / 1000);
         const savedExpired = !!(savedClaims && savedClaims.exp && savedClaims.exp <= now);
@@ -616,8 +591,7 @@ export default function OnboardingApp() {
           }
         } else {
           if (urlToken) setToken(urlToken);
-          else if (saved.token) setToken(saved.token);
-          if (saved.profileUrl) setProfileUrl(saved.profileUrl);
+          else if (savedToken) setToken(savedToken);
           if (saved.user) setUser(saved.user);
           if (saved.state) setState(saved.state);
           if (typeof saved.current === 'number' && saved.current >= 1) setCurrent(saved.current);
@@ -640,8 +614,6 @@ export default function OnboardingApp() {
       }
       const t = (p.get('token') || '').trim();
       if (t) setToken(t);
-      const pu = (p.get('profile_url') || '').trim();
-      if (pu) setProfileUrl(pu);
     }
   }, []);
 
@@ -667,7 +639,7 @@ export default function OnboardingApp() {
     try {
       window.sessionStorage.setItem(
         XERO_RESUME_KEY,
-        JSON.stringify({ state, token, profileUrl, user, maxReached }),
+        JSON.stringify({ state, token, user, maxReached }),
       );
     } catch {
       /* ignore quota / serialization errors */
@@ -1344,6 +1316,7 @@ export default function OnboardingApp() {
     try {
       window.localStorage.removeItem(sessionKey(state.entity.id));
       window.localStorage.removeItem(STORAGE_KEY);
+      window.sessionStorage.removeItem(TAB_TOKEN_KEY);
     } catch {
       /* ignore */
     }
@@ -1473,17 +1446,11 @@ export default function OnboardingApp() {
           </div>
           <h1>Getting Started</h1>
           <div className="right pl-0.5 sm:pl-2">
-            <button
-              type="button"
-              className="avatar"
-              title={profileLabel}
-              aria-label="Open profile"
-              onClick={() => {
-                if (profileUrl) window.location.href = profileUrl;
-              }}
-            >
+            {/* Initials only. It used to follow a `?profile_url=` from the address bar, which
+                Flask never sent and anyone else could (a `javascript:` URL ran on click). */}
+            <span className="avatar" title={profileLabel} role="img" aria-label={profileLabel}>
               {profileInitials}
-            </button>
+            </span>
             {/* Nav stays Logout-only through onboarding; full menu populates on the final "All Set" step. */}
             <NavMenu companyName={state.entity.name || 'Minty'} showFullMenu={current === 9} />
           </div>
