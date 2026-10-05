@@ -3906,18 +3906,6 @@ textarea {
 .billing-mandate {
   color: #6b7a80;
 }
-/* NOT UNDERLINED, and in the design's darker teal rather than the step's bright one. It
-     is the tail of a mandate sentence, not navigation — the design marks it with colour
-     and nothing else, and the underline arrives on hover to say it is clickable. */
-.billing-mandate a {
-  color: #128f92;
-  font-weight: 600;
-  text-decoration: none;
-}
-.billing-mandate a:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
 .billing-error {
   color: #b4231f;
   background: #fff1f1;

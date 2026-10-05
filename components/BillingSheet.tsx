@@ -405,14 +405,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
 
       <p className="billing-mandate">
         By providing your payment method, you authorise Minty to charge applicable subscription fees
-        in accordance with the Subscription Terms.{' '}
-        {/* Placeholder, as on the subscription card: there is no terms page in this app
-            yet, so the click is swallowed rather than jumping to the top of the dialog.
-            This link is part of a mandate disclosure — it needs a real URL before the
-            wording above is doing its job. */}
-        <a href="#" onClick={(e) => e.preventDefault()}>
-          (Details)
-        </a>
+        in accordance with the Subscription Terms.
       </p>
 
       {error ? (
