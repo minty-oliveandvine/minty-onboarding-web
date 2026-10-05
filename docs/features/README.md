@@ -7,7 +7,7 @@ sign-in, legal text and the Xero connection — and never verifies anything itse
 
 | Feature | Document |
 |---|---|
-| Entering with Minty's token; the sign-in page (email OTP, Xero, invitations); the terms modal; which backend answers what | [authentication.md](authentication.md) — the system-wide picture is `Minty/docs/features/authentication.md` |
+| Entering with Minty's token; `/auth*` forwarding to minty-web's sign-in (phase 2); which backend answers what | [authentication.md](authentication.md) — the system-wide picture is `Minty/docs/features/authentication.md` |
 | The nine steps, saving and resuming, All Set finalizing on arrival | [wizard.md](wizard.md) |
 | Step 4 — connecting to Xero, the three returns, disconnecting, the network-layer fake in tests | [xero-step.md](xero-step.md) |
 | Toasts - `components/Toast.tsx`, minty-web's card, one at a time | `Minty/docs/features/toasts.md` - the system-wide rule and the look, value for value |

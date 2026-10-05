@@ -57,7 +57,7 @@ trailing `||` would be unreachable.
 - **Don't assert a cause you don't know.** The `catch` blocks used to say
   "My connection timed out" for every failure, including CORS rejections, DNS
   failures and malformed JSON. They are cause-neutral now.
-- **Always give a fallback.** Two 429 handlers in `app/auth/confirm/page.tsx`
+- **Always give a fallback.** Two 429 handlers in `app/auth/confirm/page.tsx` (moved to minty-web's `/login/confirm`, 2026-10-05)
   did `if (data.message) setError(data.message)`, so a silent server response
   left the banner blank.
 

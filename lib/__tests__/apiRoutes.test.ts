@@ -79,12 +79,6 @@ const TO_FLASK = [
   '/entity',
   '/logout',
   '/xero_connect?from=onboarding',
-  '/xero_auth',
-  '/auth/email/request-code',
-  '/auth/email/verify-code',
-  '/legal/current',
-  '/legal/terms',
-  '/legal/content/terms',
 ];
 
 describe('urlFor', () => {

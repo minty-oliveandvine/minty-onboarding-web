@@ -18,10 +18,10 @@
 // are also the ones most likely to need reverting in a hurry. An explicit list lets
 // that be one deleted line at 2am rather than a code change under pressure.
 //
-// NOT EVERYTHING GOES THROUGH THE NEW SERVICE. `/auth/email/*`, `/legal/*`,
-// `/xero_auth`, `/xero_connect`, `/logout` and `/entity` are Flask pages and Flask
-// auth — they are not part of this extraction and are not listed here, so they fall
-// through to FLASK_BASE.
+// NOT EVERYTHING GOES THROUGH THE NEW SERVICE. `/xero_connect`, `/logout` and `/entity`
+// are Flask pages - not part of this extraction and not listed here, so they fall
+// through to FLASK_BASE. (Sign-in - `/auth/email/*`, `/xero_auth`, `/legal/*` - left
+// this app for minty-web in phase 2.)
 
 import { FLASK_BASE } from './flaskBase';
 

@@ -1484,7 +1484,7 @@ export function StepBills({
   return (
     <>
       <div className="page-head" style={{ textAlign: 'left', marginBottom: 18 }}>
-        <h2 style={{ fontSize: 30 }}>Payment Settings</h2>
+        <h2 style={{ fontSize: 30 }}>Payment Request Settings</h2>
         <p style={{ marginTop: 6 }}>
           Choose account code for expenses that will incur with supporting documents.
         </p>

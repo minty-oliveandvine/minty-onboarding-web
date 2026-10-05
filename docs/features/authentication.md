@@ -1,9 +1,9 @@
 # Authentication — the onboarding app's half
 
-The wizard has two ways of being entered, and both end with a Minty-minted JWT in the
-URL. Nothing is verified here: every call carries the token to a backend that checks it
-(`minty-onboarding-api/docs/features/authentication.md`), and the sign-in screens are thin
-clients of Minty's own endpoints (`Minty/docs/features/authentication.md`).
+The wizard is entered one way: Minty launches it with a Minty-minted JWT in the URL. Nothing
+is verified here: every call carries the token to a backend that checks it
+(`minty-onboarding-api/docs/features/authentication.md`). Signing in happens before, on
+minty-web's `/login` (§2; the system-wide picture is `Minty/docs/features/authentication.md`).
 
 ## 1. Launched from Minty
 
@@ -20,43 +20,24 @@ read: Flask never sent it, and the avatar followed it into `location.href`, so a
 value ran on click. Stripe.js is imported from `@stripe/stripe-js/pure` and loads when the
 billing sheet opens; its `return_url` is the page without a query.
 
-## 2. The sign-in page (`/auth`, `app/auth/page.tsx`; `/auth/confirm`)
+## 2. Sign-in left this app (phase 2, 2026-10-05)
 
-For people who arrive by link — an invitation, or self-serve sign-up (`?mode=signup`).
-Two paths, both Minty's:
-
-- **Email OTP** — `POST {FLASK_BASE}/auth/email/check` (login mode refuses an unknown
-  address before a code is sent), `POST …/request-code`, then `/auth/confirm` posts the
-  code to `POST …/verify-code` (with the invite token and the terms agreement when there
-  is one); for a new address, that same call creates the account from the name the page
-  sends. `/auth` reads its query once and clears the address bar; it hands the email, invite,
-  names and Terms answer to `/auth/confirm` in `sessionStorage` (`lib/authHandover.ts`), not
-  the URL, and `/auth/confirm` opened without that handover goes back to `/auth`. The invite's
-  Terms check is `POST /legal/invite-terms-status` with the token in the body. Because the
-  verify happens **cross-origin**, Minty answers with a `redirect_url` — a signed hand-off
-  (`GET /auth/email/handoff`) — and the page follows it only when it is on Flask's origin
-  (anything else goes to Flask's home, logged), so the session cookie is set on
-  Minty's origin before the wizard is launched. The code is valid 60 s, five wrong tries lock the
-  address for 15 minutes — the page shows Minty's wording for both.
-- **Sign in with Xero** — `window.location = {FLASK_BASE}/xero_auth[?invite=…]`; Xero
-  redirects to the bare `/auth` (its registered redirect URI), so the invite token and
-  email are stashed in `sessionStorage` before the hop and recovered after
-  (`lib/pendingInvite.ts`); the URL always wins when it carries them.
-  `?error=wrong_account` is Minty bouncing a person who signed into Xero as somebody else.
-
-The **terms modal** (`components/TermsModal.tsx`) shows the current Terms fetched from
-Minty (`GET /legal/current`, `GET /legal/content/terms`) on sign-up and the agreement rides
-along with the verify call, so the consent is recorded with the version that was shown
-(`signup_otp` / `signup_invite`).
-
-Self-serve sign-up collects first and last name up front (the user row requires them).
+Log in, sign up and invitations were this app's `/auth` and `/auth/confirm` until 2026-10-05.
+They are minty-web's `/login` and `/login/confirm` now (`minty-web/features/auth`, its
+`docs/features/authentication.md`): sign-in is person-level, and each app holds only its own
+app - this one is the wizard. Nothing links to the old addresses any more; `next.config.ts`
+`redirects()` sends a bookmark of them through Flask (`PETTY_CASH_URL`), which knows where sign-in
+lives: `/auth?mode=signup` to Flask's `/register` (sign-up), any other `/auth` or `/auth/confirm` to
+Flask's `/` (log in). Deleted with the pages:
+`lib/authHandover.ts`, `lib/pendingInvite.ts`, `components/AuthTopbar.tsx`,
+`components/TermsModal.tsx`.
 
 ## Where the calls go
 
 `lib/flaskBase.ts`: `PETTY_CASH_URL` — Minty; `lib/apiRoutes.ts`:
 `ONBOARDING_API_URL` — minty-onboarding-api, for the paths listed in
-`DJANGO_PATHS`; everything else (`/auth/email/*`, `/legal/*`, `/xero_auth`,
-`/xero_connect`, `/logout`, `/entity`) is Minty. Both are inlined at build time (`next.config.ts` `env`) — an unset
+`DJANGO_PATHS`; everything else (`/xero_connect`, `/logout`, `/entity`, and the old `/auth*`
+forwards) is Minty. Both are inlined at build time (`next.config.ts` `env`) — an unset
 value silently means `localhost` and breaks the OTP and Xero calls in a deployment.
 
 ## Tests

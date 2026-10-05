@@ -1,6 +1,6 @@
 // The URL security round (2026-10-05): the launch token leaves the address bar at once and
-// lives in this tab's sessionStorage only; /auth hands /auth/confirm its details in storage,
-// never in the URL.
+// lives in this tab's sessionStorage only. (Sign-in's own handover moved to minty-web with
+// sign-in, phase 2: features/auth/lib/handover.ts there.)
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -60,38 +60,5 @@ describe('the tab token', () => {
     writeTabToken('');
 
     expect(readTabToken()).toBe('tok');
-  });
-});
-
-describe('the /auth -> /auth/confirm handover', () => {
-  afterEach(() => {
-    window.sessionStorage.clear();
-  });
-
-  it('round-trips through sessionStorage and is gone once cleared', async () => {
-    const { saveConfirmContext, readConfirmContext, clearConfirmContext } = await import(
-      '@/lib/authHandover'
-    );
-    const context = {
-      email: 'a@b.test',
-      invite: 'secret-invite',
-      firstName: 'Ann',
-      lastName: 'Bee',
-      termsAccepted: true,
-      termsVersion: 'beta-1',
-    };
-
-    expect(saveConfirmContext(context)).toBe(true);
-    expect(readConfirmContext()).toEqual(context);
-
-    clearConfirmContext();
-    expect(readConfirmContext()).toBeNull();
-  });
-
-  it('refuses a handover without an email', async () => {
-    const { readConfirmContext } = await import('@/lib/authHandover');
-    window.sessionStorage.setItem('minty_auth_confirm', JSON.stringify({ invite: 'x' }));
-
-    expect(readConfirmContext()).toBeNull();
   });
 });

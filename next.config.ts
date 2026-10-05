@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 import path from 'node:path';
 
+import { FLASK_BASE } from './lib/flaskBase';
+
 /**
  * Sent with every response (the URL security round, 2026-10-05). Same values in minty-web,
  * minty-payment-request-web and minty-onboarding-web, and in Flask (pettycash/core/http_hardening.py).
@@ -18,9 +20,28 @@ const securityHeaders = [
     : []),
 ];
 
+/**
+ * Sign-in is minty-web's since phase 2 (2026-10-05): log in, sign up and invitations were this
+ * app's /auth and /auth/confirm. Nothing links there any more; an old bookmark goes through Flask,
+ * which knows where sign-in lives - `/register` forwards to sign-up, `/` to log in. Flask's address
+ * is the one this app already has (lib/flaskBase.ts), so no variable of minty-web's is needed here.
+ */
+
 const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/auth',
+        has: [{ type: 'query', key: 'mode', value: 'signup' }],
+        destination: `${FLASK_BASE}/register`,
+        permanent: false,
+      },
+      { source: '/auth', destination: `${FLASK_BASE}/`, permanent: false },
+      { source: '/auth/confirm', destination: `${FLASK_BASE}/`, permanent: false },
+    ];
   },
   turbopack: {
     // Pin the workspace root to this folder so Next.js doesn't infer the

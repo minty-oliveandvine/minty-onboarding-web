@@ -116,9 +116,9 @@ test('walks from Connect to All Set and finalizes the disposable entity', async 
     await expect(select(page, 'Discrepancy Contact')).toHaveValue(LABELS.discrepancyContact);
     await saveNext(page).click();
 
-    // --- 8. Payment Settings ---
+    // --- 8. Payment Request Settings ---
     await expect(activeTile(page)).toHaveAttribute('data-step-key', '8');
-    await expect(page.getByRole('heading', { name: 'Payment Settings' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Payment Request Settings' })).toBeVisible();
     expect(fake.posted['contacts']).toEqual([
       {
         entity_id: creds.entityId,

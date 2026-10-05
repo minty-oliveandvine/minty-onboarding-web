@@ -83,7 +83,7 @@ export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
   { id: 5, label: 'Sales Setting' },
   { id: 6, label: 'Account Code Setting' },
   { id: 7, label: 'Others' },
-  { id: 8, label: 'Payment Settings' },
+  { id: 8, label: 'Payment Request Settings' },
   { id: 9, label: 'All Set' },
 ];
 
@@ -107,7 +107,7 @@ export function getDisplaySteps(modules: readonly ModuleId[]): DisplayStep[] {
     });
   }
   if (hasBills) {
-    out.push({ label: 'Payment Settings', tiny: 'Payment', ids: [8] });
+    out.push({ label: 'Payment Request Settings', tiny: 'Payment', ids: [8] });
   }
   out.push({ label: 'All Set', tiny: 'All Set', ids: [9] });
   return out;

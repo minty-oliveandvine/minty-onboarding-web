@@ -17,7 +17,7 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | 5 | Sales Setting — electronic and delivery methods (both start empty; *Auto Fill* fills Flask's default set, *Revert* empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
 | 6 | Account Code Setting — the expense accounts and the petty-cash account mapping | `StepAccountCode` | `POST /account-codes` |
 | 7 | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero; the open list says to type a name to add one) | `StepOthers` | `POST /contacts`, `/contacts/create` |
-| 8 | Payment Settings — the bills' account codes | `StepBills` | `POST /bill-codes` |
+| 8 | Payment Request Settings — the bills' account codes | `StepBills` | `POST /bill-codes` |
 | 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival** |
 
 The rail groups 5–7 as *Petty Cash Settings* and shows 8 only when that module was

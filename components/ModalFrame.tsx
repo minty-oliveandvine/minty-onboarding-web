@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PORT of minty-web/features/subscription/components/ModalFrame.tsx (Figma 04-G / section 06):
+ * PORT of minty-web/components/ui/ModalFrame.tsx (Figma 04-G / section 06):
  * the page blurred behind a pale backdrop and one white card over it. Escape and a click on
  * the backdrop close it through `onDismiss`, unless `busy`.
  *
