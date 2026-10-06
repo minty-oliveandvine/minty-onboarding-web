@@ -12,6 +12,7 @@ sign-in, legal text and the Xero connection — and never verifies anything itse
 | Step 4 — connecting to Xero, the three returns, disconnecting, the network-layer fake in tests | [xero-step.md](xero-step.md) |
 | Toasts - `components/Toast.tsx`, minty-web's card, one at a time | `Minty/docs/features/toasts.md` - the system-wide rule and the look, value for value |
 | User-facing error copy | [../ERROR_COPY.md](../ERROR_COPY.md) |
+| Manual QA checklist for the wizard, grounded in the docs above and the e2e suite's traps, plus the `pettycashv3` rows each step writes | [qa-checklist.md](qa-checklist.md) |
 
 Email fields take English only (2026-10-01): the sign-in email, the business email (step 1),
 the invite (step 8) and the billing email spread `useEmailInput` (`lib/emailInput.ts`; the
