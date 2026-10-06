@@ -18,7 +18,7 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | 6 | Account Code Setting — the expense accounts and the petty-cash account mapping | `StepAccountCode` | `POST /account-codes` |
 | 7 | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero; the open list says to type a name to add one) | `StepOthers` | `POST /contacts`, `/contacts/create` |
 | 8 | Payment Request Settings — the bills' account codes | `StepBills` | `POST /bill-codes` |
-| 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival** |
+| 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival**; *Try again* re-posts it after a failure |
 
 The rail groups 5–7 as *Petty Cash Settings* and shows 8 only when that module was
 chosen (`getDisplaySteps`); `isStepComplete` decides the ticks. Each screen's chrome (the
@@ -56,9 +56,21 @@ summaries; change the two together.
 ## All Set finalizes on arrival
 
 Reaching step 9 runs `completeOnboarding()`: it submits the opening balance and posts
-`/finalize`, which flips the company from `onboarding` to live, enables the chosen modules
-and starts the trials; the screen itself commits
-nothing, and *Go to Minty* leaves. **Never navigate a test straight to step 9**
+`/finalize`, which flips the company from `onboarding` to `connected`/`disconnected` and
+starts the trials (minty-onboarding-api → minty-subscription-api `trials/start`, 2026-10-06);
+the screen itself commits nothing, and *Go to entity list* leaves.
+
+**A failed finalize is shown, not hidden (2026-10-06).** `completeOnboarding` checks
+`res.ok`; a failed finalize (or a network error) resolves `{ok: false, error}`, and the
+saved session (`localStorage`/`sessionStorage`) is cleared only after a successful one, so a
+reload after a failure lands back on All Set and finishes. On failure `StepAllSet` says
+"Your N-day <module> trial hasn't started yet.", shows the server's sentence inline
+(`role="alert"`, `.billing-error`; no toast), and its primary button is *Try again* (it
+re-runs the commit and replaces `commit.current`, so the billing sheet's `onDone` still
+awaits it). *Add Payment Now* and the payment nudge stay hidden until the trial exists;
+*Go to entity list* stays available (disabled while a retry is in flight).
+
+**Never navigate a test straight to step 9**
 (`e2e/README.md`, `land()` in `e2e/onboardingApi.ts` refuses it); `walk.spec.ts` reaches it
 by clicking *Complete* on step 8 against the disposable entity.
 
@@ -74,5 +86,6 @@ Unit (`npm test`): `lib/__tests__/wizardSteps.test.ts`, `validation.test.ts`, `i
 `MethodList.test.tsx`, `CardBrand.test.tsx` (the two fits and their crops). Browser (`npm run test:e2e`): `e2e/stack.spec.ts` (the two backends
 answer), `resume.spec.ts` (the database decides the landing step; `saved_step` and
 `current_step` may disagree; an out-of-range step is refused), `xero.spec.ts`,
-`walk.spec.ts` (the whole wizard to All Set, Xero faked) — 23 on 2026-09-18 against the
-deployed hosts.
+`walk.spec.ts` (the whole wizard to All Set, Xero faked; the first finalize is forced to a
+502, the failure UI asserted, then *Try again* runs the real one) — 23 on 2026-09-18 against the
+deployed hosts; 23 passed on 2026-10-06.

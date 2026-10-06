@@ -1,7 +1,7 @@
 'use client';
 
 // Step content components. Each receives { state, set, next, back }.
-import { useState, useRef, useEffect, type CSSProperties } from 'react';
+import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import Icon from './Icon';
 import MintySelect from './MintySelect';
 import MintyDatePicker from './MintyDatePicker';
@@ -1838,19 +1838,22 @@ export function StepAllSet({
 }: Pick<StepProps, 'state' | 'token' | 'modulePlans' | 'completeOnboarding' | 'exitToEntityList'>) {
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
   const [committing, setCommitting] = useState(true);
+  // The sentence from a failed commit, shown inline with Try again; null once it succeeds.
+  const [failure, setFailure] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [billingOpen, setBillingOpen] = useState(false);
   // `null` while unknown, so the nudge renders in NEITHER state until the answer is in.
   // Showing "add a payment method" and then retracting it is the flicker the subscription
   // summary was just fixed for.
   const [hasConsent, setHasConsent] = useState<boolean | null>(null);
-  const toast = useToast();
 
-  /* COMMITTED ONCE, AND THE HANDLE IS KEPT. This ref does two jobs.
+  /* COMMITTED ONCE ON ARRIVAL, AND THE HANDLE IS KEPT. This ref does two jobs.
    *
    * It is the run-once guard: StrictMode invokes effects twice in development and this one
-   * POSTs. Both halves are idempotent — finalize is guarded server-side by
-   * `status == "onboarding"` and the opening balance is documented as re-submittable — so
-   * a double call is survivable rather than fine, which is not a reason to make one.
+   * POSTs. Both halves are idempotent — finalize leaves a live company live and skips
+   * modules already on a trial, and the opening balance is re-submittable — so a double
+   * call is survivable rather than fine, which is not a reason to make one. Try again is
+   * the one deliberate second call, and it replaces this handle with its own.
    *
    * AND IT IS THE PROMISE ANYTHING THAT NAVIGATES MUST WAIT ON, which is the half that
    * matters. Committing is two round trips, and the billing dialog on this screen now
@@ -1865,20 +1868,33 @@ export function StepAllSet({
    * than trapping them on a screen whose buttons no longer work.
    */
   const commit = useRef<Promise<void> | null>(null);
-  useEffect(() => {
-    if (commit.current) return;
+  const runCommit = useCallback(() => {
     commit.current = (async () => {
       try {
         const result = await completeOnboarding();
-        if (!result?.ok) toast.error(result?.error || "Couldn't finish setting up.");
-        setTrialEnd(result?.ok && 'trialEnd' in result ? result.trialEnd || null : null);
+        if (result?.ok) {
+          setFailure(null);
+          setTrialEnd('trialEnd' in result ? result.trialEnd || null : null);
+        } else {
+          setFailure(result?.error || "Couldn't finish setting up. Mind trying again?");
+        }
       } catch {
-        toast.error("Couldn't finish setting up.");
+        setFailure("Couldn't finish setting up. Mind trying again?");
       } finally {
         setCommitting(false);
+        setRetrying(false);
       }
     })();
-  }, [completeOnboarding, toast]);
+  }, [completeOnboarding]);
+  useEffect(() => {
+    if (commit.current) return;
+    runCommit();
+  }, [runCommit]);
+
+  const tryAgain = () => {
+    setRetrying(true);
+    runCommit();
+  };
 
   // Whether this entity is already authorised. Re-read after the billing sheet reports a
   // confirmation, which is the only thing here that can change the answer.
@@ -1982,8 +1998,10 @@ export function StepAllSet({
           and the nudge share a left edge; only the buttons below are centred. */}
       {ready ? (
         <div className="allset-facts">
+          {/* Never claims a trial the server did not confirm. */}
           <p className="allset-lede">
-            Your {trialDays}-day {moduleLabel} trial has started.
+            Your {trialDays}-day {moduleLabel} trial{' '}
+            {failure ? "hasn't started yet." : 'has started.'}
           </p>
 
           <dl className="allset-grid">
@@ -2003,8 +2021,14 @@ export function StepAllSet({
           {/* Nothing to nudge someone about who has already authorised this entity. Gated on
             CONSENT, not on owning a card: a payer can hold a card this entity was never
             authorised against, and only consent decides whether the trial converts. */}
-          {hasConsent === false ? (
+          {hasConsent === false && !failure ? (
             <p className="allset-nudge">Avoid interruption by adding a payment method today.</p>
+          ) : null}
+
+          {failure ? (
+            <p className="billing-error" role="alert">
+              {failure}
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -2013,7 +2037,18 @@ export function StepAllSet({
           billing status decides, so the row arrives assembled with the facts above it. */}
       {ready ? (
         <div className="allset-actions">
-          {hasConsent ? null : (
+          {/* A failed commit has one way forward, so it takes the primary slot; the card
+              can wait until the trial it would pay for exists. */}
+          {failure ? (
+            <button
+              type="button"
+              className="btn btn-primary allset-pay"
+              onClick={tryAgain}
+              disabled={retrying}
+            >
+              {retrying ? 'Trying again…' : 'Try again'}
+            </button>
+          ) : hasConsent ? null : (
             <button
               type="button"
               className="btn btn-primary allset-pay"
@@ -2027,9 +2062,9 @@ export function StepAllSet({
               a link. */}
           <button
             type="button"
-            className={hasConsent ? 'btn btn-primary allset-pay' : 'allset-exit'}
+            className={hasConsent && !failure ? 'btn btn-primary allset-pay' : 'allset-exit'}
             onClick={exitToEntityList}
-            disabled={committing}
+            disabled={committing || retrying}
           >
             Go to entity list <Icon.Arrow />
           </button>

@@ -5,7 +5,7 @@ npm run test:e2e
 ```
 
 These run a real browser against a **stack that is already running**. They start nothing:
-booting four services from a test runner would turn "Flask isn't up" into a failed
+booting five services from a test runner would turn "Flask isn't up" into a failed
 assertion instead of a readable message. Each spec checks what it needs is reachable and
 **skips with a reason** when it is not, so an unconfigured run reads as _not run here_,
 never as _passed_.
@@ -15,8 +15,9 @@ never as _passed_.
 | Service                 | Port | Repo                        |
 | ----------------------- | ---- | --------------------------- |
 | Next (the wizard)       | 3030 | this one — `npm run dev`    |
-| Flask (Minty)           | 8010 | `C:\Github\Minty`              |
+| Flask (Minty)           | 8010 (5001 locally: `E2E_PETTY_CASH_URL=http://localhost:5001`) | `C:\Github\Minty`              |
 | Onboarding API (Django) | 8030 | `C:\Github\minty-onboarding-api` |
+| Subscription API (Django) | 8000 | `C:\Github\minty-subscription-api` — finalize's trial start (2026-10-06) |
 | PostgreSQL              | 5432 | —                           |
 
 Override any of them with `E2E_BASE_URL`, `E2E_PETTY_CASH_URL`, `E2E_ONBOARDING_API_URL`.
@@ -36,7 +37,7 @@ Never commit these. Export them for the run:
 
 ```bash
 export E2E_JWT_SECRET='<the shared SECRET_KEY from Minty/.env>'
-export E2E_USER_ID='68bfc5d3-43d0-4026-b236-0fbc16f21bf9'
+export E2E_USER_ID='070b40af-d5fc-4430-8e25-f11b3294d5f5'
 export E2E_ENTITY_ID='ee72f706-49f2-4690-83d6-e5f8d284ba2c'
 npm run test:e2e
 ```
@@ -54,15 +55,16 @@ forged, expired or wrong-scope token is refused.
 ### The dedicated test entity
 
 `ee72f706-49f2-4690-83d6-e5f8d284ba2c` — _"E2E Test Entity (do not use)"_, status
-`onboarding`, saved step 2, with `68bfc5d3…` as an approved admin. It exists so runs
-never touch an entity anyone cares about. To recreate it:
+`onboarding`, saved step 2, with `070b40af…` (`e2e@minty.test`) as an approved admin
+(recreated in the dev DB 2026-10-06 — it was missing; before that the admin was `68bfc5d3…`).
+It exists so runs never touch an entity anyone cares about. To recreate it:
 
 ```sql
 INSERT INTO pettycashv3.entities (id, name, country_code, currency_id, status, onboarding_saved_step)
 VALUES (gen_random_uuid()::text, 'E2E Test Entity (do not use)', 'HK',
         'fc848405-ffc2-4722-a309-b4b6828c4233', 'onboarding', 2);
 INSERT INTO pettycashv3.user_entity (user_id, entity_id, role, approved)
-VALUES ('<your dev user id>', '<the id above>', 'admin', TRUE);
+VALUES ('<your dev user id>', '<the id above>', 'admin', TRUE);  -- dev: 070b40af-d5fc-4430-8e25-f11b3294d5f5 (e2e@minty.test)
 ```
 
 ## NEVER LET A TEST NAVIGATE TO STEP 9
@@ -72,7 +74,8 @@ This is the sharpest edge in the whole suite, and it cost a dev entity to find.
 Step 9 is "All Set", and **arriving there runs `completeOnboarding`** —
 `OnboardingApp.tsx` notes that the screen itself "commits nothing" precisely because
 arrival already did. That call submits the opening balance and POSTs `/finalize`, which
-flips the entity to `active` and opens a trial subscription **per enabled module**.
+flips the entity to `connected`/`disconnected` and starts a trial subscription **per enabled
+module** (minty-onboarding-api → minty-subscription-api, 2026-10-06).
 
 An early version of `resume.spec.ts` landed on whatever step the row happened to hold.
 The entity it pointed at was sitting on 9, so the test finalized it and created two trial
@@ -102,7 +105,8 @@ contract is one redirect out, three query parameters back, and one boolean:
 | `GET/POST account-codes`, `POST contacts`, `contacts/create`, `GET/POST bill-codes` | **faked** | fixtures from `fixtures/xero.ts`; POST bodies are recorded so specs assert what the wizard sent |
 | `POST xero/disconnect` (from the page) | **faked** | flips the fake to disconnected |
 | `GET payment-method` | **faked** | "no card, no consent" — keeps All Set off Stripe |
-| everything else: token auth, `saved-step`, `sales-methods`, `opening-balance`, `invite`, `finalize` | **real** | — |
+| `POST finalize` (`walk.spec.ts`, the first call only) | **faked** | a 502, so the spec asserts All Set's failure UI and clicks *Try again* (2026-10-06) |
+| everything else: token auth, `saved-step`, `sales-methods`, `opening-balance`, `invite`, the second `finalize` | **real** | — |
 
 `modules` is forced to both, so steps 5–8 render regardless of what `entity_function_map`
 holds for the test entity.

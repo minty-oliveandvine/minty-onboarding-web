@@ -5,11 +5,11 @@ import { errorCopy, HOUSE_FALLBACK } from './errorCopy';
 /**
  * The payer's saved cards, and consent to bill an entity — the wire half of the billing sheet.
  *
- * These hit `/api/onboarding/billing/*` on Minty, which are thin mirrors of the payer
- * portal's `/api/me/billing/payment-methods*`. Same service code underneath; they exist
- * separately because the portal's routes send `Access-Control-Allow-Origin:
- * PAYMENT_REQUEST_WEB_URL`, so calling them from this origin is blocked by the browser before
- * the bearer token is ever looked at. Do not "simplify" this to the /api/me routes.
+ * These hit `/api/onboarding/billing/*` on minty-onboarding-api, which proxies them to
+ * minty-subscription-api, where they are thin mirrors of the payer portal's
+ * `/api/me/billing/payment-methods*`. Same service code underneath; the browser only ever
+ * talks to the onboarding API (one base URL), and the subscription API's CORS does not
+ * admit this origin. Do not "simplify" this to the /api/me routes.
  *
  * Every call carries the onboarding JWT the wizard already holds. There is no cookie
  * involved, so no `credentials: 'include'`.

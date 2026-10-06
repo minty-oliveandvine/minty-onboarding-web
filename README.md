@@ -60,7 +60,8 @@ There is no cookie involved: every call carries the onboarding JWT as a bearer t
 | end-to-end       | **Playwright**, `e2e/` — needs the whole stack up, so it is a pre-merge gate rather than a per-commit one |
 
 `npm test` is the gate to run before every commit; it needs nothing running. `npm run
-test:e2e` needs Next, Flask, the Django onboarding service and Postgres all up, and its
+test:e2e` needs Next, Flask, the Django onboarding and subscription services (the latter
+since 2026-10-06, for finalize's trial start) and Postgres all up, and its
 authenticated half needs three environment variables — [e2e/README.md](e2e/README.md) has
 the details, including **the one sharp edge: a test must never land on step 9**, because
 arriving at "All Set" finalizes the entity and opens trial subscriptions.

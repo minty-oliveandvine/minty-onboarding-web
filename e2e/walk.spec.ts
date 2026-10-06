@@ -130,6 +130,25 @@ test('walks from Connect to All Set and finalizes the disposable entity', async 
       },
     ]);
     await expect(page.locator('.acc-row')).toHaveCount(3);
+
+    // The FIRST finalize fails the way a failed trial start does (the subscription API's
+    // 502, relayed by the onboarding API); every later one is real. All Set must not claim
+    // a trial, and Try again must finish the job.
+    const trialFailure = 'This trial could not be started. Mind trying again?';
+    let finalizeCalls = 0;
+    await page.route('**/api/onboarding/finalize', async (route) => {
+      finalizeCalls += 1;
+      if (finalizeCalls === 1) {
+        await route.fulfill({
+          status: 502,
+          contentType: 'application/json',
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify({ error: trialFailure }),
+        });
+        return;
+      }
+      await route.continue();
+    });
     await page.getByRole('button', { name: 'Complete' }).click();
 
     // --- 9. All Set ---
@@ -138,8 +157,16 @@ test('walks from Connect to All Set and finalizes the disposable entity', async 
     expect(fake.posted['bill-codes']).toEqual([
       { entity_id: creds.entityId, selected_codes: ['300', '310', '469'] },
     ]);
+
+    await expect(page.locator('.allset-facts').getByRole('alert')).toHaveText(trialFailure);
+    await expect(page.locator('.allset-facts')).toContainText("trial hasn't started yet");
+    await expect(page.getByRole('button', { name: 'Add Payment Now' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Try again' }).click();
+
     // The facts block waits on finalize AND the (faked) billing status; both in means
     // the commit has returned.
+    await expect(page.locator('.allset-facts').getByRole('alert')).toHaveCount(0);
+    expect(finalizeCalls).toBe(2);
     await expect(page.locator('.allset-facts')).toBeVisible();
     await expect(page.locator('.allset-facts')).toContainText('trial has started');
     await expect(page.getByRole('button', { name: 'Add Payment Now' })).toBeVisible();

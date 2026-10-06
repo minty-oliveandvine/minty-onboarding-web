@@ -1307,19 +1307,13 @@ export default function OnboardingApp() {
    * that screen nothing true to print. So the commit runs when All Set is REACHED, and
    * leaving is just leaving.
    *
-   * Returns the trial end for the screen to show. Finalize stays BEST-EFFORT: a failure
-   * must not strand the payer on a dead end, so it resolves ok with a null date and the
-   * screen drops that one row.
+   * Returns the trial end for the screen to show (null when no module has a trial). A
+   * failure — the opening balance, the company going live, or its trial start — resolves
+   * `{ok: false}` and the screen offers Try again, which calls this again: every half is
+   * idempotent (the opening draft is created or updated, finalize leaves a live company
+   * live and skips modules already on a trial).
    */
   const completeOnboarding = async (): Promise<FinalizeResult | Result> => {
-    // Onboarding done — drop this entity's saved session (and any bare draft).
-    try {
-      window.localStorage.removeItem(sessionKey(state.entity.id));
-      window.localStorage.removeItem(STORAGE_KEY);
-      window.sessionStorage.removeItem(TAB_TOKEN_KEY);
-    } catch {
-      /* ignore */
-    }
     if (!token || !state.entity.id) return { ok: true, trialEnd: null };
     const chosen = state.modules[0]; // 'pettyCash' | 'bills' | undefined
     if (chosen !== 'bills') {
@@ -1335,9 +1329,23 @@ export default function OnboardingApp() {
         body: JSON.stringify({ entity_id: state.entity.id }),
       });
       const data = await res.json().catch(() => ({}));
+      if (!res.ok)
+        return {
+          ok: false,
+          error: friendlyError(data, "This trial could not be started. Mind trying again?"),
+        };
+      // Onboarding done — drop this entity's saved session (and any bare draft). Only now:
+      // after a failure, a reload must land back here and finish.
+      try {
+        window.localStorage.removeItem(sessionKey(state.entity.id));
+        window.localStorage.removeItem(STORAGE_KEY);
+        window.sessionStorage.removeItem(TAB_TOKEN_KEY);
+      } catch {
+        /* storage unavailable — nothing saved to drop */
+      }
       return { ok: true, trialEnd: data?.trial_end || null };
     } catch {
-      return { ok: true, trialEnd: null };
+      return { ok: false, error: "I couldn't reach the server. Mind trying again?" };
     }
   };
 
