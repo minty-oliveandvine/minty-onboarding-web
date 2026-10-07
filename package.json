@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start -p 3030",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "check:routes": "vitest run lib/__tests__/apiRoutes.test.ts",
     "test": "vitest run",
     "test:watch": "vitest",
