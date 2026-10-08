@@ -226,18 +226,17 @@ textarea::placeholder {
   display: block;
 }
 
-/* Stepper */
+/* Stepper — Minty v2 "Step progress" (Part 14). Each tile is a two-row grid: a 28px pill
+     (drawn by ::before) with the .num icon centred on it, and the label underneath. The
+     DOM is Stepper.tsx's, unchanged; only the paint moved. */
 .stepper {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--step-count, 7), 1fr);
-  gap: 0;
-  padding: 0;
-  border-bottom: 1px solid var(--line);
+  grid-template-columns: repeat(var(--step-count, 7), minmax(0, 1fr));
+  gap: 8px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--mv2-border-subtle);
   background: var(--bg);
-}
-.step + .step {
-  border-left: 1px solid var(--bg);
 }
 @keyframes waveDrift {
   from {
@@ -249,22 +248,34 @@ textarea::placeholder {
 }
 .step {
   position: relative;
-  padding: 12px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 28px auto;
+  row-gap: 6px;
+  justify-items: center;
+  align-items: start;
+  padding: 0;
   font-size: 12.5px;
-  color: var(--ink-2);
-  background: var(--mv2-surface-sunk);
-  border-radius: 0;
+  color: var(--mv2-text-muted);
+  text-align: center;
+  background: transparent;
   cursor: pointer;
   user-select: none;
+  transition: color 0.2s ease;
+}
+/* The indicator pill (todo look by default). */
+.step::before {
+  content: '';
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: var(--mv2-radius-full);
+  background: var(--mv2-surface-sunk);
+  border: 1px solid var(--mv2-border-default);
   transition:
-    color 0.2s ease,
-    background 0.25s ease;
-  white-space: nowrap;
-  overflow: hidden;
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 @keyframes waveDrift {
   from {
@@ -274,110 +285,74 @@ textarea::placeholder {
     transform: translateX(-50%);
   }
 }
-.step > .num,
-.step > .label {
+.step > .num {
+  grid-area: 1 / 1;
+  align-self: center;
   position: relative;
-  z-index: 3;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  transition: color 0.2s ease;
 }
-.step:hover:not(.locked):not(.not-clickable) {
-  background: var(--mv2-neutral-bg);
+.step .num:empty {
+  display: none;
 }
-.step.locked {
-  cursor: not-allowed;
-  opacity: 0.55;
+.step > .label {
+  grid-area: 2 / 1;
+}
+.step:not(.locked):not(.not-clickable):not(.active):not(.done):hover::before {
+  background: var(--mv2-state-hover);
 }
 /* On the final "All Set" step every step is frozen: no pointer, no hover
      shift — but completed steps keep their full "done" styling (not dimmed). */
 .step.not-clickable {
   cursor: default;
 }
-.step .num {
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  background: transparent;
-  color: inherit;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12.5px;
-  flex-shrink: 0;
-  box-shadow: none !important;
-  transition: color 0.25s ease;
-}
-.step .num:empty {
-  display: none;
-}
 .step.done {
+  color: var(--mv2-text-secondary);
+}
+.step.done::before {
   background: var(--mv2-state-selected);
-  color: var(--mv2-text-link);
+  border-color: var(--mv2-border-selected);
 }
 .step.done .num {
-  background: transparent;
-  color: var(--mv2-text-link);
+  color: var(--mv2-border-selected);
 }
-.step.done .label {
-  color: var(--mv2-text-link);
-}
-.step.done:hover:not(.locked):not(.not-clickable) {
+.step.done:not(.not-clickable):hover::before {
   background: color-mix(in oklab, var(--mv2-border-selected) 10%, var(--mv2-state-selected));
 }
-/* The step highlight is brand (decoration), so its label is primary ink: Minty Action and
-     link teal are both too light against it to read at 12.5px. */
+/* Current step: the pill is brand (decoration), so the label is primary ink, bold. */
 .step.active {
   color: var(--mv2-text-primary);
-  background: var(--mv2-brand-primary);
-  box-shadow: none;
-  z-index: 2;
   cursor: default;
 }
-/* Lock active step appearance against clicks/hover */
-.step.active:hover,
-.step.active:focus,
-.step.active:active {
-  color: var(--mv2-text-primary);
+.step.active::before {
   background: var(--mv2-brand-primary);
-  filter: none;
-  transform: none;
-}
-@keyframes stepPulse {
-  0%,
-  100% {
-    box-shadow:
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
-      inset 0 0 0 1.5px rgba(255, 255, 255, 0.35),
-      inset 0 -3px 8px rgba(0, 0, 0, 0.06),
-      0 4px 14px rgba(70, 216, 204, 0.45),
-      0 0 0 2px rgba(70, 216, 204, 0.25);
-  }
-  50% {
-    box-shadow:
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
-      inset 0 0 0 1.5px rgba(255, 255, 255, 0.55),
-      inset 0 -3px 8px rgba(0, 0, 0, 0.06),
-      0 6px 22px rgba(70, 216, 204, 0.55),
-      0 0 0 3px rgba(70, 216, 204, 0.35);
-  }
-}
-.step.active .num {
-  background: transparent;
-  color: var(--mv2-text-primary);
-  box-shadow: none;
+  border-color: var(--mv2-brand-primary);
 }
 .step.active .label {
-  color: var(--mv2-text-primary);
-  font-weight: 600;
+  font-weight: 700;
 }
+.step.locked {
+  color: var(--mv2-text-disabled);
+  cursor: not-allowed;
+}
+/* Labels sit under the pill, centred, and may wrap to two lines. */
 .step .label {
   overflow: hidden;
-  white-space: nowrap;
   min-width: 0;
-  flex: 0 1 auto;
   max-width: 100%;
+  line-height: 1.3;
 }
 .step .label-inner {
-  display: inline-block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
   transition: transform 0.25s ease;
 }
 .label.is-overflow .label-inner {
@@ -417,6 +392,14 @@ textarea::placeholder {
 .stepper {
   overflow-x: visible;
   overflow-y: visible;
+}
+@media (max-width: 767px) {
+  .stepper {
+    padding: 12px 16px;
+  }
+  .step {
+    grid-template-rows: 24px auto;
+  }
 }
 .substep-circle {
   width: 20px;
@@ -512,8 +495,8 @@ textarea::placeholder {
   border-color: color-mix(in oklab, var(--mv2-border-selected) 45%, var(--line-strong));
 }
 .pc-side-item.active .substep-circle {
-  border-color: rgba(5, 75, 68, 0.4);
-  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--mv2-border-selected);
+  background: var(--mv2-state-selected);
 }
 .pc-side-item.done .substep-circle {
   background: var(--mv2-border-selected);
@@ -566,14 +549,15 @@ textarea::placeholder {
   flex-direction: column;
   gap: 6px;
 }
+/* Field label (Part 14): 14px / 500, primary ink, 6px above the field (.field's gap). */
 .field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 .field label .field-optional {
   font-weight: 400;
-  color: var(--muted);
+  color: var(--mv2-text-muted);
 }
 .field input,
 .field select,
@@ -582,12 +566,17 @@ textarea::placeholder {
   -webkit-appearance: none;
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
-  min-height: var(--mv2-control-height);
-  padding: 11px 13px;
+  height: var(--mv2-control-height);
+  padding: 0 12px;
   font-size: 14px;
   background: var(--bg);
-  color: var(--ink);
+  color: var(--mv2-text-primary);
   transition: border-color 0.18s ease;
+}
+.field textarea {
+  height: auto;
+  min-height: var(--mv2-control-height);
+  padding: 10px 12px;
 }
 .field input:focus,
 .field select:focus,
@@ -599,7 +588,7 @@ textarea::placeholder {
   align-items: center;
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
-  min-height: var(--mv2-control-height);
+  height: var(--mv2-control-height);
   background: var(--bg);
   overflow: hidden;
 }
@@ -616,11 +605,13 @@ textarea::placeholder {
 .field .input-prefix input {
   border: 0;
   flex: 1;
-  padding: 11px 13px;
+  height: 100%;
+  min-height: 0;
+  padding: 0 12px;
   font-size: 14px;
   background: transparent;
   outline: none;
-  color: var(--ink);
+  color: var(--mv2-text-primary);
 }
 .field .input-prefix input:focus {
   box-shadow: none;
@@ -709,11 +700,11 @@ textarea::placeholder {
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 .form-stack .field input,
 .form-stack .field select {
-  padding: 14px 16px;
+  padding: 0 12px;
   border-radius: var(--mv2-radius-lg);
   font-size: 14px;
 }
@@ -735,13 +726,66 @@ textarea::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--mv2-border-subtle);
 } /* Right-side action group: Save & Exit + Save & Next laid out horizontally,
      so every step footer reads [Back] ... [Save & Exit] [Save & Next]. */
 .step-actions {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+/* Back is a Ghost button (Part 15.18): no border, link-teal text. */
+.step-nav > .btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--mv2-action-secondary-text);
+}
+.step-nav > .btn-ghost:hover {
+  background: var(--mv2-state-hover);
+}
+/* Save & Exit is a Secondary button here (SaveExitLink renders .btn-link-center). */
+.step-actions .btn-link-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--mv2-control-height);
+  padding: 0 20px;
+  background: var(--mv2-surface-card);
+  border: 1px solid var(--mv2-action-secondary-border);
+  border-radius: var(--mv2-radius-lg);
+  color: var(--mv2-action-secondary-text);
+}
+.step-actions .btn-link-center:hover:not(:disabled) {
+  background: var(--mv2-state-selected);
+  color: var(--mv2-action-secondary-text);
+}
+.step-actions .btn-link-center:disabled {
+  background: var(--mv2-action-disabled);
+  border-color: var(--mv2-action-disabled);
+  color: var(--mv2-text-disabled);
+  cursor: not-allowed;
+}
+/* Phone: one column, Primary first, then Save & Exit, then Back — all full width. */
+@media (max-width: 767px) {
+  .step-nav {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .step-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .step-nav > .btn,
+  .step-actions > .btn,
+  .step-actions > .btn-link-center {
+    width: 100%;
+  }
+  .step-actions > .btn-primary {
+    order: -1;
+  }
 }
 
 /* Skip-confirmation modal (Step 3: Invite) */
@@ -764,74 +808,100 @@ textarea::placeholder {
   padding: 0;
   cursor: default;
   background: var(--mv2-scrim);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
 }
 .mw-modal-card {
   position: relative;
   width: 100%;
 }
+/* Minty v2 "Confirmation modal" (Part 14). */
 .mw-dialog {
-  max-width: 435px;
-  border-radius: var(--mv2-radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  max-width: 440px;
+  border-radius: var(--mv2-radius-xl);
+  border: 1px solid var(--mv2-border-default);
   background: var(--mv2-surface-card);
-  padding: 48px;
+  padding: 24px;
   box-shadow: var(--mv2-elevation-modal);
 }
 .mw-dialog-title {
   margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--mv2-text-primary);
 }
 .mw-dialog-art {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
-  margin-top: 20px;
+  max-height: 160px;
+  margin: 16px auto 0;
 }
 .mw-dialog-body {
-  margin: 20px 0 0;
-  font-size: 15px;
-  line-height: 1.375;
-  color: var(--ink-2);
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mv2-text-secondary);
 }
 .mw-dialog-actions {
-  margin-top: 32px;
+  margin-top: 24px;
   display: flex;
-  gap: 20px;
+  justify-content: flex-end;
+  gap: 12px;
 }
-.mw-dialog-actions.is-single {
-  justify-content: center;
-}
+/* The non-primary action is a Secondary button. */
 .mw-dialog-btn {
-  height: 66px;
-  flex: 1;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--mv2-control-height);
+  padding: 0 20px;
   border-radius: var(--mv2-radius-lg);
-  border: 1px solid transparent;
-  font-size: 18px;
+  border: 1px solid var(--mv2-action-secondary-border);
+  background: var(--mv2-surface-card);
+  color: var(--mv2-action-secondary-text);
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.25;
   cursor: pointer;
 }
-.mw-dialog-actions.is-single .mw-dialog-btn {
-  flex: 0 0 169px;
+.mw-dialog-btn:hover {
+  background: var(--mv2-state-selected);
 }
 .mw-dialog-btn.is-teal {
   background: var(--accent);
+  border-color: var(--accent);
   color: var(--mv2-action-on-primary);
-  font-weight: 700;
 }
 .mw-dialog-btn.is-teal:hover {
   background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 .mw-dialog-btn.is-teal:active {
   background: var(--accent-pressed);
+  border-color: var(--accent-pressed);
 }
+/* Phone: the dialog becomes a bottom sheet, actions stacked with Primary first. */
 @media (max-width: 480px) {
+  .mw-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
   .mw-dialog {
-    padding: 32px 24px;
+    max-width: none;
+    border-radius: var(--mv2-radius-xl) var(--mv2-radius-xl) 0 0;
+    border-bottom: 0;
+  }
+  .mw-dialog-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mw-dialog-btn {
+    width: 100%;
+  }
+  .mw-dialog-btn.is-teal {
+    order: -1;
   }
 }
 
@@ -892,7 +962,7 @@ textarea::placeholder {
   gap: 14px;
 }
 .pc-card {
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--mv2-border-default);
   border-radius: var(--mv2-radius-lg);
   padding: 18px 20px;
   background: var(--bg);
@@ -901,9 +971,9 @@ textarea::placeholder {
     box-shadow 0.2s ease;
 }
 .pc-title {
-  font-weight: 700;
-  font-size: 15.5px;
-  color: var(--ink);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--mv2-text-primary);
   margin-bottom: 4px;
 }
 .pc-field {
@@ -912,9 +982,11 @@ textarea::placeholder {
   gap: 6px;
   margin-top: 12px;
 }
+/* Used as the field label of the petty-cash fields (pettyCashFields' f.label). */
 .pc-sub {
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 /* In-dropdown "+ Add '<name>' as a new contact" row + inline create panel. */
 .mselect-create {
@@ -941,14 +1013,15 @@ textarea::placeholder {
   gap: 12px;
 }
 .mselect-create-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 .mselect-create-input {
   width: 100%;
-  min-height: var(--mv2-control-height);
-  padding: 12px 14px;
+  height: var(--mv2-control-height);
+  padding: 0 12px;
+  color: var(--mv2-text-primary);
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
   font-size: 14px;
@@ -958,7 +1031,7 @@ textarea::placeholder {
 }
 .mselect-create-error {
   color: var(--danger);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 .mselect-create-actions {
   display: flex;
@@ -1004,8 +1077,8 @@ textarea::placeholder {
   color: var(--accent-ink);
 }
 .pc-hint {
-  color: var(--muted-2);
-  font-size: 12.5px;
+  color: var(--mv2-text-secondary);
+  font-size: 13px;
   font-weight: 400;
   margin-left: 4px;
 }
@@ -1013,12 +1086,12 @@ textarea::placeholder {
   appearance: none;
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
-  min-height: var(--mv2-control-height);
-  padding: 12px 14px;
+  height: var(--mv2-control-height);
+  padding: 0 12px;
   font-size: 14px;
   background: var(--bg);
-  color: var(--ink);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8d8b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  color: var(--mv2-text-primary);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23535A5A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 38px;
@@ -1030,7 +1103,7 @@ textarea::placeholder {
   border-color: var(--mv2-border-focus);
 }
 .pc-card:focus-within {
-  border-color: var(--line);
+  border-color: var(--mv2-border-default);
   box-shadow: none;
 }
 .pc-card.is-error {
@@ -1066,7 +1139,7 @@ textarea::placeholder {
 
 /* Group divider (matches step h2 size) */
 .pc-section-head {
-  margin-top: 28px;
+  margin-top: 32px;
   padding-top: 24px;
   border-top: 1px solid var(--line);
 }
@@ -1086,7 +1159,7 @@ textarea::placeholder {
 }
 
 .method-card {
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--mv2-border-default);
   border-radius: var(--mv2-radius-lg);
   background: var(--bg);
   transition: border-color 0.2s ease;
@@ -1107,9 +1180,9 @@ textarea::placeholder {
   cursor: default;
 }
 .method-title {
-  font-weight: 700;
-  font-size: 15.5px;
-  color: var(--ink);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--mv2-text-primary);
   letter-spacing: -0.005em;
   display: inline-flex;
   align-items: center;
@@ -1234,12 +1307,12 @@ textarea::placeholder {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .method-add-field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 .method-add-actions {
   display: grid;
@@ -1328,7 +1401,7 @@ textarea::placeholder {
   font-size: 18px;
   letter-spacing: -0.005em;
   padding: 8px 22px;
-  border-radius: var(--mv2-radius-full);
+  border-radius: var(--mv2-radius-lg);
   cursor: pointer;
   line-height: 1;
   color: var(--mv2-action-secondary-text);
@@ -1551,11 +1624,11 @@ textarea::placeholder {
   width: 100%;
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
-  min-height: var(--mv2-control-height);
-  padding: 11px 38px 11px 14px;
+  height: var(--mv2-control-height);
+  padding: 0 38px 0 12px;
   font-size: 14px;
   background: var(--bg);
-  color: var(--ink);
+  color: var(--mv2-text-primary);
   transition: border-color 0.15s ease;
   box-sizing: border-box;
 }
@@ -1674,11 +1747,11 @@ textarea::placeholder {
   gap: 10px;
   border: 1px solid var(--mv2-border-input);
   background: var(--bg);
-  color: var(--ink);
-  min-height: var(--mv2-control-height);
-  padding: 12px 14px;
+  color: var(--mv2-text-primary);
+  height: var(--mv2-control-height);
+  padding: 0 12px;
   border-radius: var(--mv2-radius-lg);
-  font-size: 14.5px;
+  font-size: 14px;
   font-family: inherit;
   cursor: pointer;
   text-align: left;
@@ -1931,13 +2004,13 @@ textarea::placeholder {
   color: var(--ink);
 }
 .invite-field {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .invite-field > label {
   display: block;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
   margin-bottom: 6px;
 }
 /* Mandatory-field marker (red asterisk) — shared by every form. */
@@ -2002,10 +2075,10 @@ textarea::placeholder {
   border: 1px solid var(--line-strong);
   border-radius: var(--mv2-radius-lg);
   padding: 14px 18px;
-  transition: border-color 0.15s ease;
+  transition: background 0.15s ease;
 }
 .invite-row-card:hover {
-  border-color: color-mix(in oklab, var(--mv2-border-selected) 45%, var(--line-strong));
+  background: var(--mv2-state-hover);
 }
 .invite-avatar {
   width: 38px;
@@ -2100,10 +2173,8 @@ textarea::placeholder {
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background: rgba(255, 255, 255, 0.72);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-  backdrop-filter: blur(18px) saturate(180%);
-  color: var(--mv2-text-primary);
+  background: var(--mv2-text-primary);
+  color: var(--mv2-text-inverse);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0;
@@ -2112,7 +2183,7 @@ textarea::placeholder {
   border-radius: var(--mv2-radius-md);
   width: max-content;
   max-width: 360px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 0;
   box-shadow: var(--mv2-elevation-overlay);
   opacity: 0;
   pointer-events: none;
@@ -2134,6 +2205,11 @@ textarea::placeholder {
 }
 .info-tip-pop p {
   margin: 0;
+}
+/* The tooltip is dark, so the link in it is inverse ink (underlined, as everywhere). */
+.info-tip-pop .pc-link,
+.info-tip-pop .pc-link:hover {
+  color: var(--mv2-text-inverse);
 }
 .info-tip-pop p + p {
   margin-top: 8px;
@@ -2160,11 +2236,11 @@ textarea::placeholder {
   background: var(--bg);
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
-  min-height: var(--mv2-control-height);
-  padding: 12px 14px;
+  height: var(--mv2-control-height);
+  padding: 0 12px;
   font: inherit;
   font-size: 14px;
-  color: var(--ink);
+  color: var(--mv2-text-primary);
   text-align: left;
   cursor: pointer;
   transition:
@@ -2367,19 +2443,24 @@ textarea::placeholder {
   font-weight: 600;
   color: var(--ink);
 }
+/* Status pill (Part 14): soft background + deep ink, 24 tall, 12px / 600. */
 .pill-status {
-  padding: 4px 12px;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
   border-radius: var(--mv2-radius-full);
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .pill-status.ok {
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+  background: var(--mv2-success-bg);
+  color: var(--mv2-success-ink);
 }
 .pill-status.off {
-  background: var(--surface-2);
-  color: var(--muted);
+  background: var(--mv2-neutral-bg);
+  color: var(--mv2-neutral-ink);
 }
 /* ==========================================================================
      STEP 2 — "Which free trial would you like to start today?"
@@ -2392,8 +2473,7 @@ textarea::placeholder {
      WHY THESE ARE STILL THEIR OWN TOKENS. The design drew this step in its own teals
      (#4FC7C7 / #18C4C7). Minty v2 unified them: selection controls resolve to
      border-selected and teal text to text-link (the old teals were ~2:1 on white). The
-     names stay so the step's roles are visible in one place. --sum-plan is the one
-     colour v2 has no role for yet.
+     names stay so the step's roles are visible in one place.
      ========================================================================== */
 :root {
   --pick-line: var(--mv2-border-selected); /* selected card border, checkbox fill */
@@ -2405,9 +2485,9 @@ textarea::placeholder {
   --sum-label: var(--mv2-text-muted); /* "Selected plan", "Payment method" */
   --sum-note: var(--mv2-text-muted); /* "/month" */
   --sum-price: var(--mv2-text-link); /* "HK$280", "Add card" */
-  --sum-plan: #2e6ff2; /* a single module's name. NOT the bundle: SuperMinty is
-                                  --pick-ink, and the two states are deliberately
-                                  different colours in the design. */
+  /* A single module's name. NOT the bundle: SuperMinty is --pick-ink, and the two states
+       are deliberately different colours. Plan names are not a status, so primary ink. */
+  --sum-plan: var(--mv2-text-primary);
 }
 
 .module-grid {
@@ -2502,27 +2582,22 @@ textarea::placeholder {
 }
 /* THE CARD, PORTED FROM THE OLD LIVE APP (onboarding-old, LIVE07072026): the illustration
      filling the top, the description over the card on hover, and a selected frame when
-     picked. The frame is a 3px ring — 1px of padding inside a 2px border — so selecting a
-     card changes its colour and never its size. Flat fills only (Minty v2). */
+     picked. Minty v2 selection card: a 1px default border, 2px selected border when picked.
+     The frame is always 3px a side (border + padding trade off), so selecting a card
+     changes its colour and never its size. */
 .mp-frame {
   position: relative;
   z-index: 1; /* above the confetti */
   width: 100%;
-  padding: 1px;
-  border: 2px solid transparent;
-  border-radius: var(--mv2-radius-xl);
-  background: var(--line);
-  transition:
-    background 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.2s ease;
-}
-.module-pick:hover .mp-frame {
-  transform: translateY(-2px);
+  padding: 2px;
+  border: 1px solid var(--mv2-border-default);
+  border-radius: calc(var(--mv2-radius-lg) + 3px);
+  background: transparent;
+  transition: border-color 0.25s ease;
 }
 .module-pick.selected .mp-frame {
+  padding: 1px;
   border: 2px solid var(--mv2-border-selected);
-  background: var(--mv2-state-selected);
 }
 .mp-card {
   position: relative;
@@ -2531,10 +2606,14 @@ textarea::placeholder {
   height: 360px;
   border-radius: var(--mv2-radius-lg);
   overflow: hidden;
-  background: var(--mv2-surface-sunk);
+  background: var(--mv2-surface-card);
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background 0.2s ease;
+}
+.module-pick:hover .mp-card {
+  background: var(--mv2-state-hover);
 }
 .module-pick.selected .mp-card {
   background: var(--mv2-state-selected);
@@ -2609,7 +2688,7 @@ textarea::placeholder {
   justify-content: center;
   gap: 10px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--mv2-state-hover);
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -2638,9 +2717,6 @@ textarea::placeholder {
   .mp-hover {
     transition: none;
   }
-  .module-pick:hover .mp-frame {
-    transform: none;
-  }
   .mp-hover {
     transform: none;
   }
@@ -2649,29 +2725,29 @@ textarea::placeholder {
 .mp-circle {
   position: relative; /* above the confetti; a flow element would sit under it */
   z-index: 1;
-  width: 40px;
-  height: 40px;
+  /* A 20px visible box. The click target is the whole .module-pick card around it. */
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
   border-radius: var(--mv2-radius-sm);
-  border: 2px solid var(--mv2-border-input);
+  border: 1px solid var(--mv2-border-input);
   background: var(--bg);
   display: grid;
   place-items: center;
   color: var(--mv2-text-inverse);
   transition:
     background 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.2s ease;
+    border-color 0.25s ease;
 }
 .module-pick:hover .mp-circle {
   border-color: var(--mv2-border-selected);
 }
 .module-pick.selected .mp-circle {
-  background: var(--pick-line);
-  border-color: transparent;
-  transform: scale(1.05);
+  background: var(--mv2-border-selected);
+  border-color: var(--mv2-border-selected);
 }
 .mp-circle svg {
-  transform: scale(1.6);
+  transform: none;
 }
 
 /* --- the Subscription Summary ------------------------------------------ */
@@ -3332,10 +3408,9 @@ textarea::placeholder {
 .page-head p {
   font-size: 16px;
 }
-.field label,
-.pc-sub,
+/* Field labels, inputs, helper and error text, status pills and the field-group titles
+     are NOT here: they take the Minty v2 sizes set on their own rules (Part 14). */
 .pc-section-sub,
-.pc-hint,
 .acc-sub,
 .acc-all-label,
 .acc-name,
@@ -3345,7 +3420,6 @@ textarea::placeholder {
 .invite-email,
 .invite-card-title,
 .invite-list-title,
-.invite-field > label,
 .invite-role,
 .module-caption,
 .autofill-hint,
@@ -3355,27 +3429,10 @@ textarea::placeholder {
 .pc-side-item,
 .status-meta,
 .status-meta b,
-.card-title,
-.pill-status,
-.field-required,
-.acc-search input {
+.card-title {
   font-size: 16px;
 }
-/* Field text & form inputs */
-.field input,
-.field select,
-.field textarea {
-  font-size: 16px;
-}
-.field .input-prefix input {
-  font-size: 16px;
-}
-.field .input-prefix .prefix {
-  font-size: 16px;
-}
-/* Larger card / section titles → tighter heading hierarchy */
-.pc-title,
-.method-title,
+/* Larger section titles → tighter heading hierarchy */
 .pc-section-title {
   font-size: 18px;
 }
@@ -3594,6 +3651,7 @@ textarea::placeholder {
      list of three, so the ring stays. */
 .billing-pm.is-chosen {
   outline-color: var(--pick-line);
+  background: var(--mv2-state-selected);
 }
 /* THE RADIO IS DRAWN, NOT THEMED. `accent-color` gives a coloured dot inside a thin
      ring; the design draws the inverse — a 6px teal ring around a white core — and no
@@ -3754,13 +3812,13 @@ textarea::placeholder {
   margin-top: 4px;
 }
 .billing-field {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .billing-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--mv2-text-primary);
 }
 /* Matched to the Stripe fields below them (STRIPE_APPEARANCE in BillingSheet.jsx), so
@@ -3771,7 +3829,7 @@ textarea::placeholder {
   display: block;
   width: 100%;
   height: var(--mv2-control-height);
-  padding: 12px 14px;
+  padding: 0 12px;
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
   background: var(--bg);
@@ -3797,7 +3855,7 @@ textarea::placeholder {
 }
 .billing-fielderror {
   margin: 6px 0 0;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.4;
   color: var(--mv2-danger-ink);
 }
@@ -3877,7 +3935,7 @@ textarea::placeholder {
 /* The card that was saved, in its own colour so the sentence can be scanned for the
      one fact it carries. */
 .billing-done-card {
-  color: #ea9713;
+  color: var(--mv2-success-ink);
 }
 .billing-done-actions {
   display: flex;

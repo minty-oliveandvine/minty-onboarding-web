@@ -133,33 +133,41 @@ function reason(err: unknown, fallback: string): string {
  *
  * Frozen at module scope because a new object identity on every render remounts the
  * Element — the payer would watch a half-typed card number disappear.
+ *
+ * The colour literals mirror the --mv2-* tokens in app/globals.css (Stripe cannot read CSS
+ * variables): #242828 text-primary, #676F6F text-muted, #A82A2F danger-ink, #848C8C
+ * border-input, #19676B border-focus. Change a token, change it here too.
  */
 const STRIPE_APPEARANCE: Appearance = {
   theme: 'stripe',
   variables: {
     fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     fontSizeBase: '14px',
-    colorText: '#16202E',
-    colorTextPlaceholder: '#9AA6AC',
-    colorDanger: '#b4231f',
-    borderRadius: '8px',
+    colorText: '#242828',
+    colorTextPlaceholder: '#676F6F',
+    colorDanger: '#A82A2F',
+    borderRadius: '12px',
     spacingUnit: '4px',
   },
   rules: {
     '.Input': {
-      border: '1px solid #D7DEE2',
+      border: '1px solid #848C8C',
       boxShadow: 'none',
-      padding: '12px 14px',
+      padding: '11px 12px',
     },
     '.Input:focus': {
-      border: '1px solid #4FC7C7',
-      boxShadow: '0 0 0 3px rgba(79, 199, 199, 0.18)',
+      border: '1px solid #19676B',
+      boxShadow: '0 0 0 2px #19676B',
       outline: 'none',
     },
+    '.Input--invalid': {
+      border: '1px solid #A82A2F',
+      boxShadow: 'none',
+    },
     '.Label': {
-      fontWeight: '600',
-      fontSize: '13px',
-      color: '#16202E',
+      color: '#242828',
+      fontSize: '14px',
+      fontWeight: '500',
     },
   },
 };

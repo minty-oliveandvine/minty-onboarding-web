@@ -63,7 +63,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
   }, [open]);
 
   const itemClass =
-    'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-primary transition-colors hover:bg-primary/10';
+    'flex w-full items-center gap-3 rounded-[8px] px-3 py-2.5 text-base font-medium text-[var(--mv2-text-secondary)] transition-colors hover:bg-[var(--mv2-state-hover)]';
 
   const drawer = (
     <div
@@ -73,20 +73,20 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
     >
       <button
         type="button"
-        className={`absolute inset-0 cursor-pointer bg-black/40 transition-opacity duration-300 ease-out ${open ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 cursor-pointer bg-[var(--mv2-scrim)] transition-opacity duration-300 ease-out ${open ? 'opacity-100' : 'opacity-0'}`}
         onClick={() => setOpen(false)}
         tabIndex={open ? 0 : -1}
         aria-label="Close menu"
       />
       <nav
         id={panelId}
-        className={`absolute right-0 top-0 flex h-full w-[min(100%,14rem)] max-w-[calc(100%-env(safe-area-inset-left)-env(safe-area-inset-right))] flex-col bg-white pt-[env(safe-area-inset-top,0px)] shadow-xl transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`absolute right-0 top-0 flex h-full w-[min(100%,14rem)] max-w-[calc(100%-env(safe-area-inset-left)-env(safe-area-inset-right))] flex-col rounded-l-[12px] border border-[var(--mv2-border-default)] bg-[var(--mv2-surface-card)] pt-[env(safe-area-inset-top,0px)] shadow-[var(--mv2-elevation-overlay)] transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
         aria-label="Main navigation"
       >
-        <div className="flex flex-col gap-3 border-b border-primary/20 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex flex-col gap-3 border-b border-[var(--mv2-border-subtle)] px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex min-w-0 items-center justify-between gap-3">
             <span
-              className="min-w-0 truncate text-sm font-semibold tracking-wide text-primary sm:text-base"
+              className="min-w-0 truncate text-sm font-semibold tracking-wide text-[var(--mv2-text-primary)] sm:text-base"
               title={abbr}
             >
               {abbr}
@@ -94,7 +94,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10"
+              className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[var(--mv2-text-secondary)] transition-colors hover:bg-[var(--mv2-state-hover)]"
               aria-label="Close menu"
             >
               <span className="material-symbols-rounded text-[26px] leading-none">close</span>
@@ -103,7 +103,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
           {showFullMenu && (
             <button type="button" onClick={() => setOpen(false)} className={itemClass}>
               <span
-                className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
+                className="material-symbols-rounded shrink-0 text-[22px] leading-none text-[var(--mv2-text-secondary)]"
                 aria-hidden
               >
                 corporate_fare
@@ -125,7 +125,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
                       role="group"
                       aria-label={section.title}
                     >
-                      <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-primary/70">
+                      <p className="px-3 text-[12px] font-semibold uppercase tracking-wider text-[var(--mv2-text-muted)]">
                         {section.title}
                       </p>
                       <ul className="flex flex-col gap-1">
@@ -137,7 +137,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
                               className={itemClass}
                             >
                               <span
-                                className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
+                                className="material-symbols-rounded shrink-0 text-[22px] leading-none text-[var(--mv2-text-secondary)]"
                                 aria-hidden
                               >
                                 {item.icon}
@@ -154,14 +154,14 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
             )}
 
             <div
-              className={`-mx-4 shrink-0 sm:-mx-6 ${showFullMenu ? 'mt-4 border-t border-primary/15' : ''}`}
+              className={`-mx-4 shrink-0 sm:-mx-6 ${showFullMenu ? 'mt-4 border-t border-[var(--mv2-border-subtle)]' : ''}`}
               role="presentation"
             >
               <div className="flex flex-col gap-1 px-4 pt-4 sm:px-6">
                 {showFullMenu && (
                   <button type="button" onClick={() => setOpen(false)} className={itemClass}>
                     <span
-                      className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
+                      className="material-symbols-rounded shrink-0 text-[22px] leading-none text-[var(--mv2-text-secondary)]"
                       aria-hidden
                     >
                       settings
@@ -171,7 +171,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
                 )}
                 <button type="button" onClick={handleLogout} className={itemClass}>
                   <span
-                    className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
+                    className="material-symbols-rounded shrink-0 text-[22px] leading-none text-[var(--mv2-text-secondary)]"
                     aria-hidden
                   >
                     logout

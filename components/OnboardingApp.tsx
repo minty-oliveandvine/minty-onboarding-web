@@ -66,10 +66,11 @@ import { inviteRows } from '../lib/invites';
 import { useMounted } from '../lib/useMounted';
 
 // Baked-in defaults that used to live in TWEAK_DEFAULTS (tweaks-panel removed from prod build)
+// Minty v2 values (mirror --mv2-action-primary / --mv2-text-link / --mv2-state-selected).
 const ACCENT_DEFAULTS = {
-  accent: '#36c3b4',
-  accentInk: '#0f7a6e',
-  accentSoft: '#e6f7f4',
+  accent: '#3cbcc3',
+  accentInk: '#19676b',
+  accentSoft: '#effafa',
 };
 
 export default function OnboardingApp() {
@@ -1542,7 +1543,7 @@ export default function OnboardingApp() {
               aria-labelledby="xero-prompt-title"
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#f1f3f4',
+                background: 'var(--mv2-surface-sunk)',
                 border: '1px solid var(--line)',
                 borderRadius: 'var(--radius)',
                 boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22)',
