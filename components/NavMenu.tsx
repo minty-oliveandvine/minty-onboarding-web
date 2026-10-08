@@ -97,13 +97,13 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
               className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10"
               aria-label="Close menu"
             >
-              <span className="material-symbols-outlined text-[26px] leading-none">close</span>
+              <span className="material-symbols-rounded text-[26px] leading-none">close</span>
             </button>
           </div>
           {showFullMenu && (
             <button type="button" onClick={() => setOpen(false)} className={itemClass}>
               <span
-                className="material-symbols-outlined shrink-0 text-[22px] leading-none text-primary"
+                className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
                 aria-hidden
               >
                 corporate_fare
@@ -137,7 +137,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
                               className={itemClass}
                             >
                               <span
-                                className="material-symbols-outlined shrink-0 text-[22px] leading-none text-primary"
+                                className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
                                 aria-hidden
                               >
                                 {item.icon}
@@ -161,7 +161,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
                 {showFullMenu && (
                   <button type="button" onClick={() => setOpen(false)} className={itemClass}>
                     <span
-                      className="material-symbols-outlined shrink-0 text-[22px] leading-none text-primary"
+                      className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
                       aria-hidden
                     >
                       settings
@@ -171,7 +171,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
                 )}
                 <button type="button" onClick={handleLogout} className={itemClass}>
                   <span
-                    className="material-symbols-outlined shrink-0 text-[22px] leading-none text-primary"
+                    className="material-symbols-rounded shrink-0 text-[22px] leading-none text-primary"
                     aria-hidden
                   >
                     logout
@@ -207,7 +207,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
         aria-controls={panelId}
         aria-label="Open navigation menu"
       >
-        <span className="material-symbols-outlined text-[26px] leading-none">menu</span>
+        <span className="material-symbols-rounded text-[26px] leading-none">menu</span>
       </button>
       {portalReady ? createPortal(drawer, document.body) : null}
     </div>
