@@ -60,6 +60,20 @@ Reaching step 9 runs `completeOnboarding()`: it submits the opening balance and 
 starts the trials (minty-onboarding-api → minty-subscription-api `trials/start`, 2026-10-06);
 the screen itself commits nothing, and *Go to entity list* leaves.
 
+**The trials have no subscriber** (the user, 2026-10-08). Starting a trial is free and
+commits nobody, so finalize establishes no payer for the company. The wizard's one door onto
+the billing relationship is **step 2's billing sheet** (`authorizeBilling`, `lib/billing.ts`
+-> `POST /billing/authorize`), and it is skippable: a person who skips it finishes with
+card-free trials nobody is liable for. Those trials expire at term end rather than
+converting, every admin of the company may act on its subscription, and any of them can
+confirm billing later with *Activate Subscription* on minty-web's module settings page.
+Nothing in the wizard changes - this is what *Add Payment Now* on All Set is for.
+
+Complete the sheet and the company DOES get its subscriber: the confirm is made on step 2,
+before the module rows exist, so the engine lands the stamp at finalize
+(`store.confirmed_payer_for_entity`, asked by company rather than by whoever finished - so
+a wizard completed by a different member still credits the person who agreed to pay).
+
 **A failed finalize is shown, not hidden (2026-10-06).** `completeOnboarding` checks
 `res.ok`; a failed finalize (or a network error) resolves `{ok: false, error}`, and the
 saved session (`localStorage`/`sessionStorage`) is cleared only after a successful one, so a

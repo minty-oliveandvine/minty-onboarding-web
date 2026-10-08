@@ -162,10 +162,18 @@ release. Tick each box against a disposable test entity — never one you care a
 - [ ] **DB:** `SELECT status FROM pettycashv3.entities WHERE id = '<id>';` flips to
       `connected`/`disconnected` only on a successful finalize — stays `onboarding` after a
       failed one (reload-and-retry depends on this).
-- [ ] **DB:** `SELECT function_code, phase, trial_end FROM
+- [ ] **DB:** `SELECT function_code, phase, trial_end, payer_user_id FROM
       pettycashv3.entity_module_subscription WHERE entity_id = '<id>';` — exactly one row
       per enabled module (unique on `entity_id, function_code`); clicking *Try again* after
-      a failure must not add a second row for the same module.
+      a failure must not add a second row for the same module. Since 2026-10-08
+      `payer_user_id` must be **NULL**: finalize establishes no subscriber, and the person
+      who finished the wizard is not liable for the company.
+- [ ] Skip the billing sheet on step 2 entirely, then finish: the company still goes live
+      with its trials, there is no `pettycashv3.entity_billing_group` row and no
+      `entity_billing_consent` row for it, and minty-web's module page offers *Activate
+      Subscription* — to ANY admin of it, not only the one who ran the wizard.
+- [ ] Complete the billing sheet instead: `entity_billing_group` and consent exist for the
+      person who completed it, and after finalize every module row is stamped with them.
 
 ## Never land on step 9 against a real entity
 
