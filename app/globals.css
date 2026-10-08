@@ -2085,10 +2085,21 @@ textarea {
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   opacity: 0;
   pointer-events: none;
+  cursor: auto;
   transition:
     opacity 0.18s ease,
     transform 0.18s ease;
   z-index: 50;
+}
+/* Bridges the 10px gap above the icon so the pointer can travel into the
+   popup without passing over dead space and closing it. */
+.info-tip-pop::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 10px;
 }
 .info-tip-pop p {
   margin: 0;
@@ -2097,9 +2108,11 @@ textarea {
   margin-top: 8px;
 }
 .info-tip:hover .info-tip-pop,
-.info-tip:focus-visible .info-tip-pop {
+.info-tip:focus-visible .info-tip-pop,
+.info-tip:focus-within .info-tip-pop {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 /* MintySelect — themed dropdown */
@@ -2291,42 +2304,6 @@ textarea {
 .mselect-menu::-webkit-scrollbar-thumb {
   background: var(--line-strong);
   border-radius: 99px;
-}
-/* Notice */
-.notice {
-  display: flex;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  border-left: 4px solid #3b82f6;
-  background: #eef4ff;
-}
-.notice-info {
-  background: #eef4ff;
-  border-color: #3b82f6;
-}
-.notice-icon {
-  color: #3b82f6;
-  flex-shrink: 0;
-  padding-top: 2px;
-}
-.notice-icon svg {
-  width: 18px;
-  height: 18px;
-}
-.notice-body {
-  font-size: 13.5px;
-  color: #1e3a8a;
-  line-height: 1.55;
-}
-.notice-title {
-  font-weight: 700;
-  margin-bottom: 2px;
-  color: #1e3a8a;
-}
-.notice-body p {
-  margin: 0;
-  color: #2347a3;
 }
 .card-title {
   font-weight: 700;
@@ -3337,8 +3314,6 @@ textarea {
 .substep-label,
 .pc-side-title,
 .pc-side-item,
-.notice-body,
-.notice-title,
 .status-meta,
 .status-meta b,
 .card-title,

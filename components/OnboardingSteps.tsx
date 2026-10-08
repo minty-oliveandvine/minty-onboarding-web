@@ -642,7 +642,12 @@ export function StepConnectXero({
               <p>
                 Currently Minty can be used only by integrating to Xero. If you wish to be informed
                 about our feature update, please{' '}
-                <a href="#" className="pc-link">
+                <a
+                  href="https://www.xero.com/signup/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pc-link"
+                >
                   register here
                 </a>
                 .
@@ -650,19 +655,6 @@ export function StepConnectXero({
             </span>
           </span>
         </h2>
-      </div>
-
-      <div className="notice notice-info">
-        <div className="notice-icon">
-          <Icon.Info />
-        </div>
-        <div className="notice-body">
-          <div className="notice-title">Before you connect</div>
-          <p>
-            Our service team can walk you through setting up your Xero integration — want to reach
-            out to them first?
-          </p>
-        </div>
       </div>
 
       <div
