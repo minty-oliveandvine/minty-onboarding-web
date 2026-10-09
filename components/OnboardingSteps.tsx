@@ -549,6 +549,7 @@ export function StepConnectXero({
   clearXeroMismatch,
   xeroConflict,
   clearXeroConflict,
+  releaseXeroConflict,
   saveAndExit,
 }: Pick<
   StepProps,
@@ -561,6 +562,7 @@ export function StepConnectXero({
   | 'clearXeroMismatch'
   | 'xeroConflict'
   | 'clearXeroConflict'
+  | 'releaseXeroConflict'
   | 'saveAndExit'
 >) {
   const connected = state.xero.connected;
@@ -585,20 +587,33 @@ export function StepConnectXero({
     if (typeof clearXeroMismatch === 'function') clearXeroMismatch();
   }, [xeroMismatch, clearXeroMismatch, toast]);
 
-  // One-org-one-entity block, same redirect-driven shape as the mismatch above:
-  // raise it from an effect and consume it immediately. `xeroConflict` holds the
-  // name of the entity already using the org, or 'unknown' when the backend
-  // couldn't tell us — in that case the copy has to stay generic rather than
-  // naming a placeholder entity.
-  useEffect(() => {
-    if (!xeroConflict) return;
-    toast.error(
-      xeroConflict === 'unknown'
-        ? 'Oh, another entity got to this Xero org first! Disconnect it there, then come back?'
-        : `Oh, “${xeroConflict}” is using this Xero org already! Disconnect it there, then come back?`,
-    );
+  // One-org-one-company block. NOT a toast like the mismatch above: the way on is to free
+  // the organisation on the company holding it, which is a real disconnect, so it is asked
+  // for in a dialog and nothing happens until the person asks. A toast said the same thing
+  // and could do nothing about it - and before 2026-10-09 this case did not even refuse:
+  // it connected and silently unlinked the other company.
+  //
+  // `name` is 'unknown' when Flask could not name the company; the copy then stays generic.
+  // `canMove` false (no permission there, or no id came back) leaves only who to ask.
+  const [moving, setMoving] = useState(false);
+  const [moveError, setMoveError] = useState('');
+  const conflictTitleId = 'xero-conflict-title';
+
+  const handleMove = async () => {
+    if (moving || typeof releaseXeroConflict !== 'function') return;
+    setMoving(true);
+    setMoveError('');
+    const result = await releaseXeroConflict();
+    // Only a failure comes back: on success the browser is already on its way to Xero.
+    setMoving(false);
+    if (!result?.ok) setMoveError(result?.error || "I couldn't disconnect that company from Xero.");
+  };
+
+  const closeConflict = () => {
+    if (moving) return;
+    setMoveError('');
     if (typeof clearXeroConflict === 'function') clearXeroConflict();
-  }, [xeroConflict, clearXeroConflict, toast]);
+  };
 
   const handleDisconnect = async () => {
     if (disconnecting || typeof disconnectXero !== 'function') return;
@@ -748,6 +763,71 @@ export function StepConnectXero({
           )}
         </div>
       </div>
+
+      {/* The organisation picked on Xero is in use by another company. Escape and the
+          backdrop close it: nothing has changed yet, and the step still offers Connect. */}
+      {xeroConflict && (
+        <ModalFrame
+          labelledBy={conflictTitleId}
+          busy={moving}
+          onDismiss={closeConflict}
+          className="mw-dialog"
+        >
+          {/* Title and company in their own column, Minty beside them - minty-web's
+              ConfirmDialog, which this dialog follows. */}
+          <div className="mw-dialog-head">
+            <div className="mw-dialog-head-text">
+              <h2 id={conflictTitleId} className="mw-dialog-title">
+                That Xero organisation is taken
+              </h2>
+              {xeroConflict.name !== 'unknown' && (
+                <p className="mw-dialog-entity">
+                  Entity
+                  <b>{xeroConflict.name}</b>
+                </p>
+              )}
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/minty-dont.png" alt="" className="mw-dialog-figure" />
+          </div>
+          <p className="mw-dialog-body">
+            {xeroConflict.name === 'unknown'
+              ? 'That Xero organisation is already connected to another company, and a Xero organisation can only be linked to one company at a time.'
+              : `That Xero organisation is already connected to ${xeroConflict.name}, and a Xero organisation can only be linked to one company at a time.`}
+          </p>
+          <p className="mw-dialog-body">
+            {xeroConflict.canMove
+              ? `I can disconnect it from ${xeroConflict.name === 'unknown' ? 'that company' : xeroConflict.name} and take you back to Xero to connect it to ${state.entity.name || 'this company'} instead.`
+              : `Ask an accountant or admin of ${xeroConflict.name === 'unknown' ? 'that company' : xeroConflict.name} to disconnect it from Xero there first, then connect again.`}
+          </p>
+          {moveError && (
+            <p className="mw-dialog-error" role="alert">
+              {moveError}
+            </p>
+          )}
+          <div className={'mw-dialog-actions' + (xeroConflict.canMove ? '' : ' is-single')}>
+            {xeroConflict.canMove && (
+              <button
+                type="button"
+                className="mw-dialog-btn is-grey"
+                onClick={closeConflict}
+                disabled={moving}
+              >
+                Go back
+              </button>
+            )}
+            <button
+              type="button"
+              className={'mw-dialog-btn ' + (xeroConflict.canMove ? 'is-orange' : 'is-teal')}
+              onClick={xeroConflict.canMove ? handleMove : closeConflict}
+              disabled={moving}
+              aria-busy={moving || undefined}
+            >
+              {xeroConflict.canMove ? (moving ? 'Moving…' : 'Move it here') : 'Close'}
+            </button>
+          </div>
+        </ModalFrame>
+      )}
     </>
   );
 }

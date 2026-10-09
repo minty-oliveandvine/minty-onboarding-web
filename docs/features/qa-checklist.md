@@ -75,8 +75,15 @@ release. Tick each box against a disposable test entity — never one you care a
       *Connected to \<org\>*, and unlocks Save & Next.
 - [ ] A mismatch return (`?xero=mismatch&expected=<email>`) shows the mismatch notice with
       the expected email, and leaves the connection unmade.
-- [ ] A conflict return (`?xero=conflict&conflict_entity=<name>`) names the other company
-      already holding that Xero org, and the connection is not made.
+- [ ] A conflict return (`?xero=conflict&conflict_entity=<name>`) raises the *That Xero
+      organisation is taken* dialog naming the other company, and the connection is not made.
+      Without `conflict_can_move=1` there is no *Move it here*, only who to ask.
+- [ ] *Move it here* disconnects the other company and comes back connected; *Go back* and
+      Escape change nothing on either company. A refused release stays in the dialog.
+- [ ] At 360px the step scrolls only downwards — the heading's info tooltip stays on screen
+      (it hangs from the icon's right below 760px) and the footer row wraps, the reminder on
+      its own line. `e2e/responsive.spec.ts` measures this and needs no credentials; run it
+      after any change to the step's chrome.
 - [ ] *Disconnect* clears the connection but leaves the company in `onboarding`, still
       resumable — reload and confirm step 4 shows disconnected (state is re-read from
       `GET /state`, not cached).

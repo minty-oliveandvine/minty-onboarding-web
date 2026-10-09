@@ -75,6 +75,7 @@ const DJANGO_PATHS = [
   '/api/onboarding/billing/authorize',
   '/api/onboarding/finalize',
   '/api/onboarding/xero/disconnect',
+  '/api/onboarding/xero/release',
 ];
 
 const DJANGO_PATTERNS = DJANGO_PATHS.map((p) => p.split('/'));

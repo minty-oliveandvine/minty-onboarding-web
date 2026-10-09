@@ -704,6 +704,26 @@ textarea {
   align-items: center;
   gap: 12px;
 }
+/* Back, Save & Exit, Save & Next and the "…to continue" reminder are one unwrapping row,
+   which is 30px wider than a 360px phone - enough to scroll the whole page sideways. Let
+   the row wrap and give the reminder a line of its own: it is a sentence, not a control,
+   and it is the piece with no room. */
+@media (max-width: 560px) {
+  .step-nav {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .step-actions {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .step-reminder {
+    flex: 1 0 100%;
+    max-width: 100%;
+  }
+}
 
 /* Skip-confirmation modal (Step 3: Invite) */
 /* minty-web's modal (PORT of its ModalFrame + ConfirmDialog card, Figma 04-G / section 06):
@@ -755,6 +775,26 @@ textarea {
   height: auto;
   margin-top: 20px;
 }
+/* minty-web's ConfirmDialog layout: the Minty picture sits BESIDE the title, in the top
+   right, with the title and the company in a column that wraps inside its own width - not
+   the full-width `.mw-dialog-art` block above it (that one is the older accountant prompt's).
+   The height is pinned and the width follows, as it does there. */
+.mw-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.mw-dialog-head-text {
+  min-width: 0;
+  flex: 1;
+}
+.mw-dialog-figure {
+  height: 130px;
+  width: auto;
+  flex-shrink: 0;
+  margin: -8px -12px 0 0;
+}
 .mw-dialog-body {
   margin: 20px 0 0;
   font-size: 15px;
@@ -789,9 +829,61 @@ textarea {
 .mw-dialog-btn.is-teal:hover {
   opacity: 0.9;
 }
+/* The other two tones minty-web's ConfirmDialog draws: orange to change something, and the
+   grey-edged secondary beside it. Change them with it. */
+.mw-dialog-btn.is-orange {
+  background: #ea9713;
+  color: #fff;
+  font-weight: 700;
+}
+.mw-dialog-btn.is-orange:hover {
+  opacity: 0.9;
+}
+.mw-dialog-btn.is-grey {
+  background: #fff;
+  border-color: rgba(115, 122, 135, 0.3);
+  color: #000;
+  font-weight: 700;
+}
+.mw-dialog-btn.is-grey:hover {
+  background: #f9fafb;
+}
+.mw-dialog-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+/* "Entity" and the company it names, in the title's column (minty-web's `entityName`). */
+.mw-dialog-entity {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.375;
+  color: #737a87;
+  overflow-wrap: break-word;
+}
+.mw-dialog-entity b {
+  display: block;
+  font-weight: 400;
+  color: #18c4c7;
+}
+.mw-dialog-error {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.375;
+  color: #dc5a5a;
+}
 @media (max-width: 480px) {
   .mw-dialog {
     padding: 32px 24px;
+  }
+  /* The pair stacks with the action on top, as minty-web's does under 560px. */
+  .mw-dialog-actions {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+  .mw-dialog-btn {
+    height: 56px;
+    flex: none;
+    width: 100%;
   }
 }
 
@@ -2085,7 +2177,10 @@ textarea {
   padding: 14px 16px;
   border-radius: 14px;
   width: max-content;
-  max-width: 360px;
+  /* Never wider than the screen it has to fit on. A flat 360px is wider than a 360px
+     phone, and this popup is only opacity-hidden - it sits in the layout at all times, so
+     an oversized one scrolls the whole page sideways without ever being seen. */
+  max-width: min(360px, calc(100vw - 32px));
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow:
     0 18px 40px rgba(15, 23, 42, 0.18),
@@ -2121,6 +2216,23 @@ textarea {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
   pointer-events: auto;
+}
+/* Centring on the icon is what runs off the page: both tooltips follow their heading's
+   text, so on a phone the icon is near the right edge and half of a centred popup lands
+   outside the viewport (137px past it at 360px, scrolling the whole page sideways even
+   though nothing is visible). Narrow screens hang it from the icon's right instead, so it
+   grows leftwards into the room that exists. Capped above, so it still fits. */
+@media (max-width: 760px) {
+  .info-tip-pop {
+    left: auto;
+    right: -8px;
+    transform: translateY(4px);
+  }
+  .info-tip:hover .info-tip-pop,
+  .info-tip:focus-visible .info-tip-pop,
+  .info-tip:focus-within .info-tip-pop {
+    transform: translateY(0);
+  }
 }
 
 /* MintySelect — themed dropdown */

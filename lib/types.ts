@@ -109,6 +109,20 @@ export type XeroForm = {
 };
 
 /**
+ * The company already holding the Xero organisation this company's connect was refused for
+ * ("one org = one company"), as the redirect back from Flask reports it. `canMove` is whether
+ * this person may free it there - `POST /api/onboarding/xero/release` checks it again.
+ *
+ * `name` can be 'unknown': Flask names the company when it can, and the copy stays generic
+ * when it cannot. `entityId` empty means there is nothing to offer, only a message.
+ */
+export type XeroConflict = {
+  name: string;
+  entityId: string;
+  canMove: boolean;
+};
+
+/**
  * An invitation as the wizard's own list holds it -- `first` / `last`, not the API's
  * `first_name` / `last_name`.
  *
@@ -217,9 +231,15 @@ export type StepProps = {
   /** Non-empty when Xero came back connected to a different org than expected. */
   xeroMismatch: string;
   clearXeroMismatch: () => void;
-  /** Non-empty when the Xero org is already connected to another entity. */
-  xeroConflict: string;
+  /** Set when the Xero org the person picked is already connected to another company. */
+  xeroConflict: XeroConflict | null;
   clearXeroConflict: () => void;
+  /**
+   * Free the organisation on the company holding it, then go back through Xero for this one -
+   * the move the conflict dialog offers. Resolves only on a failure; on success the browser
+   * has already left for Xero.
+   */
+  releaseXeroConflict: () => Promise<Result>;
 
   exitToEntityList: () => void;
   saveAndExit: (submitFn?: SubmitFn) => Promise<void>;

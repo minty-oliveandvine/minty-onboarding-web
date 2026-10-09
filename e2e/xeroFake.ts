@@ -33,7 +33,7 @@ import { BASE_URL } from './urls';
 export type XeroOutcome =
   | { kind: 'connected' }
   | { kind: 'mismatch'; expected: string }
-  | { kind: 'conflict'; conflictEntity: string };
+  | { kind: 'conflict'; conflictEntity: string; conflictEntityId?: string; conflictCanMove?: boolean };
 
 export type XeroFake = {
   /** What the fake currently tells the wizard the backend believes. */
@@ -41,6 +41,8 @@ export type XeroFake = {
   setConnected(value: boolean): void;
   /** What the next `/xero_connect` round-trip comes back with. Default: connected. */
   setOutcome(outcome: XeroOutcome): void;
+  /** Make `xero/release` refuse (502), so the dialog's failure path can be exercised. */
+  setReleaseFails(value: boolean): void;
   /** JSON bodies the wizard POSTed to faked endpoints, keyed by path after `/api/onboarding/`. */
   readonly posted: Record<string, unknown[]>;
 };
@@ -92,6 +94,7 @@ export async function installXeroFake(
   { org = FAKE_ORG }: { org?: string } = {},
 ): Promise<XeroFake> {
   let connected = false;
+  let releaseFails = false;
   let outcome: XeroOutcome = { kind: 'connected' };
   const posted: Record<string, unknown[]> = {};
   let createdContacts = 0;
@@ -136,6 +139,10 @@ export async function installXeroFake(
         back.searchParams.set('expected', outcome.expected);
       } else {
         back.searchParams.set('conflict_entity', outcome.conflictEntity);
+        // What the dialog needs to OFFER the move, not only name the company.
+        if (outcome.conflictEntityId)
+          back.searchParams.set('conflict_entity_id', outcome.conflictEntityId);
+        if (outcome.conflictCanMove) back.searchParams.set('conflict_can_move', '1');
       }
       await route.fulfill({ status: 302, headers: { location: back.toString() } });
     },
@@ -169,6 +176,15 @@ export async function installXeroFake(
     record('xero/disconnect', await jsonBody(request));
     connected = false;
     await fulfillJson(route, { ok: true, connected: false });
+  });
+
+  // Freeing the OTHER company's organisation - the first half of the move the conflict
+  // dialog offers. The wizard then navigates to /xero_connect again, which the route above
+  // answers with whatever outcome is set, so a test can let the retry succeed.
+  await api('xero/release', async (route, request) => {
+    record('xero/release', await jsonBody(request));
+    if (releaseFails) return fulfillJson(route, { error: 'Xero would not let go of that one.' }, 502);
+    await fulfillJson(route, { ok: true, released: true, entity_name: 'Another Entity Ltd' });
   });
 
   // 3. Xero-backed data for steps 5-8.
@@ -210,6 +226,9 @@ export async function installXeroFake(
     },
     setOutcome(next) {
       outcome = next;
+    },
+    setReleaseFails(value) {
+      releaseFails = value;
     },
     posted,
   };

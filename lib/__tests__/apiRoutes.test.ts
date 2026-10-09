@@ -72,6 +72,7 @@ const TO_DJANGO = [
   '/api/onboarding/billing/authorize',
   '/api/onboarding/finalize',
   '/api/onboarding/xero/disconnect',
+  '/api/onboarding/xero/release',
 ];
 
 // Flask pages and Flask auth -- not part of the extraction.

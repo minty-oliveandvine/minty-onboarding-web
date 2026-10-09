@@ -94,7 +94,10 @@ test('a wrong-account return names the email to sign in with and stays disconnec
   expect(fake.connected).toBe(false);
 });
 
-test('an org already linked elsewhere names the entity using it and stays disconnected', async ({
+// An org already in use blocks the connect and ASKS what to do about it: freeing it is a
+// real disconnect of another company, so nothing happens until the person says so. Before
+// 2026-10-09 this case connected anyway and silently unlinked the other company.
+test('an org already linked elsewhere asks in a dialog, and leaves the step disconnected', async ({
   page,
   request,
 }) => {
@@ -103,9 +106,79 @@ test('an org already linked elsewhere names the entity using it and stays discon
 
   await connect(page).click();
 
-  await expect(errorToast(page)).toContainText('Another Entity Ltd');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('That Xero organisation is taken');
+  await expect(dialog).toContainText('Another Entity Ltd');
+  // No id/permission came back, so there is nothing to offer - only who to ask.
+  await expect(dialog).toContainText('Ask an accountant or admin');
+  await expect(dialog.getByRole('button', { name: 'Move it here' })).toHaveCount(0);
+
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(status(page)).toHaveText('Not connected');
   await expect(saveNext(page)).toBeDisabled();
+  expect(fake.connected).toBe(false);
+  expect(fake.posted['xero/release']).toBeUndefined();
+});
+
+test('Go back on the conflict dialog moves nothing', async ({ page, request }) => {
+  fake.setOutcome({
+    kind: 'conflict',
+    conflictEntity: 'Another Entity Ltd',
+    conflictEntityId: 'e-other',
+    conflictCanMove: true,
+  });
+  await land(page, request, creds, 4);
+
+  await connect(page).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Go back' }).click();
+
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(status(page)).toHaveText('Not connected');
+  expect(fake.posted['xero/release']).toBeUndefined();
+});
+
+test('Move it here frees the other company, then connects this one', async ({ page, request }) => {
+  fake.setOutcome({
+    kind: 'conflict',
+    conflictEntity: 'Another Entity Ltd',
+    conflictEntityId: 'e-other',
+    conflictCanMove: true,
+  });
+  await land(page, request, creds, 4);
+
+  await connect(page).click();
+  // The second trip through Xero succeeds: the organisation is free now.
+  fake.setOutcome({ kind: 'connected' });
+  await page.getByRole('dialog').getByRole('button', { name: 'Move it here' }).click();
+
+  await expect(status(page)).toHaveText('Connected');
+  await expect(saveNext(page)).toBeEnabled();
+  // The company freed is the OTHER one, never the one being onboarded.
+  expect(fake.posted['xero/release']).toEqual([{ entity_id: 'e-other' }]);
+  expect(fake.connected).toBe(true);
+});
+
+test('a refused release stays in the dialog, so it can be tried again', async ({
+  page,
+  request,
+}) => {
+  fake.setOutcome({
+    kind: 'conflict',
+    conflictEntity: 'Another Entity Ltd',
+    conflictEntityId: 'e-other',
+    conflictCanMove: true,
+  });
+  fake.setReleaseFails(true);
+  await land(page, request, creds, 4);
+
+  await connect(page).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Move it here' }).click();
+
+  await expect(dialog.getByRole('alert')).toContainText('Xero would not let go of that one.');
+  await expect(dialog.getByRole('button', { name: 'Move it here' })).toBeEnabled();
+  await expect(status(page)).toHaveText('Not connected');
   expect(fake.connected).toBe(false);
 });
 

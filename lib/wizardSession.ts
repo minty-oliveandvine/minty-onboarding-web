@@ -66,6 +66,8 @@ const LAUNCH_PARAMS = [
   'expected',
   'conflict',
   'conflict_entity',
+  'conflict_entity_id',
+  'conflict_can_move',
 ];
 
 let launchParams: URLSearchParams | null = null;

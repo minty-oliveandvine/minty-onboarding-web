@@ -61,7 +61,7 @@ import type {
   Result,
   SalesMethods,
 } from '../lib/api';
-import type { AccountOptions, StepProps, SubmitFn, WizardState, SetState } from '../lib/types';
+import type { AccountOptions, StepProps, SubmitFn, WizardState, SetState, XeroConflict } from '../lib/types';
 import { inviteRows } from '../lib/invites';
 import { useMounted } from '../lib/useMounted';
 
@@ -115,11 +115,11 @@ export default function OnboardingApp() {
   // a specific "use the account for X" message. Empty string = no mismatch.
   const [xeroMismatch, setXeroMismatch] = useState('');
   // Set when the Xero OAuth round-trip returns `xero=conflict` — the chosen Xero
-  // org is already linked to a different entity, so the backend refused to
-  // connect this one. Holds that entity's name (from the `conflict_entity`
-  // param) so the Accounting step can name what to disconnect first. Empty
-  // string = no conflict.
-  const [xeroConflict, setXeroConflict] = useState('');
+  // org is already linked to a different company, so the backend refused to
+  // connect this one. Holds that company (name, id and whether this person may
+  // free it) so the Accounting step can OFFER the move rather than only naming
+  // what to go and disconnect. null = no conflict.
+  const [xeroConflict, setXeroConflict] = useState<XeroConflict | null>(null);
   // Guard the portal for SSR — document.body isn't there during server render.
   const mounted = useMounted();
 
@@ -470,14 +470,21 @@ export default function OnboardingApp() {
         } else {
           setXeroMismatch('');
         }
-        // One-org-one-entity block: the org the user picked is already linked to
-        // another entity. `conflict_entity` names it (URL-encoded; searchParams
+        // One-org-one-company block: the org the user picked is already linked to
+        // another company. `conflict_entity` names it (URL-encoded; searchParams
         // decodes) so the step can say which one to disconnect first. It can be
         // absent in edge cases, so fall back to 'unknown' and render generic copy.
+        // `conflict_entity_id` and `conflict_can_move` go with it, so the step can
+        // OFFER the move (free it there, then back through Xero) rather than only
+        // telling the person to go and do it themselves.
         if (xeroParam === 'conflict') {
-          setXeroConflict((p.get('conflict_entity') || '').trim() || 'unknown');
+          setXeroConflict({
+            name: (p.get('conflict_entity') || '').trim() || 'unknown',
+            entityId: (p.get('conflict_entity_id') || '').trim(),
+            canMove: p.get('conflict_can_move') === '1',
+          });
         } else {
-          setXeroConflict('');
+          setXeroConflict(null);
         }
         // A blocked attempt (mismatch/conflict) leaves the entity unconnected
         // backend-side. Force disconnected rather than restoring the stashed
@@ -676,6 +683,39 @@ export default function OnboardingApp() {
           error: friendlyError(data, "I couldn't disconnect that. Mind trying again?"),
         };
       set({ xero: { ...state.xero, connected: false, org: '' } });
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "I couldn't reach the server. Mind trying again?" };
+    }
+  };
+
+  // The move the conflict dialog offers: free the organisation on the company
+  // holding it, then straight back through Xero for this one. Two steps, because
+  // the grant the refused attempt created was handed back to Xero - there is no
+  // token left to reuse. `/xero/release` and not `/xero/disconnect`: that one
+  // leaves the company it clears in `onboarding` status, right for the company
+  // being onboarded and wrong for the live one being freed.
+  //
+  // Resolves only on a FAILURE. On success connectXero() leaves the page, so the
+  // dialog stays as it is rather than flashing a state nobody would see.
+  const releaseXeroConflict = async (): Promise<Result> => {
+    const holder = xeroConflict?.entityId;
+    if (!holder) return { ok: false, error: "I don't know which company to disconnect." };
+    if (!token) return { ok: false, error: 'Please sign in again to do that.' };
+    try {
+      const res = await fetch(urlFor(`/api/onboarding/xero/release`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ entity_id: holder }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok)
+        return {
+          ok: false,
+          error: friendlyError(data, "I couldn't disconnect that company from Xero. Mind trying again?"),
+        };
+      setXeroConflict(null);
+      connectXero();
       return { ok: true };
     } catch {
       return { ok: false, error: "I couldn't reach the server. Mind trying again?" };
@@ -1428,7 +1468,8 @@ export default function OnboardingApp() {
     xeroMismatch,
     clearXeroMismatch: () => setXeroMismatch(''),
     xeroConflict,
-    clearXeroConflict: () => setXeroConflict(''),
+    clearXeroConflict: () => setXeroConflict(null),
+    releaseXeroConflict,
     submitSalesMethods,
     submitOpeningBalance,
     accountOptions,
