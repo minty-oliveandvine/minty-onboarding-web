@@ -103,3 +103,39 @@ answer), `resume.spec.ts` (the database decides the landing step; `saved_step` a
 `walk.spec.ts` (the whole wizard to All Set, Xero faked; the first finalize is forced to a
 502, the failure UI asserted, then *Try again* runs the real one) — 23 on 2026-09-18 against the
 deployed hosts; 23 passed on 2026-10-06.
+
+## Required fields
+
+**A mandatory field shows a red `*` from the moment its step opens**, and its control turns red
+only once Next has actually been refused (every gated step already keeps a `showErrors` flag
+for that, so no new state was needed).
+
+- The mark is `.req` in `app/globals.css`, commented *"shared by every form"* since it was
+  added. As of 2026-10-09 it finally is: it had been applied to 5 fields out of ~19.
+- It is **`aria-hidden`**, because an asterisk read aloud is "star". Requiredness is announced
+  on the CONTROL instead - `aria-required` on the inputs, and `MintySelect` takes `required`
+  and `invalid` props for the same reason. Both halves are needed.
+- Steps 6 and 7 draw their fields through `PCSection` (`components/steps/pettyCashFields.tsx`),
+  so the mark is rendered **once** there rather than nine times at the call sites. `PCField`'s
+  `required` defaults ON, because everything PCSection draws today is a hard gate - an optional
+  field is the one that has to say so.
+- Marked: Entity Name (step 1), the "Add New Method" name (step 5), the six account-code fields
+  (step 6), the three contacts (step 7), Payment Account Code (step 8), and the billing sheet's
+  Email and Billing company. Country, Currency, Contact Phone and Business Email stay unmarked -
+  the first two are pre-filled and the last two are genuinely optional, and already labelled so.
+
+### The dropdowns could not turn red at all
+
+`MintySelect` is a `<div>`, so `.pc-field.field-error` - which only targets
+`input/select/textarea` - never reached it. **Nine** mandatory fields in steps 6 and 7 printed
+their message while the dropdown stayed neutral. `app/globals.css` now has a rule for
+`.mselect.is-invalid .mselect-trigger` (and the `.field-error` descendant forms), so they
+redden like everything else.
+
+Still open: `.pc-card.is-error` glows `var(--accent)` - **mint**, not `var(--danger)` - so an
+errored card looks highlighted rather than wrong. Changing it is a visual decision, not part of
+the marker work.
+
+`.billing-label .req` mirrors minty-web's `SHEET_REQUIRED`; the note at the top of
+`minty-web/components/ui/sheetClasses.ts` applies - the same dialog in two apps must be the
+same dialog, so change both or neither.

@@ -343,6 +343,39 @@ describe('PCSection', () => {
     expect(screen.getByText('Cash Sale')).toBeInTheDocument();
   });
 
+  // Steps 6 and 7 refuse Next without these, and used to say so only after the refusal.
+  it('marks every field mandatory, because every one of them gates Next', () => {
+    const { container } = render(
+      <PCSection title="Contacts" cardRef={ref()} fields={[field(), field({ label: 'Cash Sale' })]} />,
+    );
+
+    expect(container.querySelectorAll('.pc-sub .req')).toHaveLength(2);
+    // read as "Director", not "Director star" - the control carries the requiredness
+    for (const mark of container.querySelectorAll('.req')) {
+      expect(mark).toHaveAttribute('aria-hidden');
+    }
+    expect(screen.getAllByPlaceholderText('Select an option')[0]).toHaveAttribute('aria-required', 'true');
+  });
+
+  it('lets a field opt out, for the day an optional one appears', () => {
+    const { container } = render(
+      <PCSection title="Contacts" cardRef={ref()} fields={[field({ required: false })]} />,
+    );
+
+    expect(container.querySelector('.pc-sub .req')).toBeNull();
+    expect(screen.getByPlaceholderText('Select an option')).not.toHaveAttribute('aria-required');
+  });
+
+  it('reddens the dropdown itself, not just the sentence under it', () => {
+    // MintySelect is a div, so the stylesheet's input/select rules never reached it.
+    const { container } = render(
+      <PCSection title="Contacts" cardRef={ref()} fields={[field({ error: true })]} />,
+    );
+
+    expect(container.querySelector('.mselect')).toHaveClass('is-invalid');
+    expect(screen.getByPlaceholderText('Select an option')).toHaveAttribute('aria-invalid', 'true');
+  });
+
   it('marks the whole card in error when ANY field is', () => {
     const { container } = render(
       <PCSection title="Contacts" cardRef={ref()} fields={[field(), field({ error: true })]} />,

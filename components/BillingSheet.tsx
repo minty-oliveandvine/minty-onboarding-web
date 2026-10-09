@@ -325,6 +325,9 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
       <div className="billing-field">
         <label className="billing-label" htmlFor="billing-email">
           Email
+          <span className="req" aria-hidden>
+            *
+          </span>
         </label>
         <input
           id="billing-email"
@@ -347,6 +350,9 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
       <div className="billing-field">
         <label className="billing-label" htmlFor="billing-company">
           Billing company
+          <span className="req" aria-hidden>
+            *
+          </span>
         </label>
         <input
           id="billing-company"
@@ -376,7 +382,12 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
           is rendered by Stripe, in Stripe's iframe, and is the one part of this form we do
           not see the contents of. */}
       <div className="billing-field">
-        <span className="billing-label">Payment method</span>
+        <span className="billing-label">
+            Payment method
+            <span className="req" aria-hidden>
+              *
+            </span>
+          </span>
         <div className="billing-stripe">
           {/* `loaderror` is the Element itself failing to come up — a blocked
               js.stripe.com, a client secret it can't fetch, a key from another account.

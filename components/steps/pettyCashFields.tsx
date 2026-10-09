@@ -172,7 +172,7 @@ export function MethodList({
         {adding ? (
           <div className="method-add-form">
             <div className="method-add-field">
-              <label>Name</label>
+              <label>Name<span className="req" aria-hidden>*</span></label>
               <div className="field">
                 <input
                   ref={inputRef}
@@ -360,6 +360,12 @@ export function AccountCodesCard({
 /** One dropdown row in a PCSection. */
 export type PCField = {
   label: ReactNode;
+  /**
+   * Mandatory, and marked with a red asterisk. Every field PCSection draws today is a hard
+   * gate - steps 6 and 7 refuse Next without it - so this defaults ON and an optional field
+   * is the one that has to say so.
+   */
+  required?: boolean;
   value: string;
   options: SelectOption[];
   onChange: (value: string) => void;
@@ -381,12 +387,21 @@ export function PCSection({ title, fields, cardRef }: PCSectionProps) {
       <div className="pc-title">{title}</div>
       {fields.map((f, i) => (
         <div className={'pc-field' + (f.error ? ' field-error' : '')} key={i}>
-          <div className="pc-sub">{f.label}</div>
+          <div className="pc-sub">
+            {f.label}
+            {f.required === false ? null : (
+              <span className="req" aria-hidden>
+                *
+              </span>
+            )}
+          </div>
           <MintySelect
             value={f.value}
             onChange={f.onChange}
             options={f.options}
             placeholder="Select an option"
+            required={f.required !== false}
+            invalid={Boolean(f.error)}
             searchable
             clearable
             onCreate={f.onAddNew}

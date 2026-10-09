@@ -222,3 +222,15 @@ For a manual session:
   step-9 incident this checklist's warning is based on.
 - `minty-onboarding-api/docs/features/qa-checklist.md` — the backend's half of this same
   checklist, including the step-9 reset in API terms.
+
+## Required fields
+
+- [ ] Every mandatory field shows a red `*` as its step opens: Entity Name (1), the opening
+      balance (5), all six account codes (6), all three contacts (7), Payment Account Code (8),
+      and the billing sheet's Email and Billing company. Nothing is red yet.
+- [ ] Press Next on an empty step 6 or 7: the first missing field scrolls into view, **its
+      dropdown turns red** (not just the sentence under it - nine of these could not redden at
+      all before 2026-10-09) and the message appears. Choosing a value clears both.
+- [ ] Country, Currency, Contact Phone and Business Email are **not** marked - the first two
+      are pre-filled, the last two are optional and say so.
+- [ ] A screen reader says "Entity Name, required", not "Entity Name star".

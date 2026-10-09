@@ -22,6 +22,10 @@ type MintySelectProps = {
   onCreate?: ((name: string) => Promise<ContactResult>) | null;
   createNoun?: string;
   clearable?: boolean;
+  /** Mandatory: announced here, since a label's red asterisk is aria-hidden. */
+  required?: boolean;
+  /** Draws the field as refused, and tells assistive tech the same. */
+  invalid?: boolean;
 };
 
 export default function MintySelect({
@@ -34,6 +38,8 @@ export default function MintySelect({
   onCreate = null,
   createNoun = 'contact',
   clearable = false,
+  required = false,
+  invalid = false,
 }: MintySelectProps) {
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -192,7 +198,9 @@ export default function MintySelect({
 
   return (
     <div
-      className={'mselect' + (open ? ' open' : '') + (disabled ? ' disabled' : '')}
+      className={
+        'mselect' + (open ? ' open' : '') + (disabled ? ' disabled' : '') + (invalid ? ' is-invalid' : '')
+      }
       ref={rootRef}
     >
       {searchable ? (
@@ -207,6 +215,8 @@ export default function MintySelect({
           <input
             ref={inputRef}
             type="text"
+            aria-required={required || undefined}
+            aria-invalid={invalid || undefined}
             className={'mselect-input' + (selectedLabel || query !== null ? '' : ' placeholder')}
             value={query === null ? selectedLabel || '' : query}
             placeholder={placeholder}
@@ -264,6 +274,8 @@ export default function MintySelect({
         <button
           type="button"
           className="mselect-trigger"
+          aria-required={required || undefined}
+          aria-invalid={invalid || undefined}
           disabled={disabled}
           onClick={() => !disabled && setOpen((o) => !o)}
           aria-haspopup="listbox"

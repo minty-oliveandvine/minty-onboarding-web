@@ -133,7 +133,7 @@ export function StepCreateEntity({
       </div>
       <div className="form-stack">
         <div className={'field' + (nameTaken ? ' field-error' : '')}>
-          <label>Entity Name</label>
+          <label>Entity Name<span className="req" aria-hidden>*</span></label>
           <input
             type="text"
             name="organization"
@@ -1009,7 +1009,7 @@ export function StepSalesSetting({
           </div>
           <div className={'pc-field' + (showBalanceError && balanceEmpty ? ' field-error' : '')}>
             <div className="pc-sub">
-              Choose the beginning petty cash balance of the day<span className="req">*</span>
+              Choose the beginning petty cash balance of the day<span className="req" aria-hidden>*</span>
             </div>
             <div className="field">
               <div className="input-prefix">
@@ -1020,6 +1020,7 @@ export function StepSalesSetting({
                   type="text"
                   inputMode="decimal"
                   placeholder="0.00"
+                  aria-required="true"
                   value={
                     balanceFocused
                       ? toAmountEditString(p.openingBalance)
@@ -1147,7 +1148,7 @@ export function StepAccountCode({
 
       <div className="pc-stack">
         <div className="pc-section-head" style={{ marginTop: 0, paddingTop: 0, border: 0 }}>
-          <div className="pc-section-title">Petty Cash Account Codes</div>
+          <div className="pc-section-title">Petty Cash Account Codes<span className="req" aria-hidden>*</span></div>
           <div className="pc-section-sub">
             Only selected account code will appear when adding an expense in Petty Cash.
           </div>
@@ -1498,7 +1499,7 @@ export function StepBills({
               className="method-head method-head-static"
               style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 6 }}
             >
-              <div className="method-title">Payment Account Code</div>
+              <div className="method-title">Payment Account Code<span className="req" aria-hidden>*</span></div>
               <div className="acc-sub">
                 Only selected account code will appear when adding a payment in Payment.
               </div>
@@ -1655,12 +1656,13 @@ export function StepInvite({
 
           <div className="invite-field">
             <label>
-              First Name<span className="req">*</span>
+              First Name<span className="req" aria-hidden>*</span>
             </label>
             <div className="field">
               <input
                 type="text"
                 placeholder="Enter first name"
+                  aria-required="true"
                 value={form.first}
                 onChange={(e) => setF('first', e.target.value)}
               />
@@ -1668,12 +1670,13 @@ export function StepInvite({
           </div>
           <div className="invite-field">
             <label>
-              Last Name<span className="req">*</span>
+              Last Name<span className="req" aria-hidden>*</span>
             </label>
             <div className="field">
               <input
                 type="text"
                 placeholder="Enter last name"
+                  aria-required="true"
                 value={form.last}
                 onChange={(e) => setF('last', e.target.value)}
               />
@@ -1681,7 +1684,7 @@ export function StepInvite({
           </div>
           <div className="invite-field">
             <label>
-              Email Address<span className="req">*</span>
+              Email Address<span className="req" aria-hidden>*</span>
             </label>
             <div className={'field' + (emailInvalid ? ' field-error' : '')}>
               <input
@@ -1690,6 +1693,7 @@ export function StepInvite({
                 value={form.email}
                 onBlur={() => setEmailTouched(true)}
                 aria-invalid={emailInvalid}
+                aria-required="true"
               />
             </div>
             {inviteEmail.rejected && (
@@ -1700,13 +1704,14 @@ export function StepInvite({
           </div>
           <div className="invite-field">
             <label>
-              Role<span className="req">*</span>
+              Role<span className="req" aria-hidden>*</span>
             </label>
             <MintySelect
               value={form.role}
               onChange={(v) => setF('role', v)}
               options={ROLES}
               placeholder="Select a role"
+              required
             />
           </div>
 

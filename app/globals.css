@@ -1018,6 +1018,14 @@ textarea {
   color: var(--danger);
 }
 /* Invalid input (e.g. a malformed invite email) — flag the field border. */
+/* MintySelect is a div, not an <input>, so the rules below never reached it: nine mandatory
+   fields in steps 6 and 7 showed their message but never turned red. */
+.mselect.is-invalid .mselect-trigger,
+.pc-field.field-error .mselect .mselect-trigger,
+.field.field-error .mselect .mselect-trigger {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 18%, transparent);
+}
 .field.field-error input,
 .field.field-error select,
 .field.field-error textarea {
@@ -3768,6 +3776,12 @@ textarea {
 }
 .billing-input.is-invalid:focus {
   box-shadow: 0 0 0 3px rgba(180, 35, 31, 0.15);
+}
+/* The red asterisk on a mandatory billing field - mirrors minty-web's SHEET_REQUIRED
+   (components/ui/sheetClasses.ts). The same dialog in two apps must be the same dialog. */
+.billing-label .req {
+  color: #b4231f;
+  margin-left: 0;
 }
 .billing-fielderror {
   margin: 6px 0 0;
