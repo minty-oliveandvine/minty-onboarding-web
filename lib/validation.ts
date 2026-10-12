@@ -97,6 +97,37 @@ export function nationalDigits(code: string, national: string): string {
   return digits.startsWith('0') && !KEEPS_LEADING_ZERO.has(code) ? digits.slice(1) : digits;
 }
 
+/** The most national digits a code takes: its exact length where it has one (8 for +852),
+ *  else what E.164's 15 digits leave after the code. */
+export function maxNationalDigits(code: string): number {
+  return PHONE_LENGTHS[code] ?? 15 - code.length;
+}
+
+/** `national` with every digit past the code's maximum dropped (punctuation kept). Counted the
+ *  way `nationalDigits` counts, so a leading trunk 0 the number loses is not a digit used up. */
+export function capNational(code: string, national: string): string {
+  const max = maxNationalDigits(code);
+  const trunk = !KEEPS_LEADING_ZERO.has(code);
+  let kept = 0;
+  let seenDigit = false;
+  let out = '';
+  for (const ch of national) {
+    if (!/\d/.test(ch)) {
+      out += ch;
+      continue;
+    }
+    const isTrunkZero = trunk && !seenDigit && ch === '0';
+    seenDigit = true;
+    if (isTrunkZero) {
+      out += ch;
+    } else if (kept < max) {
+      out += ch;
+      kept += 1;
+    }
+  }
+  return out;
+}
+
 /** "" when the number is acceptable, else what to tell the user. Worded by the code, not the
  *  country: the registry's names are the long official ones ("Hong Kong SAR China"), and a
  *  shared code (+1, +44) belongs to several. */

@@ -56,6 +56,11 @@ Phone*, an 8–11-digit box with no country code). No hint line under it (the us
   waits for the first blur; Save & Next stays off while it stands. A number with no code to
   judge it by is blocked the same way (*Please choose a country code.*), so a bare number can
   never reach the API, which refuses it.
+- **No digit past the maximum** (`maxNationalDigits`: 8 for +852, else what 15 leaves after the
+  code). A keystroke on a full number is refused outright (so a digit typed mid-number cannot
+  push the last one out), a paste is cut at the limit (`capNational`, punctuation kept, a
+  dropped trunk 0 not counted), and deleting always works, even on a number a code change
+  left too long.
 - **The default Country** is the label `'Hong Kong'` until the registry loads, then the row's
   id. The registry holds the official name ("Hong Kong SAR China"), so the label is matched
   exactly or by a UNIQUE prefix (the API's own fallback). Until 2026-10-12 it was exact only:

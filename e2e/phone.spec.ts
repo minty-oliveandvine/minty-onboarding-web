@@ -111,4 +111,20 @@ test('a new company starts on Hong Kong, and a short number cannot be saved', as
   await page.getByLabel('Phone Number').blur();
   await expect(page.getByText('A +852 number has 8 digits.')).toBeVisible();
   await expect(save).toBeDisabled();
+
+  // No ninth digit: a paste is cut at eight, and a keystroke on a full number does nothing.
+  const number = page.getByLabel('Phone Number');
+  await number.fill('9123 45678');
+  await expect(number).toHaveValue('9123 4567');
+  await number.press('End');
+  await number.pressSequentially('9');
+  await expect(number).toHaveValue('9123 4567');
+  await number.press('Home');
+  await number.pressSequentially('5');
+  await expect(number).toHaveValue('9123 4567');
+  // Deleting still works.
+  await number.press('End');
+  await number.press('Backspace');
+  await expect(number).toHaveValue('9123 456');
+  await expect(save).toBeDisabled();
 });
