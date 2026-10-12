@@ -49,7 +49,8 @@ Phone*, an 8–11-digit box with no country code). No hint line under it (the us
   the list is in (`splitStoredPhone`, under the Country's code, minus that code if it was typed
   in front).
 - **The rule** (`lib/validation.ts` `phoneError`, mirrored in the API's `resolve.PHONE_LENGTHS`,
-  change both together): exactly 8 digits for +852/+853/+65, 11 for +86, 10 for +1; otherwise
+  change both together): exactly 8 digits for +852, the one market Minty sells in (the user,
+  2026-10-12: strict on Hong Kong only for now - add a code when its market opens); otherwise
   E.164's bounds (4+ national digits, 15 in all). The message (*A +852 number has 8 digits.*,
   worded by code because the registry's names are the official ones, "Hong Kong SAR China")
   waits for the first blur; Save & Next stays off while it stands. A number with no code to

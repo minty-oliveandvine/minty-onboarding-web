@@ -53,10 +53,11 @@ export function isUuid(value: unknown): boolean {
 /** A country the Phone Number picker offers. `code` is the dial code without its "+". */
 export type DialCountry = { iso: string; name: string; code: string };
 
-/** National-number lengths for the dial codes that have exactly one. Every other code gets
- *  E.164's own bounds: at least 4 national digits, at most 15 digits in all. The API's
- *  PHONE_LENGTHS is the same table -- change them together. */
-export const PHONE_LENGTHS: Record<string, number> = { '1': 10, '65': 8, '86': 11, '852': 8, '853': 8 };
+/** National-number lengths held exactly. Hong Kong only for now: it is the one market Minty
+ *  sells in (the user, 2026-10-12) - add a code when its market opens, not before. Every other
+ *  code gets E.164's own bounds: at least 4 national digits, at most 15 digits in all. The
+ *  API's PHONE_LENGTHS is the same table -- change them together. */
+export const PHONE_LENGTHS: Record<string, number> = { '852': 8 };
 
 /** Where a leading 0 is part of the number (Italy and the Vatican, San Marino). Everywhere
  *  else it is the domestic trunk prefix, which E.164 drops. */
