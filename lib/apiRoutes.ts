@@ -20,8 +20,9 @@
 //
 // NOT EVERYTHING GOES THROUGH THE NEW SERVICE. `/xero_connect`, `/logout` and `/entity`
 // are Flask pages - not part of this extraction and not listed here, so they fall
-// through to FLASK_BASE. (Sign-in - `/auth/email/*`, `/xero_auth`, `/legal/*` - left
-// this app for minty-web in phase 2.)
+// through to FLASK_BASE. (Sign-in - `/auth/email/*`, `/xero_auth` - left this app for
+// minty-web in phase 2, and the legal DOCUMENTS left Flask altogether on 2026-10-12: they
+// are minty-web's pages, `/terms` and `/privacy`. Only `/legal/current` is still Flask's.)
 
 import { FLASK_BASE } from './flaskBase';
 
