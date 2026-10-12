@@ -92,3 +92,23 @@ test('Phone Number: picker, length message, paste and resume at 360px', async ({
     await api.restoreSavedStep(request, creds, originalStep);
   }
 });
+
+test('a new company starts on Hong Kong, and a short number cannot be saved', async ({ page }) => {
+  // fresh=1 starts a brand-new company; nothing here presses Save, so nothing is created.
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto(`/?token=${creds.token}&fresh=1`);
+  const picker = page.getByLabel('Country code');
+  await expect(picker).toHaveValue('HK +852');
+  // The default resolved to the registry's row, not the bare 'Hong Kong' label.
+  await expect(page.locator('.field', { hasText: 'Country' }).first().locator('.mselect-input')).toHaveValue(
+    'Hong Kong SAR China',
+  );
+
+  await page.getByPlaceholder('Please enter your company name').fill('Phone Gap Test');
+  const save = page.getByRole('button', { name: 'Save & Next' });
+  await expect(save).toBeEnabled();
+  await page.getByLabel('Phone Number').fill('123');
+  await page.getByLabel('Phone Number').blur();
+  await expect(page.getByText('A +852 number has 8 digits.')).toBeVisible();
+  await expect(save).toBeDisabled();
+});

@@ -192,6 +192,16 @@ const ADDRESS_ELEMENT_OPTIONS: StripeAddressElementOptions = {
   display: { name: 'full' },
 };
 
+/** The address form starting on the company's own country. Left to itself Stripe guesses from
+ *  the browser's location, so a Hong Kong payer on a VPN or a US-set browser met "United
+ *  States". Anything but an ISO alpha-2 code (the Step 1 label before the registry loads)
+ *  leaves Stripe's guess alone rather than sending it a country it does not know. */
+function addressOptions(country?: string): StripeAddressElementOptions {
+  return country && /^[A-Z]{2}$/.test(country)
+    ? { ...ADDRESS_ELEMENT_OPTIONS, defaultValues: { address: { country } } }
+    : ADDRESS_ELEMENT_OPTIONS;
+}
+
 /**
  * 01-D — the new billing account form.
  *
@@ -219,9 +229,14 @@ type CardFormProps = {
   ) => Promise<void>;
   onBack: () => void;
   busyLabel: string;
+  /** The company's country (ISO alpha-2), where the address form starts. */
+  country?: string;
 };
 
-function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
+function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardFormProps) {
+  // Stable per country: a new options object on every render would make Stripe update the
+  // element each time.
+  const addressElementOptions = useMemo(() => addressOptions(country), [country]);
   const stripe = useStripe();
   const elements = useElements();
   const [busy, setBusy] = useState(false);
@@ -418,7 +433,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
               left out: the payer portal shows both on the saved card, and a method saved
               without them shows blanks a payer cannot fill in from anywhere. */}
           <div className="billing-address">
-            <AddressElement options={ADDRESS_ELEMENT_OPTIONS} />
+            <AddressElement options={addressElementOptions} />
           </div>
         </div>
       </div>
@@ -565,6 +580,8 @@ type BillingSheetProps = {
   entityId: string;
   /** The card this entity is already nominated onto, if any. */
   nominatedId?: string | null;
+  /** The company's country (Step 1's ISO code): where a new card's address starts. */
+  country?: string;
   onClose: () => void;
   onDone: () => void;
 };
@@ -573,6 +590,7 @@ export default function BillingSheet({
   token,
   entityId,
   nominatedId,
+  country,
   onClose,
   onDone,
 }: BillingSheetProps) {
@@ -895,6 +913,7 @@ export default function BillingSheet({
                     onSaved={saveNewCard}
                     onBack={methods.length > 0 ? () => setAdding(false) : onClose}
                     busyLabel="Saving…"
+                    country={country}
                   />
                 </Elements>
               ) : error ? (

@@ -103,8 +103,17 @@ export function StepCreateEntity({
   // the standalone prototype, faking the Xero connection and saving nothing.
   useEffect(() => {
     if (countryOptions.length === 0 && currencyOptions.length === 0) return;
-    const byLabel = (opts: { value: string; label: string }[], v: string) =>
-      v && !opts.some((o) => o.value === v) ? opts.find((o) => o.label === v) : null;
+    // An exact name, else a UNIQUE name prefix: the registry holds the long official names
+    // ("Hong Kong SAR China"), so the default 'Hong Kong' never matched exactly and a new
+    // company kept the bare label -- no country id, and no dial code for the phone picker.
+    // Prefix-unique is the API's own fallback (resolve.country_code).
+    const byLabel = (opts: { value: string; label: string }[], v: string) => {
+      if (!v || opts.some((o) => o.value === v)) return null;
+      const exact = opts.find((o) => o.label === v);
+      if (exact) return exact;
+      const prefixed = opts.filter((o) => o.label.startsWith(v));
+      return prefixed.length === 1 ? prefixed[0] : null;
+    };
     set((prev) => {
       const country = byLabel(countryOptions, prev.entity.country);
       const currency = byLabel(currencyOptions, prev.entity.currency);
@@ -554,6 +563,7 @@ export function StepSelectModule({
              than on the payer's account default. Those are the same card until somebody
              changes one — which is exactly what the Change button above is for. */
           nominatedId={savedCard?.id}
+          country={state.entity.country}
           // Closing costs nothing: the payer opened this from "Add card" and is put back
           // where they were, with the modules untouched.
           onClose={() => setBillingOpen(false)}
@@ -2190,6 +2200,7 @@ export function StepAllSet({
         <BillingSheet
           token={token}
           entityId={state.entity.id}
+          country={state.entity.country}
           onClose={() => setBillingOpen(false)}
           /* CONFIRMING HERE FINISHES ONBOARDING. All Set is the terminal screen — a card
              was the last outstanding thing on it, and leaving is all that follows — so
