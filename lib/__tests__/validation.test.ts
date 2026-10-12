@@ -136,6 +136,11 @@ describe('phoneError', () => {
     expect(phoneError('1', '212 555 0123')).toBe('');
   });
 
+  it('holds only Hong Kong to an exact length - the one market Minty sells in', () => {
+    expect(phoneError('65', '6123 456')).toBe(''); // Singapore: 7 digits passes, for now
+    expect(phoneError('86', '1381234567')).toBe('');
+  });
+
   it("uses E.164's bounds everywhere else", () => {
     expect(phoneError('44', '7700 900123')).toBe('');
     expect(phoneError('44', '770')).toBe('Please check the phone number.');
