@@ -164,6 +164,15 @@ const STRIPE_APPEARANCE: Appearance = {
   },
 };
 
+/* The face the appearance above names, handed to the iframe that has to render it. Naming
+   'Inter' in `variables.fontFamily` is only a request: the fields are a cross-origin document,
+   so the stylesheet this app loads does not reach them and the name silently resolved to the
+   system face. `fonts` is the only way in, and it has to be a URL — the same Google copy
+   app/layout.tsx loads for the rest of the app, cut to the weights the fields use. */
+const STRIPE_FONTS = [
+  { cssSrc: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap' },
+];
+
 /* Options objects, out here for the same reason: a fresh literal each render is a new
    prop, and these Elements remount when their options change identity. */
 const PAYMENT_ELEMENT_OPTIONS: StripePaymentElementOptions = {
@@ -878,6 +887,7 @@ export default function BillingSheet({
                   options={{
                     clientSecret: intent.client_secret,
                     appearance: STRIPE_APPEARANCE,
+                    fonts: STRIPE_FONTS,
                   }}
                 >
                   <CardForm

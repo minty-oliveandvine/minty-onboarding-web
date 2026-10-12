@@ -8,10 +8,6 @@ import { useMounted } from '../lib/useMounted';
 import { createPortal } from 'react-dom';
 import { urlFor } from '../lib/apiRoutes';
 
-// Spelled out rather than inherited because these styles are inline objects on a
-// portalled menu; it is the same Inter the app now uses everywhere.
-const INTER_STACK = "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
-
 const SECTIONS = [
   {
     title: 'Petty Cash',
@@ -68,7 +64,6 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
   const drawer = (
     <div
       className={`fixed inset-0 z-[200] overflow-x-hidden ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
-      style={{ fontFamily: INTER_STACK }}
       aria-hidden={!open}
     >
       <button
