@@ -10,6 +10,8 @@ import {
   hasNonAsciiEmailChar,
   isEmail,
   isUuid,
+  capNational,
+  maxNationalDigits,
   phoneError,
   phoneForApi,
   sanitizeEmailInput,
@@ -150,6 +152,25 @@ describe('phoneError', () => {
   it('drops the trunk 0 except where it is part of the number', () => {
     expect(phoneForApi('+44 07700 900123')).toBe('+447700900123');
     expect(phoneForApi('+39 06 1234 5678')).toBe('+390612345678');
+  });
+});
+
+describe('capNational', () => {
+  it('holds +852 to 8 digits, keeping the punctuation', () => {
+    expect(maxNationalDigits('852')).toBe(8);
+    expect(capNational('852', '9123 45678')).toBe('9123 4567');
+    expect(capNational('852', '9123 4567')).toBe('9123 4567');
+  });
+
+  it("caps every other code at what E.164's 15 digits leave", () => {
+    expect(maxNationalDigits('44')).toBe(13);
+    expect(maxNationalDigits('1')).toBe(14);
+  });
+
+  it('does not spend the limit on a trunk 0 the number drops', () => {
+    // "0" + 13 digits under +44: the 0 goes, so all 13 stay.
+    expect(capNational('44', '0 7700 900123 456')).toBe('0 7700 900123 456');
+    expect(capNational('39', '0612345678901234')).toBe('0612345678901'); // Italy keeps its 0
   });
 });
 

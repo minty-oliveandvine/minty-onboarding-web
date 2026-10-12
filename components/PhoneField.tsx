@@ -6,7 +6,10 @@
 import { useMemo, useState } from 'react';
 import MintySelect from './MintySelect';
 import {
+  capNational,
   composeWizardPhone,
+  maxNationalDigits,
+  nationalDigits,
   parseWizardPhone,
   phoneError,
   sanitizePhoneInput,
@@ -62,14 +65,34 @@ export default function PhoneField({
   const own = (pick: string) => (pick === country ? '' : pick);
 
   const setNational = (raw: string) => {
-    const v = sanitizePhoneInput(raw);
+    let v = sanitizePhoneInput(raw);
     if (v.startsWith('+')) {
       // Compacted first: "+44 07700 900123" is already the wizard's own shape, which
       // splitStoredPhone leaves alone, but here the code in it is new and the picker must move.
       const split = splitStoredPhone(`+${v.replace(/\D/g, '')}`, dial, iso);
+      const p = split ? parseWizardPhone(split.phone) : null;
       // No known code yet ("+6" on the way to "+65"): kept as typed, and flagged.
-      onChange(split ? { phone: split.phone, phoneCountry: own(split.iso) } : { phone: v, phoneCountry });
+      onChange(
+        split
+          ? {
+              phone: p ? composeWizardPhone(p.code, capNational(p.code, p.national)) : split.phone,
+              phoneCountry: own(split.iso),
+            }
+          : { phone: v, phoneCountry },
+      );
       return;
+    }
+    if (picked) {
+      // No digit past the code's maximum (8 for +852). A keystroke on a full number is refused
+      // outright, so a digit typed mid-number cannot push the last one out; a paste is cut at
+      // the limit. Deleting always goes through, even on a number left too long by a code change.
+      const max = maxNationalDigits(picked.code);
+      const next = nationalDigits(picked.code, v).length;
+      const cur = nationalDigits(picked.code, national).length;
+      if (next > max && next > cur) {
+        if (cur >= max) return;
+        v = capNational(picked.code, v);
+      }
     }
     onChange({ phone: picked ? composeWizardPhone(picked.code, v) : v, phoneCountry });
   };
