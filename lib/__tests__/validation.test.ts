@@ -10,7 +10,12 @@ import {
   hasNonAsciiEmailChar,
   isEmail,
   isUuid,
+  phoneError,
+  phoneForApi,
   sanitizeEmailInput,
+  sanitizePhoneInput,
+  splitStoredPhone,
+  type DialCountry,
 } from '../validation';
 
 describe('isEmail', () => {
@@ -113,5 +118,78 @@ describe('sanitizeEmailInput', () => {
   it('says when a character was not English', () => {
     expect(hasNonAsciiEmailChar('user@회사.com')).toBe(true);
     expect(hasNonAsciiEmailChar('user@example.com')).toBe(false);
+  });
+});
+
+const DIAL: DialCountry[] = [
+  { iso: 'HK', name: 'Hong Kong', code: '852' },
+  { iso: 'SG', name: 'Singapore', code: '65' },
+  { iso: 'US', name: 'United States', code: '1' },
+  { iso: 'CA', name: 'Canada', code: '1' },
+  { iso: 'IT', name: 'Italy', code: '39' },
+];
+
+describe('phoneError', () => {
+  it('names the code and its one length where there is one', () => {
+    expect(phoneError('852', '9123 4567')).toBe('');
+    expect(phoneError('852', '9123 456')).toBe('A +852 number has 8 digits.');
+    expect(phoneError('1', '212 555 0123')).toBe('');
+  });
+
+  it("uses E.164's bounds everywhere else", () => {
+    expect(phoneError('44', '7700 900123')).toBe('');
+    expect(phoneError('44', '770')).toBe('Please check the phone number.');
+    expect(phoneError('44', '7700 9001 2345 67')).toBe('Please check the phone number.'); // 16 in all
+  });
+
+  it('drops the trunk 0 except where it is part of the number', () => {
+    expect(phoneForApi('+44 07700 900123')).toBe('+447700900123');
+    expect(phoneForApi('+39 06 1234 5678')).toBe('+390612345678');
+  });
+});
+
+describe('phoneForApi', () => {
+  it('sends compact E.164, or "" for no number', () => {
+    expect(phoneForApi('+852 9123-4567')).toBe('+85291234567');
+    expect(phoneForApi('+85291234567')).toBe('+85291234567');
+    expect(phoneForApi('')).toBe('');
+  });
+});
+
+describe('sanitizePhoneInput', () => {
+  it('keeps digits, the punctuation people type, and a leading +', () => {
+    expect(sanitizePhoneInput('  +65 (6123) 45.67-x')).toBe('+65 (6123) 45.67-');
+    expect(sanitizePhoneInput('9123+4567')).toBe('91234567');
+  });
+});
+
+describe('splitStoredPhone', () => {
+  it('splits a stored E.164 number, preferring the company country on a shared code', () => {
+    expect(splitStoredPhone('+85291234567', DIAL, 'HK')).toEqual({ phone: '+852 91234567', iso: 'HK' });
+    expect(splitStoredPhone('+12125550123', DIAL, 'CA')).toEqual({ phone: '+1 2125550123', iso: 'CA' });
+    expect(splitStoredPhone('+12125550123', DIAL, 'HK')).toEqual({ phone: '+1 2125550123', iso: 'US' });
+  });
+
+  it("falls back to the code's main country, not the first alphabetically", () => {
+    const shared: DialCountry[] = [
+      { iso: 'GG', name: 'Guernsey', code: '44' },
+      { iso: 'IM', name: 'Isle of Man', code: '44' },
+      { iso: 'GB', name: 'United Kingdom', code: '44' },
+    ];
+    expect(splitStoredPhone('+447700900123', shared, 'HK')?.iso).toBe('GB');
+    expect(splitStoredPhone('+447700900123', shared, 'GG')?.iso).toBe('GG');
+  });
+
+  it('reads a pre-picker digits-only number under the company country', () => {
+    expect(splitStoredPhone('91234567', DIAL, 'HK')).toEqual({ phone: '+852 91234567', iso: 'HK' });
+    // the old box let people type the code in front; it is not part of the national number
+    expect(splitStoredPhone('85291234567', DIAL, 'HK')).toEqual({ phone: '+852 91234567', iso: 'HK' });
+  });
+
+  it('leaves alone what it cannot or need not split', () => {
+    expect(splitStoredPhone('+852 91234567', DIAL, 'HK')).toBeNull();
+    expect(splitStoredPhone('', DIAL, 'HK')).toBeNull();
+    expect(splitStoredPhone('+99912345', DIAL, 'HK')).toBeNull();
+    expect(splitStoredPhone('91234567', DIAL, 'AF')).toBeNull();
   });
 });

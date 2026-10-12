@@ -340,17 +340,20 @@ describe('isStepComplete', () => {
     });
 
     it.each([
-      ['1234567', false, '7 digits, too short'],
-      ['12345678', true, '8 digits, the minimum'],
-      ['12345678901', true, '11 digits, the maximum'],
-      ['123456789012', false, '12 digits, too long'],
+      ['+852 9123 456', false, 'Hong Kong, 7 digits'],
+      ['+852 9123 4567', true, 'Hong Kong, 8 digits'],
+      ['+852 9123 45678', false, 'Hong Kong, 9 digits'],
+      ['+65 6123-4567', true, 'Singapore, punctuation ignored'],
+      ['+44 07700 900123', true, 'UK, the trunk 0 is not counted'],
+      ['+44 770', false, 'under E.164 4-digit floor'],
     ])('phone %s -> %s (%s)', (phone, expected) => {
       expect(isStepComplete(1, state({ entity: { phone } }))).toBe(expected);
     });
 
-    it('counts digits only, ignoring formatting', () => {
-      expect(isStepComplete(1, state({ entity: { phone: '+852 1234 5678' } }))).toBe(true);
-      expect(isStepComplete(1, state({ entity: { phone: '(   ) - ' } }))).toBe(true); // no digits = empty
+    it('does not re-judge a number the server stored in another shape', () => {
+      // Step 1 splits these once the country list is in; until then they stand.
+      expect(isStepComplete(1, state({ entity: { phone: '+85291234567' } }))).toBe(true);
+      expect(isStepComplete(1, state({ entity: { phone: '12345678' } }))).toBe(true);
     });
   });
 

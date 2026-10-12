@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import Icon from './Icon';
 import MintySelect from './MintySelect';
+import PhoneField, { phoneFieldError } from './PhoneField';
 import MintyDatePicker from './MintyDatePicker';
 import Confetti, { type BurstOrigin } from './Confetti';
 import BillingSheet from './BillingSheet';
@@ -14,7 +15,14 @@ import { acceptAmountInput, formatAmount, toAmountEditString } from '@/lib/amoun
 import { formatDate } from '@/lib/date';
 import { fetchBillingStatus } from '@/lib/billing';
 import { urlFor } from '../lib/apiRoutes';
-import { EMAIL_ASCII_HINT, isEmail } from '../lib/validation';
+import {
+  EMAIL_ASCII_HINT,
+  composeWizardPhone,
+  isEmail,
+  parseWizardPhone,
+  splitStoredPhone,
+  type DialCountry,
+} from '../lib/validation';
 import { useEmailInput } from '../lib/emailInput';
 import { toIsoDate } from '../lib/date';
 import { SaveExitLink, StepNav } from './steps/StepChrome';
@@ -42,10 +50,10 @@ export function StepCreateEntity({
     set({ entity: { ...s, [k]: v } });
   const businessEmail = useEmailInput((v) => upd('email', v));
   // Phone and email are optional — but if the user does type something, it must
-  // still be valid (Module 1 create-entity: 8–11 digits; standard email shape).
+  // still be valid (the phone's length for its dial code; standard email shape).
   const emailOk = s.email.trim() === '' || isEmail(s.email);
-  const phoneDigits = s.phone.replace(/\D/g, '');
-  const phoneOk = phoneDigits.length === 0 || (phoneDigits.length >= 8 && phoneDigits.length <= 11);
+  const [dial, setDial] = useState<DialCountry[]>([]);
+  const phoneOk = phoneFieldError(s.phone, dial) === '';
   const canNext = s.name.trim().length > 0 && phoneOk && emailOk;
   const [saving, setSaving] = useState(false);
   const toast = useToast();
@@ -63,6 +71,15 @@ export function StepCreateEntity({
     fetchCountries().then((list) => {
       if (!cancelled) {
         setCountryOptions(list.map((c) => ({ value: c.country_id, label: c.country_name_en })));
+        setDial(
+          list
+            .filter((c) => c.phone_code)
+            .map((c) => ({
+              iso: c.country_code,
+              name: c.country_name_en,
+              code: c.phone_code.replace(/^\+/, ''),
+            })),
+        );
       }
     });
     fetchCurrencies().then((list) => {
@@ -101,6 +118,36 @@ export function StepCreateEntity({
       };
     });
   }, [countryOptions, currencyOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A stored phone arrives as "+85291234567", or digits-only from before the picker; split it
+  // into the field's "+852 91234567" once the dial codes are in. Keyed on the phone too: a cold
+  // resume can land after the list (the race above, so it reads the LATEST state the same way).
+  useEffect(() => {
+    if (dial.length === 0) return;
+    set((prev) => {
+      const e = prev.entity;
+      const split = splitStoredPhone(e.phone, dial, e.phoneCountry || e.country);
+      if (!split) return {};
+      return {
+        entity: { ...e, phone: split.phone, phoneCountry: split.iso === e.country ? '' : split.iso },
+      };
+    });
+  }, [dial, s.phone]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The phone's code follows the Country until the user picks one; a Country with no dial
+  // code pins the picker where it was instead.
+  const changeCountry = (country: string) => {
+    const p = parseWizardPhone(s.phone);
+    if (s.phoneCountry || !p) return upd('country', country);
+    const to = dial.find((d) => d.iso === country);
+    set({
+      entity: {
+        ...s,
+        country,
+        ...(to ? { phone: composeWizardPhone(to.code, p.national) } : { phoneCountry: s.country }),
+      },
+    });
+  };
 
   const handleNext = async () => {
     if (!canNext || saving) return;
@@ -159,7 +206,7 @@ export function StepCreateEntity({
           <label>Country</label>
           <MintySelect
             value={s.country}
-            onChange={(v) => upd('country', v)}
+            onChange={changeCountry}
             options={countryOptions}
             searchable
           />
@@ -173,23 +220,14 @@ export function StepCreateEntity({
             searchable
           />
         </div>
-        <div className="field">
-          <label>
-            Contact Phone <span className="field-optional">(optional)</span>
-          </label>
-          <input
-            type="tel"
-            name="tel"
-            autoComplete="tel"
-            inputMode="numeric"
-            maxLength={11}
-            pattern="[0-9]{8,11}"
-            title="Phone number must be 8-11 digits"
-            placeholder="Please enter your contact phone number"
-            value={s.phone}
-            onChange={(e) => upd('phone', e.target.value.replace(/\D/g, '').slice(0, 11))}
-          />
-        </div>
+        <PhoneField
+          id="entity-phone"
+          phone={s.phone}
+          phoneCountry={s.phoneCountry}
+          country={s.country}
+          dial={dial}
+          onChange={(v) => set({ entity: { ...s, ...v } })}
+        />
         <div className="field">
           <label>
             Business Email <span className="field-optional">(optional)</span>

@@ -238,6 +238,12 @@ For a manual session:
 - [ ] Press Next on an empty step 6 or 7: the first missing field scrolls into view, **its
       dropdown turns red** (not just the sentence under it - nine of these could not redden at
       all before 2026-10-09) and the message appears. Choosing a value clears both.
-- [ ] Country, Currency, Contact Phone and Business Email are **not** marked - the first two
+- [ ] Phone Number: the picker shows `HK +852` beside an empty number; typing `sing` or `65`
+      in it finds Singapore. Change Country to Singapore and the code follows (+65); pick a code
+      yourself and changing Country no longer moves it. Paste `+44 07700 900123` into the number:
+      the picker moves to +44 and the save stores `+447700900123`. Type 7 digits under +852 and
+      leave the box: *A +852 number has 8 digits.* and Save & Next is off. Reload: the
+      code and number come back as saved. No line of hint text under the field.
+- [ ] Country, Currency, Phone Number and Business Email are **not** marked - the first two
       are pre-filled, the last two are optional and say so.
 - [ ] A screen reader says "Entity Name, required", not "Entity Name star".

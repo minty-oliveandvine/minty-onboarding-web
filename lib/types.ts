@@ -40,7 +40,10 @@ export type EntityForm = {
   country: string;
   currency: string;
   fyStart: string;
+  /** `+<code> <national as typed>` ("+852 9123 4567"); see lib/validation's phone rules. */
   phone: string;
+  /** The Phone Number picker's country when the user chose it; "" = it follows `country`. */
+  phoneCountry: string;
   email: string;
 };
 

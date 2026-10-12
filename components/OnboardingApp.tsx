@@ -63,6 +63,7 @@ import type {
 } from '../lib/api';
 import type { AccountOptions, StepProps, SubmitFn, WizardState, SetState, XeroConflict } from '../lib/types';
 import { inviteRows } from '../lib/invites';
+import { phoneForApi } from '../lib/validation';
 import { useMounted } from '../lib/useMounted';
 
 // Baked-in defaults that used to live in TWEAK_DEFAULTS (tweaks-panel removed from prod build)
@@ -369,7 +370,7 @@ export default function OnboardingApp() {
         country: nextState.entity.country,
         currency: nextState.entity.currency,
         business_email: (nextState.entity.email || '').trim(),
-        contact_phone: (nextState.entity.phone || '').replace(/\D/g, ''),
+        contact_phone: phoneForApi(nextState.entity.phone || ''),
       };
       // Land on the FE step the backend persisted (`payload.saved_step`), with
       // the Xero gate applied — deriveResumeStep handles the contract, including
@@ -836,7 +837,7 @@ export default function OnboardingApp() {
       // string as "clear this field", so a user who deletes their phone number
       // on revisit actually gets it removed.
       business_email: (state.entity.email || '').trim(),
-      contact_phone: (state.entity.phone || '').replace(/\D/g, ''),
+      contact_phone: phoneForApi(state.entity.phone || ''),
     };
 
     // --- Revisit: entity already exists, so this is an EDIT, not a create. ---

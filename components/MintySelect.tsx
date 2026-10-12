@@ -26,6 +26,11 @@ type MintySelectProps = {
   required?: boolean;
   /** Draws the field as refused, and tells assistive tech the same. */
   invalid?: boolean;
+  /** What the closed field shows for the chosen option, when that should be shorter than the
+   *  menu row (the phone picker: "HK +852" closed, "Hong Kong +852" in the list). */
+  valueLabel?: (opt: { value: string; label: string }) => string;
+  /** The field's accessible name, for a select that has no visible label of its own. */
+  ariaLabel?: string;
 };
 
 export default function MintySelect({
@@ -40,6 +45,8 @@ export default function MintySelect({
   clearable = false,
   required = false,
   invalid = false,
+  valueLabel,
+  ariaLabel,
 }: MintySelectProps) {
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -190,9 +197,9 @@ export default function MintySelect({
   // no label yet, so show the placeholder instead of flashing the id.
   const selectedLabel = useMemo(() => {
     const match = items.find((o) => o.value === value);
-    if (match) return match.label;
+    if (match) return valueLabel ? valueLabel(match) : match.label;
     return UUID_RE.test(value || '') ? '' : value || '';
-  }, [items, value]);
+  }, [items, value, valueLabel]);
   const display = selectedLabel || placeholder;
   const hasValue = !!value;
 
@@ -215,6 +222,7 @@ export default function MintySelect({
           <input
             ref={inputRef}
             type="text"
+            aria-label={ariaLabel}
             aria-required={required || undefined}
             aria-invalid={invalid || undefined}
             className={'mselect-input' + (selectedLabel || query !== null ? '' : ' placeholder')}
@@ -274,6 +282,7 @@ export default function MintySelect({
         <button
           type="button"
           className="mselect-trigger"
+          aria-label={ariaLabel}
           aria-required={required || undefined}
           aria-invalid={invalid || undefined}
           disabled={disabled}
