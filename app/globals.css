@@ -597,6 +597,24 @@ textarea {
   border-color: var(--line-strong);
   box-shadow: none;
 }
+/* Phone Number: the dial-code picker beside the number, one row at every width. The picker
+   stays narrow ("HK +852") while its menu is wide enough for "Hong Kong +852", capped to the
+   phone's width so it never overflows a 360px screen. */
+.phone-row {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 8px;
+}
+.phone-row input[type='tel'] {
+  min-width: 0;
+  width: 100%;
+}
+.phone-row .mselect-menu {
+  right: auto;
+  width: max-content;
+  min-width: 100%;
+  max-width: min(320px, calc(100vw - 32px));
+}
 @keyframes mintRipple {
   0% {
     box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent);

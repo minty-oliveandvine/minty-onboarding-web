@@ -9,7 +9,13 @@ import { urlFor } from './apiRoutes';
 // Routed through `urlFor` rather than reading the env var here: which service
 // answers a path is one decision, and it lives in lib/apiRoutes.
 
-export type CountryRow = { country_id: string; country_name_en: string; country_code: string };
+/** `phone_code` is the dial code ("+852"), "" for a country without one. */
+export type CountryRow = {
+  country_id: string;
+  country_name_en: string;
+  country_code: string;
+  phone_code: string;
+};
 export type CurrencyRow = { currency_id: string; currency_name: string; iso_code: string };
 
 // Build a module-wide cached fetcher for one `/api/onboarding/<key>` registry.

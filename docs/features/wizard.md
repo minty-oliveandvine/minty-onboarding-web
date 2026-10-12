@@ -27,6 +27,33 @@ shared fields in `components/steps/pettyCashFields.tsx`, the pricing in
 `components/steps/modulePricing.tsx`; selects and the date picker are the app's own
 (`MintySelect`, `MintyDatePicker`).
 
+### Phone Number (Step 1, `components/PhoneField.tsx`, since 2026-10-12)
+
+A dial-code picker beside the number, labelled *Phone Number (optional)* (it was *Contact
+Phone*, an 8–11-digit box with no country code). No hint line under it (the user's call).
+- **The picker** is a searchable `MintySelect`: the menu rows read `Hong Kong +852`, the closed
+  field `HK +852` (`valueLabel`). No flag emoji: Windows draws them as letters. Its list is
+  `GET /countries`' `phone_code`, so a country without one is not offered. Those codes live in
+  `country_info.phone_code`, filled by `Minty/docs/schema/seed_country_phone_codes.sql`
+  (`load_catalogue.py` loads it). A database without them offers no codes, and the API refuses
+  every number.
+- **It follows the Country** until the user picks a code; picking the Country's own code
+  makes it follow again. Pasting `+65 6123 4567` into the number moves it to +65. On a shared
+  code (+1, +44, +7…) the company's Country wins when it is one of them, else the code's main
+  country (`MAIN_COUNTRY`: +44 is the UK, not Guernsey, which sorts first). A pasted number's
+  national part is kept as digits only.
+- **State** (`EntityForm.phone`) is `+<code> <national as typed>` ("+852 9123 4567"), and
+  `phoneCountry` is the user's own pick ("" = follows). The API is sent compact E.164
+  (`phoneForApi`: "+85291234567", the domestic trunk 0 dropped except for +39/+378). A stored
+  number, or a digits-only one from before the picker, is split back into the field's form once
+  the list is in (`splitStoredPhone`, under the Country's code, minus that code if it was typed
+  in front).
+- **The rule** (`lib/validation.ts` `phoneError`, mirrored in the API's `resolve.PHONE_LENGTHS`,
+  change both together): exactly 8 digits for +852/+853/+65, 11 for +86, 10 for +1; otherwise
+  E.164's bounds (4+ national digits, 15 in all). The message (*A +852 number has 8 digits.*,
+  worded by code because the registry's names are the official ones, "Hong Kong SAR China")
+  waits for the first blur; Save & Next stays off while it stands.
+
 A card's network mark is `components/CardBrand.tsx`: our own wordmark (Mastercard's circles
 drawn as circles), never the issuers' licensed artwork. It has two fits — `tile`, the picker
 chip's (`pm-brand`), and `mark`, cropped to the logo itself for the summary's slot
@@ -121,7 +148,7 @@ for that, so no new state was needed).
   field is the one that has to say so.
 - Marked: Entity Name (step 1), the "Add New Method" name (step 5), the six account-code fields
   (step 6), the three contacts (step 7), Payment Account Code (step 8), and the billing sheet's
-  Email and Billing company. Country, Currency, Contact Phone and Business Email stay unmarked -
+  Email and Billing company. Country, Currency, Phone Number and Business Email stay unmarked -
   the first two are pre-filled and the last two are genuinely optional, and already labelled so.
 
 ### The dropdowns could not turn red at all
