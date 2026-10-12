@@ -20,13 +20,14 @@ type PhoneValue = { phone: string; phoneCountry: string };
  *  gate and the field's message both read this, so they cannot disagree. */
 export function phoneFieldError(phone: string, dial: DialCountry[]): string {
   const parsed = parseWizardPhone(phone);
-  if (parsed) return phoneError(parsed.code, parsed.national);
-  // A "+" with no known code after it, typed or pasted. Anything else in another shape is a
-  // stored number the step is about to split, or there is no list to judge it by yet.
-  if (phone.startsWith('+') && dial.length && !splitStoredPhone(phone, dial, '')) {
-    return 'Please check the country code.';
-  }
-  return '';
+  // A pasted "+999 1234" has the field's own shape, so the code itself is checked too.
+  if (parsed && dial.some((d) => d.code === parsed.code)) return phoneError(parsed.code, parsed.national);
+  if (!/\d/.test(phone)) return '';
+  // A stored "+85291234567" the step is about to split into the field's form.
+  if (phone.startsWith('+') && splitStoredPhone(phone, dial, '')) return '';
+  // Anything else carries no code to judge its length by -- a "+" no country has, or digits
+  // typed while no code was picked -- and the API refuses it, so it must not reach Save.
+  return phone.startsWith('+') ? 'Please check the country code.' : 'Please choose a country code.';
 }
 
 export default function PhoneField({

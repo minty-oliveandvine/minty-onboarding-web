@@ -52,7 +52,17 @@ Phone*, an 8–11-digit box with no country code). No hint line under it (the us
   change both together): exactly 8 digits for +852/+853/+65, 11 for +86, 10 for +1; otherwise
   E.164's bounds (4+ national digits, 15 in all). The message (*A +852 number has 8 digits.*,
   worded by code because the registry's names are the official ones, "Hong Kong SAR China")
-  waits for the first blur; Save & Next stays off while it stands.
+  waits for the first blur; Save & Next stays off while it stands. A number with no code to
+  judge it by is blocked the same way (*Please choose a country code.*), so a bare number can
+  never reach the API, which refuses it.
+- **The default Country** is the label `'Hong Kong'` until the registry loads, then the row's
+  id. The registry holds the official name ("Hong Kong SAR China"), so the label is matched
+  exactly or by a UNIQUE prefix (the API's own fallback). Until 2026-10-12 it was exact only:
+  a new company kept the bare label, and its phone picker had no code at all.
+
+The billing sheet's address (Stripe's AddressElement) starts on the company's Step 1 Country
+(`BillingSheet`'s `country` → `defaultValues`, since 2026-10-12). Left to itself Stripe guesses
+from the browser's location, so a Hong Kong payer on a US-set browser met "United States".
 
 A card's network mark is `components/CardBrand.tsx`: our own wordmark (Mastercard's circles
 drawn as circles), never the issuers' licensed artwork. It has two fits — `tile`, the picker
