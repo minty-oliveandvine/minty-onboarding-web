@@ -1,10 +1,28 @@
 @import 'tailwindcss';
+/* The icon font, self-hosted from npm as minty-web and minty-payment-request-web do
+   (2026-10-12) - this replaced a Google Fonts <link>. Deliberately NOT `layer(base)`: the
+   package's CSS is unlayered, so its `font-size: 24px` outranks any size utility and every glyph
+   renders at 24px in all three apps. That was already true here through the old <link> (also
+   unlayered, winning on document order), so nothing changed size - but it does mean the
+   `text-[26px]` / `text-[22px]` on the spans in components/NavMenu.tsx have no effect. */
+@import 'material-symbols/outlined.css';
 
 /* Brand tokens shared with the payment-request module so Tailwind utilities
    like text-primary / bg-secondary resolve to the same colours. */
 @theme {
   --color-primary: #656565;
   --color-secondary: #54d3da;
+  /* The faces. These live here and not in :root below: --font-* IS Tailwind's theme namespace,
+     so a :root declaration of the same name cannot be referenced from here the way the colours
+     are, and a token declared only in :root generates no utility - font-sans would silently fall
+     back to Tailwind's own stack instead of Inter. @theme still emits them onto :root, so the
+     html/body rule below reads them unchanged.
+     Inter from next/font (--font-inter on <html className>).
+     COPY of minty-web/app/globals.css's @theme font block (2026-10-12), byte for byte - lifted
+     into @minty/shared at Part 3 step 4. Change them together. minty-web's copy carries the full
+     reasoning for the two deletions (no --font-mono, no emoji tail). */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-brand: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -32,22 +50,18 @@
 * {
   box-sizing: border-box;
 }
-/* Inter, matching the design and Module 2. This is the ONLY place the body typeface is
-     set — every other rule says font-family: inherit — so the app changes face here and
-     nowhere else. The one exception is the "Minty" wordmark in the topbar (.topbar .brand),
-     which is set in Plus Jakarta Sans as a brand mark, not a text style. */
+/* Inter, matching the design and Module 2, through the --font-sans token above (next/font sets
+     --font-inter on <html>). This is the ONLY place the body typeface is set — every other rule
+     says font-family: inherit — so the app changes face here and nowhere else. The one exception
+     is the "Minty" wordmark in the topbar (.topbar .brand), which is set in Plus Jakarta Sans as
+     a brand mark, not a text style. */
 html,
 body {
   margin: 0;
   padding: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 body {
@@ -91,12 +105,10 @@ textarea {
   align-items: center;
   gap: 10px;
   color: var(--ink);
-  /* Plus Jakarta Sans for the wordmark only — see the note on html, body above. */
-  font-family:
-    'Plus Jakarta Sans',
-    Inter,
-    system-ui,
-    sans-serif;
+  /* Plus Jakarta Sans for the wordmark only — see the note on html, body above. The three values
+     here (the face, weight 700, -0.005em) are minty-web's components/ui/Wordmark.tsx value for
+     value; change the two together. */
+  font-family: var(--font-brand);
   font-weight: 700;
   font-size: 15px;
   letter-spacing: -0.005em;
