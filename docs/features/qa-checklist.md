@@ -119,10 +119,12 @@ release. Tick each box against a disposable test entity — never one you care a
       discrepancy_contact_id FROM pettycashv3.entity_pettycash_settings WHERE entity_id =
       '<id>';` — one row per entity; step 5 fills `opening_balance`/`start_date`, step 6
       the four account columns, step 7 the three contact columns.
-- [ ] **DB:** `SELECT status, opening_balance, cash_addition FROM pettycashv3.report WHERE
-      entity_id = '<id>' AND status = 'draft';` — the one draft row mirrors step 5's
-      opening balance; `cash_addition` stays `0`/`NULL` here — it is never written by the
-      wizard (the API checklist's dead-field warning, confirmed at the row level).
+- [ ] **DB:** `SELECT count(*) FROM pettycashv3.report WHERE entity_id = '<id>';` — `0`:
+      the wizard writes no report. The first report, opened in Petty Cash after step 9,
+      starts at step 5's opening balance on its start date.
+- [ ] **DB:** `SELECT cash_id, is_active, display_order FROM
+      pettycashv3.entity_cash_setting WHERE entity_id = '<id>';` — one row per active
+      denomination of the step 1 currency; changing the currency on step 1 swaps them.
 
 ## Step 8 — Payment Request Settings (only when that module is chosen)
 

@@ -12,9 +12,11 @@ entity travels in the query so Minty can embed it in the OAuth `state` and bind 
 tenant to **exactly this company** on the callback (`entity_id` is the exact match,
 `entity_name` the fallback; neither would fall back to the person's latest in-progress
 company). Before leaving, the app stashes its state in `sessionStorage` so the return
-lands on the same step. Minty does the OAuth round-trip with its minimal scope set, stores
-the token on the connecting person, starts the accounts/contacts sync and sends the
-browser back to the wizard root with one of:
+lands on the same step. Minty does the OAuth round-trip with its minimal scope set, saves
+the organisation's financial year end on the company (`entities.financial_year_end_day` /
+`_month`, from Xero's Organisation — if Xero can't give it, the connect fails, the grant is
+revoked and the wizard gets `?xero=cancelled` like any other failed connect), stores the token on the connecting person, starts the accounts/contacts
+sync and sends the browser back to the wizard root with one of:
 
 | Return | Meaning | What the step shows |
 |---|---|---|
