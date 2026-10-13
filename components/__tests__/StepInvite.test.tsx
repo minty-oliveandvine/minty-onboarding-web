@@ -22,6 +22,7 @@ function renderStep() {
         back={vi.fn()}
         submitInvite={vi.fn()}
         cancelInvite={vi.fn()}
+        resendInvite={vi.fn()}
         saveAndExit={vi.fn()}
       />
     </ToastProvider>,

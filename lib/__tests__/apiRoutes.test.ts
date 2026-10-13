@@ -55,6 +55,7 @@ const TO_DJANGO = [
   '/api/onboarding/invite',
   '/api/onboarding/invite?entity_id=abc',
   '/api/onboarding/invite/cancel',
+  '/api/onboarding/invite/resend',
   // Proxied through the Django service, but still addressed at it
   '/api/onboarding/account-codes',
   '/api/onboarding/account-codes?entity_id=abc',
@@ -129,7 +130,7 @@ describe('the properties the list alone does not show', () => {
     expect(baseFor('/api/onboarding/invite/cancel')).toBe(DJANGO);
     // And the segment rule is what keeps them apart: a deeper path that is NOT
     // listed does not inherit /invite's decision.
-    expect(baseFor('/api/onboarding/invite/resend')).toBe(FLASK);
+    expect(baseFor('/api/onboarding/invite/not-listed')).toBe(FLASK);
   });
 
   it('falls through to Flask for an unlisted onboarding path', async () => {

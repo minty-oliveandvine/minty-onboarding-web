@@ -11,6 +11,7 @@ import BillingSheet from './BillingSheet';
 import { ModalFrame } from './ModalFrame';
 import { useToast } from './Toast';
 import { fetchCountries, fetchCurrencies } from '@/lib/refData';
+import { currencyForCountry } from '@/lib/countryCurrency';
 import { acceptAmountInput, formatAmount, toAmountEditString } from '@/lib/amount';
 import { formatDate } from '@/lib/date';
 import { fetchBillingStatus } from '@/lib/billing';
@@ -24,6 +25,7 @@ import {
   type DialCountry,
 } from '../lib/validation';
 import { useEmailInput } from '../lib/emailInput';
+import { inviteExpiryLabel } from '../lib/invites';
 import { toIsoDate } from '../lib/date';
 import { SaveExitLink, StepNav } from './steps/StepChrome';
 import {
@@ -32,11 +34,18 @@ import {
   priceSelection,
   pricedRows,
 } from './steps/modulePricing';
-import { AccountCodesCard, MethodList, PCSection, currencyCode } from './steps/pettyCashFields';
+import {
+  AccountCodesCard,
+  MethodList,
+  PCSection,
+  currencyCode,
+  currencyDecimals,
+} from './steps/pettyCashFields';
 import type { BillsForm, EntityForm, PettyCashForm, StepProps } from '../lib/types';
-import type { CurrencyRow } from '../lib/refData';
+import type { CountryRow, CurrencyRow } from '../lib/refData';
 import type { PaymentMethod } from '../lib/billing';
-import type { ModuleId, Result } from '../lib/api';
+import type { ModuleId, Result, SetupGap } from '../lib/api';
+import { STEPS } from '../lib/wizardSteps';
 
 export function StepCreateEntity({
   state,
@@ -66,10 +75,13 @@ export function StepCreateEntity({
   // created entity's country_id / currency_id FKs receive uuids.
   const [countryOptions, setCountryOptions] = useState<{ value: string; label: string }[]>([]);
   const [currencyOptions, setCurrencyOptions] = useState<{ value: string; label: string }[]>([]);
+  // Each country's own currency, for preselecting it when the country is picked.
+  const [countryRows, setCountryRows] = useState<CountryRow[]>([]);
   useEffect(() => {
     let cancelled = false;
     fetchCountries().then((list) => {
       if (!cancelled) {
+        setCountryRows(list);
         setCountryOptions(list.map((c) => ({ value: c.country_id, label: c.country_name_en })));
         setDial(
           list
@@ -146,13 +158,16 @@ export function StepCreateEntity({
   // The phone's code follows the Country until the user picks one; a Country with no dial
   // code pins the picker where it was instead.
   const changeCountry = (country: string) => {
+    // The country's own currency fills an empty Currency; a chosen one is never replaced.
+    const currency = currencyForCountry(countryRows, country, s.currency);
     const p = parseWizardPhone(s.phone);
-    if (s.phoneCountry || !p) return upd('country', country);
+    if (s.phoneCountry || !p) return set({ entity: { ...s, country, currency } });
     const to = dial.find((d) => d.iso === country);
     set({
       entity: {
         ...s,
         country,
+        currency,
         ...(to ? { phone: composeWizardPhone(to.code, p.national) } : { phoneCountry: s.country }),
       },
     });
@@ -911,6 +926,8 @@ export function StepSalesSetting({
   const balanceRef = useRef<HTMLDivElement>(null);
   // Currency registry for the amount prefix — entity.currency is a uuid.
   const [currencyRegistry, setCurrencyRegistry] = useState<CurrencyRow[]>([]);
+  // The opening balance is typed in the company currency's places (JPY takes whole amounts).
+  const balanceDecimals = currencyDecimals(state.entity.currency, currencyRegistry);
   useEffect(() => {
     let cancelled = false;
     fetchCurrencies().then((list) => {
@@ -1146,17 +1163,17 @@ export function StepSalesSetting({
                 </div>
                 <input
                   type="text"
-                  inputMode="decimal"
-                  placeholder="0.00"
+                  inputMode={balanceDecimals > 0 ? 'decimal' : 'numeric'}
+                  placeholder={balanceDecimals > 0 ? `0.${'0'.repeat(balanceDecimals)}` : '0'}
                   aria-required="true"
                   value={
                     balanceFocused
                       ? toAmountEditString(p.openingBalance)
-                      : formatAmount(p.openingBalance)
+                      : formatAmount(p.openingBalance, balanceDecimals)
                   }
                   onFocus={() => setBalanceFocused(true)}
                   onChange={(e) => {
-                    const raw = acceptAmountInput(e.target.value);
+                    const raw = acceptAmountInput(e.target.value, balanceDecimals);
                     if (raw === null) return; // past the digit limits — refuse the keystroke
                     upd('openingBalance', raw);
                     if (raw !== '') setShowBalanceError(false);
@@ -1639,6 +1656,23 @@ export function StepBills({
             Pick at least one account code.
           </div>
         )}
+        {billCodes.some(codeOn) && (
+          <div className="field bill-default">
+            <label>Default account code</label>
+            <div className="acc-sub">
+              Optional. A new payment request starts with this code selected.
+            </div>
+            <MintySelect
+              value={codeOn(b.defaultCode || '') ? b.defaultCode || '' : ''}
+              onChange={(v) => upd('defaultCode', v)}
+              options={[
+                { value: '', label: 'No default' },
+                ...billCodes.filter(codeOn).map((c) => ({ value: c, label: billLabels[c] || c })),
+              ]}
+              searchable
+            />
+          </div>
+        )}
       </div>
 
       <StepNav
@@ -1672,10 +1706,18 @@ export function StepInvite({
   back,
   submitInvite,
   cancelInvite,
+  resendInvite,
   saveAndExit,
 }: Pick<
   StepProps,
-  'state' | 'set' | 'next' | 'back' | 'submitInvite' | 'cancelInvite' | 'saveAndExit'
+  | 'state'
+  | 'set'
+  | 'next'
+  | 'back'
+  | 'submitInvite'
+  | 'cancelInvite'
+  | 'resendInvite'
+  | 'saveAndExit'
 >) {
   const list = state.invites.filter((x) => x.email && x.email.includes('@'));
   const [form, setForm] = useState({ first: '', last: '', email: '', role: '' });
@@ -1762,6 +1804,30 @@ export function StepInvite({
       }
     }
     set({ invites: list.filter((_, idx) => idx !== i) });
+  };
+  // A row being resent, so its button shows the wait and cannot be pressed twice.
+  const [resending, setResending] = useState<string | null>(null);
+  const resendRow = async (i: number) => {
+    const target = list[i];
+    if (!target?.id || resending) return;
+    setResending(target.id);
+    const result = await resendInvite(target.id);
+    setResending(null);
+    if (!result.ok) {
+      notify.error(
+        'retryAfter' in result
+          ? `I sent that one moments ago. You can resend it in ${result.retryAfter}s.`
+          : result.error,
+      );
+      return;
+    }
+    const sent = result.invitation;
+    set({
+      invites: list.map((row, idx) =>
+        idx === i && sent ? { ...row, expiresAt: sent.expires_at ?? null, expired: !!sent.expired } : row,
+      ),
+    });
+    notify.success(`Invitation sent again to ${target.email}.`);
   };
 
   return (
@@ -1876,8 +1942,23 @@ export function StepInvite({
                       {hasName ? `${u.first} ${u.last}`.trim() : u.email}
                     </div>
                     {hasName && <div className="invite-email">{u.email}</div>}
+                    {inviteExpiryLabel(u) && (
+                      <div className={'invite-expiry' + (u.expired ? ' is-expired' : '')}>
+                        {inviteExpiryLabel(u)}
+                      </div>
+                    )}
                   </button>
                   <span className="invite-role">{roleLabel(u.role)}</span>
+                  {u.id && (
+                    <button
+                      type="button"
+                      className="invite-resend"
+                      onClick={() => resendRow(i)}
+                      disabled={resending === u.id}
+                    >
+                      {resending === u.id ? 'Sending…' : 'Resend'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="icon-x"
@@ -1960,11 +2041,17 @@ export function StepAllSet({
   modulePlans,
   completeOnboarding,
   exitToEntityList,
-}: Pick<StepProps, 'state' | 'token' | 'modulePlans' | 'completeOnboarding' | 'exitToEntityList'>) {
+  returnToStep,
+}: Pick<
+  StepProps,
+  'state' | 'token' | 'modulePlans' | 'completeOnboarding' | 'exitToEntityList' | 'returnToStep'
+>) {
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
   const [committing, setCommitting] = useState(true);
   // The sentence from a failed commit, shown inline with Try again; null once it succeeds.
   const [failure, setFailure] = useState<string | null>(null);
+  // What finalize found unfinished, each with the step that fixes it.
+  const [gaps, setGaps] = useState<SetupGap[]>([]);
   const [retrying, setRetrying] = useState(false);
   const [billingOpen, setBillingOpen] = useState(false);
   // `null` while unknown, so the nudge renders in NEITHER state until the answer is in.
@@ -1999,9 +2086,11 @@ export function StepAllSet({
         const result = await completeOnboarding();
         if (result?.ok) {
           setFailure(null);
+          setGaps([]);
           setTrialEnd('trialEnd' in result ? result.trialEnd || null : null);
         } else {
           setFailure(result?.error || "Couldn't finish setting up. Mind trying again?");
+          setGaps(result && 'missing' in result ? result.missing : []);
         }
       } catch {
         setFailure("Couldn't finish setting up. Mind trying again?");
@@ -2073,12 +2162,16 @@ export function StepAllSet({
     <>
       {/* Not in the frame, because a still frame cannot draw it. This is the one screen in
           the flow that has earned it. */}
-      <Confetti count={42} />
+      {/* Only once finalize has succeeded: a refusal for unfinished setup is not a moment
+          to celebrate, and the confetti used to fly before the answer was in. */}
+      {!committing && !failure && <Confetti count={42} />}
       <div className="celebrate">
         <div className="check-circle">
           <Icon.CheckBig />
         </div>
-        <h2 className="allset-title">You&apos;re all set!</h2>
+        <h2 className="allset-title">
+          {gaps.length > 0 ? 'Almost there' : <>You&apos;re all set!</>}
+        </h2>
       </div>
 
       <div className="mascot-video-wrap">
@@ -2154,6 +2247,22 @@ export function StepAllSet({
             <p className="billing-error" role="alert">
               {failure}
             </p>
+          ) : null}
+          {gaps.length > 0 ? (
+            <ul className="allset-gaps">
+              {gaps.map((gap, i) => (
+                <li key={`${gap.step}-${i}`}>
+                  <span>{gap.message}</span>
+                  <button
+                    type="button"
+                    className="btn btn-ghost allset-gap-go"
+                    onClick={() => returnToStep(gap.step)}
+                  >
+                    Go to {STEPS.find((s) => s.id === gap.step)?.label || `step ${gap.step}`}
+                  </button>
+                </li>
+              ))}
+            </ul>
           ) : null}
         </div>
       ) : null}

@@ -1973,6 +1973,10 @@ textarea {
 /* User Invite */
 .invite-grid {
   display: grid;
+  /* minmax(0, …), not the implicit auto: a pending row's unwrapped name + role + Resend
+     would otherwise set the column's minimum and push the form and list past a 360px
+     screen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   justify-items: center;
 }
@@ -4150,4 +4154,76 @@ textarea {
   .billing-save {
     flex: none;
   }
+}
+
+/* Step 3: when a pending invitation lapses, and Resend (2026-10-13). */
+.invite-expiry {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.invite-expiry.is-expired {
+  color: var(--danger);
+  font-weight: 600;
+}
+.invite-resend {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.invite-resend:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--line));
+}
+.invite-resend:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.invite-resend:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+/* Phones: the name takes its own line; role, Resend and remove sit below it. */
+@media (max-width: 639.98px) {
+  .invite-row-card {
+    flex-wrap: wrap;
+  }
+  .invite-row-card .invite-meta {
+    flex-basis: calc(100% - 52px);
+  }
+}
+
+/* Step 9: what finalize found unfinished, each with a way back to its step (2026-10-13). */
+.allset-gaps {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+.allset-gaps li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.allset-gaps li > span {
+  flex: 1 1 220px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.allset-gap-go {
+  min-height: 44px;
 }

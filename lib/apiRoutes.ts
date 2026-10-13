@@ -60,6 +60,8 @@ const DJANGO_PATHS = [
   // because the invitation email links into a Flask route and uses a Flask template
   '/api/onboarding/invite',
   '/api/onboarding/invite/cancel',
+  // Proxied to Flask by the Django service: Flask sends the email (template, accept link)
+  '/api/onboarding/invite/resend',
   // Proxied to Flask by the Django service. Listed so the wizard still talks to one
   // base URL; delete a line to route it straight at Flask instead.
   '/api/onboarding/account-codes',
