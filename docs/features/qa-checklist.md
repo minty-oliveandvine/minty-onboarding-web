@@ -119,6 +119,17 @@ release. Tick each box against a disposable test entity — never one you care a
       discrepancy_contact_id FROM pettycashv3.entity_pettycash_settings WHERE entity_id =
       '<id>';` — one row per entity; step 5 fills `opening_balance`/`start_date`, step 6
       the four account columns, step 7 the three contact columns.
+- [ ] Step 1: picking a country fills an EMPTY Currency with that country's currency and
+      never replaces one already chosen; `entities.timezone` holds the browser's zone.
+- [ ] Step 5's amount follows the currency: two decimals for HKD, whole numbers for a
+      zero-decimal currency (a "." is refused while typing).
+- [ ] Step 3: each pending invite says "Expires in N days" / "Expires within a day" / "Expired"; Resend
+      sends it again (toast), and pressing again at once says when it can go.
+- [ ] Step 8: "Default account code" lists only ticked codes plus "No default"; unticking the
+      chosen default drops it; a revisit shows the saved default.
+- [ ] Step 9 with Petty Cash on and no Xero (or a mapping left short): the screen lists what is
+      missing, each with "Go to <step>", and nothing went live; finishing the step and coming
+      back to All Set completes it.
 - [ ] **DB:** `SELECT count(*) FROM pettycashv3.report WHERE entity_id = '<id>';` — `0`:
       the wizard writes no report. The first report, opened in Petty Cash after step 9,
       starts at step 5's opening balance on its start date.

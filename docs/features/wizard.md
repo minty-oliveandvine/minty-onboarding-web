@@ -10,15 +10,15 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 
 | # | Screen | Component | Writes |
 |---|---|---|---|
-| 1 | Basic Information — name, country, currency, phone, email | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
+| 1 | Basic Information — name, country, currency, phone, email; picking a country fills an empty currency with its own (`lib/countryCurrency.ts`), and the browser's timezone goes with the save, with nothing on screen (`lib/browserTimezone.ts`) | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
 | 2 | Select Module — Petty Cash, Payment Request (cards in the old live app's design: accent gradient, large illustration, the description over the card on hover/focus, a teal gradient frame when picked); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
-| 3 | User Invite — invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip; *Add later* at the foot of the page moves on) | `StepInvite` | `POST /invite`, `/invite/cancel` |
+| 3 | User Invite — invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip; *Add later* at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers *Resend* | `StepInvite` | `POST /invite`, `/invite/cancel`, `/invite/resend` |
 | 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
-| 5 | Sales Setting — electronic and delivery methods (both start empty; *Auto Fill* fills Flask's default set, *Revert* empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
+| 5 | Sales Setting — electronic and delivery methods (both start empty; *Auto Fill* fills Flask's default set, *Revert* empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one), typed in the currency's decimal places (`currencyDecimals`; JPY is whole amounts) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
 | 6 | Account Code Setting — the expense accounts and the petty-cash account mapping | `StepAccountCode` | `POST /account-codes` |
 | 7 | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero; the open list says to type a name to add one) | `StepOthers` | `POST /contacts`, `/contacts/create` |
-| 8 | Payment Request Settings — the bills' account codes | `StepBills` | `POST /bill-codes` |
-| 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival**; *Try again* re-posts it after a failure |
+| 8 | Payment Request Settings — the bills' account codes, and an optional default code from the ticked ones | `StepBills` | `POST /bill-codes` (`default_code`) |
+| 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival**; *Try again* re-posts it after a failure; a 409 for unfinished setup lists each gap with *Go to <step>* (`returnToStep`, the one way out of the locked stepper), titles the screen *Almost there* and holds the confetti (it flies only once finalize succeeds); the needs-Xero dialog never opens over All Set |
 
 The rail groups 5–7 as *Petty Cash Settings* and shows 8 only when that module was
 chosen (`getDisplaySteps`); `isStepComplete` decides the ticks. Each screen's chrome (the

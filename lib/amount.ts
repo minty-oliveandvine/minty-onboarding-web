@@ -1,12 +1,13 @@
 /**
  * Single source of truth for how amounts are shown and typed.
  *
- * Display: thousands grouped in 3s with commas, always exactly 2 decimals
- * (e.g. 12000 -> "12,000.00").
+ * Display: thousands grouped in 3s with commas, always exactly the currency's
+ * decimal places - 2 unless a caller passes the currency's own
+ * (`currency_info.decimal_places`; JPY is 0, so 12000 -> "12,000").
  *
  * Entry: while a field is focused the user sees plain digits; grouping is
  * applied on blur. Typing is capped at MAX_AMOUNT_INT_DIGITS digits before the
- * decimal point and 2 after it.
+ * decimal point and the currency's places after it (no point at all for 0).
  *
  * Grouping and rounding are done with string operations rather than
  * parseFloat/toLocaleString, so a 12-digit amount keeps every digit instead of
@@ -16,7 +17,7 @@
 /** Max digits allowed before the decimal point. Decimals are capped at 2. */
 export const MAX_AMOUNT_INT_DIGITS = 11;
 
-/** Max digits allowed after the decimal point. */
+/** Decimal places when the caller does not pass the currency's own. */
 export const MAX_AMOUNT_DECIMALS = 2;
 
 /** Strip grouping commas so only digits and at most one dot remain. */
@@ -30,13 +31,16 @@ function groupThousands(intPart: string): string {
 }
 
 /**
- * Normalize a typed amount to an exact decimal string with 2 decimal places,
+ * Normalize a typed amount to an exact decimal string in `decimals` places,
  * e.g. "12,312,312.5" -> "12312312.50". Pure string work — never parseFloat —
- * so large values keep every digit. Extra decimals past the second are
- * truncated, not rounded ("9.999" -> "9.99"). Returns undefined when blank or
- * not a number.
+ * so large values keep every digit. Extra decimals are truncated, not rounded
+ * ("9.999" -> "9.99"); with 0 places there is no point ("1200.5" -> "1200").
+ * Returns undefined when blank or not a number.
  */
-export function toAmountString(raw: string | number): string | undefined {
+export function toAmountString(
+  raw: string | number,
+  decimals: number = MAX_AMOUNT_DECIMALS,
+): string | undefined {
   const cleaned = cleanAmountString(raw);
   if (!cleaned || cleaned === '.') return undefined;
 
@@ -48,26 +52,29 @@ export function toAmountString(raw: string | number): string | undefined {
   let intPart = intRaw.replace(/^0+(?=\d)/, '');
   if (intPart === '') intPart = '0';
 
-  const dec = (decRaw + '00').slice(0, MAX_AMOUNT_DECIMALS);
+  const dec = (decRaw + '0'.repeat(decimals)).slice(0, decimals);
 
   const sign = negative && /[1-9]/.test(intPart + dec) ? '-' : '';
-  return `${sign}${intPart}.${dec}`;
+  return decimals > 0 ? `${sign}${intPart}.${dec}` : `${sign}${intPart}`;
 }
 
 /**
- * Format any amount for display: grouped to 3 digits, always 2 decimals.
+ * Format any amount for display: grouped to 3 digits, always `decimals` places.
  * Accepts a raw user string, an API decimal string, or a number.
  * Returns "" when there is no usable number.
  */
-export function formatAmount(value: string | number | null | undefined): string {
+export function formatAmount(
+  value: string | number | null | undefined,
+  decimals: number = MAX_AMOUNT_DECIMALS,
+): string {
   if (value === null || value === undefined) return '';
   const raw = typeof value === 'number' ? numberToPlainString(value) : value;
-  const normalized = toAmountString(raw);
+  const normalized = toAmountString(raw, decimals);
   if (normalized === undefined) return '';
   const [intPart, dec] = normalized.split('.');
   const negative = intPart.startsWith('-');
   const digits = negative ? intPart.slice(1) : intPart;
-  return `${negative ? '-' : ''}${groupThousands(digits)}.${dec}`;
+  return `${negative ? '-' : ''}${groupThousands(digits)}${dec !== undefined ? `.${dec}` : ''}`;
 }
 
 /**
@@ -95,13 +102,17 @@ function numberToPlainString(n: number): string {
  * formatAmount() on blur to add the commas. Input past the digit limits is
  * silently refused rather than truncated, so the caret never jumps.
  */
-export function acceptAmountInput(next: string): string | null {
+export function acceptAmountInput(
+  next: string,
+  decimals: number = MAX_AMOUNT_DECIMALS,
+): string | null {
   const cleaned = cleanAmountString(next);
   if (cleaned === '') return '';
   if (!/^\d*\.?\d*$/.test(cleaned)) return null;
+  if (decimals === 0 && cleaned.includes('.')) return null;
   const [intPart = '', dec = ''] = cleaned.split('.');
   if (intPart.length > MAX_AMOUNT_INT_DIGITS) return null;
-  if (dec.length > MAX_AMOUNT_DECIMALS) return null;
+  if (dec.length > decimals) return null;
   return cleaned;
 }
 
