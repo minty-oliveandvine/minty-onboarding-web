@@ -4,8 +4,9 @@
    package's CSS is unlayered, so its `font-size: 24px` outranks any size utility and every glyph
    renders at 24px in all three apps. That was already true here through the old <link> (also
    unlayered, winning on document order), so nothing changed size - but it does mean the
-   `text-[26px]` / `text-[22px]` on the spans in components/NavMenu.tsx have no effect. */
-@import 'material-symbols/outlined.css';
+   `text-[26px]` / `text-[22px]` on the spans in components/NavMenu.tsx have no effect.
+   Rounded, not Outlined: Part 13 (D-20), and NavMenu's spans are `material-symbols-rounded`. */
+@import 'material-symbols/rounded.css';
 /* The faces, shared: @minty/shared/theme.css (--font-sans, --font-brand). Plain CSS resolved by
    the bundler, exactly like the icon font above - misspell it and the build fails. This app takes
    the TOKENS only: it consumes no packaged component, so it needs no `@source` line (that is what
@@ -17,31 +18,82 @@
 /* Brand tokens shared with the payment-request module so Tailwind utilities
    like text-primary / bg-secondary resolve to the same colours. */
 @theme {
-  --color-primary: #656565;
-  --color-secondary: #54d3da;
+  --color-primary: var(--mv2-text-secondary);
+  --color-secondary: var(--mv2-brand-primary);
 }
 
 :root {
-  --bg: #ffffff;
-  --surface: #fbfbfa;
-  --surface-2: #f5f5f3;
-  --line: #ececea;
-  --line-strong: #d9d9d6;
-  --ink: #1b1d1c;
-  --ink-2: #4a4d4b;
-  --muted: #8a8d8b;
-  --muted-2: #b2b5b3;
-  --accent: #36c3b4; /* teal */
-  --accent-hover: #2cb0a2;
-  --accent-soft: #e6f7f4;
-  --accent-ink: #0f7a6e;
-  --warn: #e8a13a;
-  --warn-soft: #fcf2dc;
-  --danger: #d9534f;
-  --radius: 14px;
-  --radius-sm: 10px;
-  --shadow-sm: 0 1px 2px rgba(15, 20, 25, 0.04), 0 1px 3px rgba(15, 20, 25, 0.05);
-  --shadow-md: 0 8px 24px rgba(15, 20, 25, 0.06), 0 2px 6px rgba(15, 20, 25, 0.04);
+  /* ── Minty v2 tokens (Part 13). Source of truth: Figma library "Minty v2 · Semantic / Dimension".
+        Screens use these through the legacy names below; never add raw hex in new rules. ── */
+  --mv2-surface-page: #ffffff;
+  --mv2-surface-card: #ffffff;
+  --mv2-surface-sunk: #f3f4f4;
+  --mv2-surface-raised: #ffffff;
+  --mv2-border-subtle: #e8eaea;
+  --mv2-border-default: #d9dcdb;
+  --mv2-border-input: #848c8c;
+  --mv2-border-selected: #1d8a90;
+  --mv2-border-focus: #19676b;
+  --mv2-text-primary: #242828;
+  --mv2-text-secondary: #535a5a;
+  --mv2-text-muted: #676f6f;
+  --mv2-text-disabled: #a3aaaa;
+  --mv2-text-link: #19676b;
+  --mv2-text-inverse: #ffffff;
+  --mv2-brand-primary: #54d3da; /* logo, illustration, progress, highlights — never a button fill or text */
+  --mv2-action-primary: #3cbcc3; /* Minty Action — primary button fill, white label */
+  --mv2-action-primary-hover: #35b2b9;
+  --mv2-action-primary-pressed: #2fa4ab;
+  --mv2-action-on-primary: #ffffff;
+  --mv2-action-secondary-border: #1d8a90;
+  --mv2-action-secondary-text: #19676b;
+  --mv2-action-danger: #c2363b;
+  --mv2-action-danger-hover: #a82a2f;
+  --mv2-action-disabled: #e8eaea;
+  --mv2-state-selected: #effafa;
+  --mv2-state-hover: #f3f4f4;
+  --mv2-success-bg: #dff4ec;
+  --mv2-success-ink: #0c5c42;
+  --mv2-warning-bg: #fdf0dc;
+  --mv2-warning-ink: #7e4e05;
+  --mv2-danger-bg: #fcecec;
+  --mv2-danger-ink: #a82a2f;
+  --mv2-info-bg: #e7f4fe;
+  --mv2-info-ink: #1b57b4;
+  --mv2-neutral-bg: #e8eaea;
+  --mv2-neutral-ink: #535a5a;
+  --mv2-scrim: rgba(17, 19, 19, 0.48);
+  --mv2-radius-sm: 4px; /* checkboxes, tags inside tables */
+  --mv2-radius-md: 8px; /* inline alerts, tooltips, small controls */
+  --mv2-radius-lg: 12px; /* buttons, inputs, selects, cards, rows, modals */
+  --mv2-radius-xl: 16px; /* sheets, large onboarding panels */
+  --mv2-radius-full: 999px; /* pills, chips, avatars, toggles */
+  --mv2-elevation-overlay: 0 2px 6px rgba(17, 19, 19, 0.05), 0 8px 24px rgba(17, 19, 19, 0.08);
+  --mv2-elevation-modal: 0 20px 48px rgba(17, 19, 19, 0.16);
+  --mv2-focus-ring: 2px solid var(--mv2-border-focus);
+  --mv2-control-height: 44px;
+
+  --bg: var(--mv2-surface-page);
+  --surface: var(--mv2-surface-card);
+  --surface-2: var(--mv2-surface-sunk);
+  --line: var(--mv2-border-subtle);
+  --line-strong: var(--mv2-border-default);
+  --ink: var(--mv2-text-primary);
+  --ink-2: var(--mv2-text-secondary);
+  --muted: var(--mv2-text-muted);
+  --muted-2: var(--mv2-text-disabled);
+  --accent: var(--mv2-action-primary); /* primary button fill ONLY — see Round 1 notes */
+  --accent-hover: var(--mv2-action-primary-hover);
+  --accent-pressed: var(--mv2-action-primary-pressed);
+  --accent-soft: var(--mv2-state-selected);
+  --accent-ink: var(--mv2-text-link);
+  --warn: var(--mv2-warning-ink);
+  --warn-soft: var(--mv2-warning-bg);
+  --danger: var(--mv2-danger-ink);
+  --radius: var(--mv2-radius-lg);
+  --radius-sm: var(--mv2-radius-lg);
+  --shadow-sm: none;
+  --shadow-md: var(--mv2-elevation-overlay);
 }
 * {
   box-sizing: border-box;
@@ -71,6 +123,17 @@ input,
 select,
 textarea {
   font-family: inherit;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--mv2-text-muted);
+}
+/* One visible focus ring for every keyboard stop (WCAG 2.4.7). :where() keeps it at zero
+     specificity, so a rule below must never set `outline: none` on a focusable control —
+     that would win and hide the ring again. */
+:where(button, a, input, select, textarea, [role='button'], [tabindex]):focus-visible {
+  outline: var(--mv2-focus-ring);
+  outline-offset: 2px;
 }
 
 /* Top bar */
@@ -112,7 +175,7 @@ textarea {
 .brand-mark-img {
   width: 26px;
   height: 26px;
-  border-radius: 6px;
+  border-radius: var(--mv2-radius-md);
   object-fit: contain;
   display: block;
 }
@@ -140,8 +203,8 @@ textarea {
   border: 0;
   padding: 0;
   border-radius: 50%;
-  background: #ffe6b1;
-  color: #6b3a12;
+  background: var(--mv2-warning-bg);
+  color: var(--mv2-warning-ink);
   display: grid;
   place-items: center;
   font-weight: 600;
@@ -156,34 +219,33 @@ textarea {
 .icon-btn {
   width: 40px;
   height: 40px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   border: 0;
   background: transparent;
   display: grid;
   place-items: center;
-  color: #656565;
+  color: var(--mv2-text-secondary);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 .icon-btn:hover {
-  background: color-mix(in oklab, #656565 10%, transparent);
+  background: var(--mv2-state-hover);
 }
 .icon-btn svg {
   display: block;
 }
 
-/* Stepper */
+/* Stepper — Minty v2 "Step progress" (Part 14). Each tile is a two-row grid: a 28px pill
+     (drawn by ::before) with the .num icon centred on it, and the label underneath. The
+     DOM is Stepper.tsx's, unchanged; only the paint moved. */
 .stepper {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--step-count, 7), 1fr);
-  gap: 0;
-  padding: 0;
-  border-bottom: 1px solid var(--line);
+  grid-template-columns: repeat(var(--step-count, 7), minmax(0, 1fr));
+  gap: 8px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--mv2-border-subtle);
   background: var(--bg);
-}
-.step + .step {
-  border-left: 1px solid var(--bg);
 }
 @keyframes waveDrift {
   from {
@@ -195,22 +257,34 @@ textarea {
 }
 .step {
   position: relative;
-  padding: 12px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 28px auto;
+  row-gap: 6px;
+  justify-items: center;
+  align-items: start;
+  padding: 0;
   font-size: 12.5px;
-  color: var(--ink-2);
-  background: #eef0f3;
-  border-radius: 0;
+  color: var(--mv2-text-muted);
+  text-align: center;
+  background: transparent;
   cursor: pointer;
   user-select: none;
+  transition: color 0.2s ease;
+}
+/* The indicator pill (todo look by default). */
+.step::before {
+  content: '';
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: var(--mv2-radius-full);
+  background: var(--mv2-surface-sunk);
+  border: 1px solid var(--mv2-border-default);
   transition:
-    color 0.2s ease,
-    background 0.25s ease;
-  white-space: nowrap;
-  overflow: hidden;
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 @keyframes waveDrift {
   from {
@@ -220,113 +294,74 @@ textarea {
     transform: translateX(-50%);
   }
 }
-.step > .num,
-.step > .label {
+.step > .num {
+  grid-area: 1 / 1;
+  align-self: center;
   position: relative;
-  z-index: 3;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  transition: color 0.2s ease;
 }
-.step:hover:not(.locked):not(.not-clickable) {
-  background: #e6e9ed;
+.step .num:empty {
+  display: none;
 }
-.step.locked {
-  cursor: not-allowed;
-  opacity: 0.55;
+.step > .label {
+  grid-area: 2 / 1;
+}
+.step:not(.locked):not(.not-clickable):not(.active):not(.done):hover::before {
+  background: var(--mv2-state-hover);
 }
 /* On the final "All Set" step every step is frozen: no pointer, no hover
      shift — but completed steps keep their full "done" styling (not dimmed). */
 .step.not-clickable {
   cursor: default;
 }
-.step .num {
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  background: transparent;
-  color: inherit;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12.5px;
-  flex-shrink: 0;
-  box-shadow: none !important;
-  transition: color 0.25s ease;
-}
-.step .num:empty {
-  display: none;
-}
 .step.done {
-  background: #d6f1ee;
-  color: #0f7a6e;
+  color: var(--mv2-text-secondary);
+}
+.step.done::before {
+  background: var(--mv2-state-selected);
+  border-color: var(--mv2-border-selected);
 }
 .step.done .num {
-  background: transparent;
-  color: #0f7a6e;
+  color: var(--mv2-border-selected);
 }
-.step.done .label {
-  color: #0f7a6e;
+.step.done:not(.not-clickable):hover::before {
+  background: color-mix(in oklab, var(--mv2-border-selected) 10%, var(--mv2-state-selected));
 }
-.step.done:hover:not(.locked):not(.not-clickable) {
-  background: #c4ebe6;
-}
+/* Current step: the pill is brand (decoration), so the label is primary ink, bold. */
 .step.active {
-  color: #054b44;
-  background: #46d8cc;
-  box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.35),
-    inset 0 -3px 8px rgba(0, 0, 0, 0.06),
-    0 4px 14px rgba(70, 216, 204, 0.45),
-    0 0 0 2px rgba(70, 216, 204, 0.25);
-  z-index: 2;
+  color: var(--mv2-text-primary);
   cursor: default;
 }
-/* Lock active step appearance against clicks/hover */
-.step.active:hover,
-.step.active:focus,
-.step.active:active {
-  color: #054b44;
-  background: #46d8cc;
-  filter: none;
-  transform: none;
-}
-@keyframes stepPulse {
-  0%,
-  100% {
-    box-shadow:
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
-      inset 0 0 0 1.5px rgba(255, 255, 255, 0.35),
-      inset 0 -3px 8px rgba(0, 0, 0, 0.06),
-      0 4px 14px rgba(70, 216, 204, 0.45),
-      0 0 0 2px rgba(70, 216, 204, 0.25);
-  }
-  50% {
-    box-shadow:
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
-      inset 0 0 0 1.5px rgba(255, 255, 255, 0.55),
-      inset 0 -3px 8px rgba(0, 0, 0, 0.06),
-      0 6px 22px rgba(70, 216, 204, 0.55),
-      0 0 0 3px rgba(70, 216, 204, 0.35);
-  }
-}
-.step.active .num {
-  background: transparent;
-  color: #054b44;
-  box-shadow: none;
+.step.active::before {
+  background: var(--mv2-brand-primary);
+  border-color: var(--mv2-brand-primary);
 }
 .step.active .label {
-  color: #054b44;
-  font-weight: 600;
+  font-weight: 700;
 }
+.step.locked {
+  color: var(--mv2-text-disabled);
+  cursor: not-allowed;
+}
+/* Labels sit under the pill, centred, and may wrap to two lines. */
 .step .label {
   overflow: hidden;
-  white-space: nowrap;
   min-width: 0;
-  flex: 0 1 auto;
   max-width: 100%;
+  line-height: 1.3;
 }
 .step .label-inner {
-  display: inline-block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
   transition: transform 0.25s ease;
 }
 .label.is-overflow .label-inner {
@@ -367,6 +402,14 @@ textarea {
   overflow-x: visible;
   overflow-y: visible;
 }
+@media (max-width: 767px) {
+  .stepper {
+    padding: 12px 16px;
+  }
+  .step {
+    grid-template-rows: 24px auto;
+  }
+}
 .substep-circle {
   width: 20px;
   height: 20px;
@@ -393,12 +436,9 @@ textarea {
   left: max(20px, calc(50vw - 360px - 220px));
   width: 200px;
   background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--mv2-radius-lg);
   padding: 14px;
-  box-shadow:
-    0 14px 32px rgba(15, 23, 42, 0.1),
-    0 2px 8px rgba(15, 23, 42, 0.05);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -425,7 +465,7 @@ textarea {
   align-items: center;
   gap: 10px;
   padding: 10px 14px 10px 10px;
-  border-radius: 12px;
+  border-radius: var(--mv2-radius-lg);
   border: 1.5px solid var(--line-strong);
   background: var(--bg);
   color: var(--ink-2);
@@ -442,7 +482,7 @@ textarea {
     color 0.15s ease;
 }
 .pc-side-item:hover:not(:disabled):not(.active) {
-  border-color: color-mix(in oklab, var(--accent) 55%, var(--line-strong));
+  border-color: color-mix(in oklab, var(--mv2-border-selected) 55%, var(--line-strong));
   color: var(--ink);
 }
 .pc-side-item:disabled {
@@ -455,24 +495,22 @@ textarea {
   opacity: 1;
 }
 .pc-side-item.active {
-  background: #46d8cc;
+  background: var(--mv2-brand-primary);
   border-color: transparent;
-  color: #054b44;
-  box-shadow: 0 4px 12px rgba(70, 216, 204, 0.35);
+  color: var(--mv2-text-primary);
 }
 .pc-side-item.done {
   color: var(--ink);
-  border-color: color-mix(in oklab, var(--accent) 45%, var(--line-strong));
+  border-color: color-mix(in oklab, var(--mv2-border-selected) 45%, var(--line-strong));
 }
 .pc-side-item.active .substep-circle {
-  border-color: rgba(5, 75, 68, 0.4);
-  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--mv2-border-selected);
+  background: var(--mv2-state-selected);
 }
 .pc-side-item.done .substep-circle {
-  background: linear-gradient(135deg, #00cbc6 0%, #00d5bf 100%);
+  background: var(--mv2-border-selected);
   border-color: transparent;
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 203, 198, 0.35);
+  color: var(--mv2-text-inverse);
 }
 @media (max-width: 1180px) {
   .pc-side-menu {
@@ -520,52 +558,46 @@ textarea {
   flex-direction: column;
   gap: 6px;
 }
+/* Field label (Part 14): 14px / 500, primary ink, 6px above the field (.field's gap). */
 .field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 .field label .field-optional {
   font-weight: 400;
-  color: var(--muted);
+  color: var(--mv2-text-muted);
 }
 .field input,
 .field select,
 .field textarea {
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  padding: 11px 13px;
+  border: 1px solid var(--mv2-border-input);
+  border-radius: var(--mv2-radius-lg);
+  height: var(--mv2-control-height);
+  padding: 0 12px;
   font-size: 14px;
   background: var(--bg);
-  color: var(--ink);
-  outline: none;
-  outline-offset: 0;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.35s ease;
+  color: var(--mv2-text-primary);
+  transition: border-color 0.18s ease;
 }
-.field input:hover,
-.field select:hover,
-.field textarea:hover {
-  border-color: var(--line-strong);
+.field textarea {
+  height: auto;
+  min-height: var(--mv2-control-height);
+  padding: 10px 12px;
 }
 .field input:focus,
-.field input:focus-visible,
 .field select:focus,
-.field select:focus-visible,
-.field textarea:focus,
-.field textarea:focus-visible {
-  outline: none;
-  border-color: var(--line-strong);
-  box-shadow: none;
+.field textarea:focus {
+  border-color: var(--mv2-border-focus);
 }
 .field .input-prefix {
   display: flex;
   align-items: center;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--mv2-border-input);
+  border-radius: var(--mv2-radius-lg);
+  height: var(--mv2-control-height);
   background: var(--bg);
   overflow: hidden;
 }
@@ -577,25 +609,29 @@ textarea {
   height: 100%;
   display: grid;
   place-items: center;
-  border-right: 1px solid var(--line-strong);
+  border-right: 1px solid var(--mv2-border-input);
 }
 .field .input-prefix input {
   border: 0;
   flex: 1;
-  padding: 11px 13px;
+  height: 100%;
+  min-height: 0;
+  padding: 0 12px;
   font-size: 14px;
   background: transparent;
   outline: none;
-  color: var(--ink);
+  color: var(--mv2-text-primary);
 }
 .field .input-prefix input:focus {
   box-shadow: none;
   animation: none;
   border: 0;
 }
+/* The inner input is borderless, so the ring goes on the box that draws the field. */
 .field .input-prefix:focus-within {
-  border-color: var(--line-strong);
-  box-shadow: none;
+  border-color: var(--mv2-border-focus);
+  outline: var(--mv2-focus-ring);
+  outline-offset: 2px;
 }
 /* Phone Number: the dial-code picker beside the number, one row at every width. The picker
    stays narrow ("HK +852") while its menu is wide enough for "Hong Kong +852", capped to the
@@ -615,21 +651,11 @@ textarea {
   min-width: 100%;
   max-width: min(320px, calc(100vw - 32px));
 }
-@keyframes mintRipple {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent);
-  }
-  60% {
-    box-shadow: 0 0 0 10px color-mix(in oklab, var(--accent) 0%, transparent);
-  }
-  100% {
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 22%, transparent);
-  }
-}
 /* Buttons */
 .btn {
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--mv2-radius-lg);
+  min-height: var(--mv2-control-height);
   padding: 12px 20px;
   font-size: 14px;
   font-weight: 600;
@@ -648,60 +674,65 @@ textarea {
   transform: scale(0.98);
 }
 .btn-primary {
-  background: linear-gradient(90deg, #00cbc6 0%, #00d5bf 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 203, 198, 0.28);
+  background: var(--accent);
+  color: var(--mv2-action-on-primary);
+  box-shadow: none;
 }
 .btn-primary:hover {
-  box-shadow: 0 8px 22px rgba(0, 203, 198, 0.4);
+  background: var(--accent-hover);
+}
+.btn-primary:active {
+  background: var(--accent-pressed);
 }
 .btn-primary[disabled] {
-  background: var(--line-strong);
-  color: white;
+  background: var(--mv2-action-disabled);
+  color: var(--mv2-text-disabled);
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
 }
 .btn-ghost {
-  background: transparent;
-  color: var(--ink-2);
-  border: 1px solid var(--line-strong);
+  background: var(--mv2-surface-card);
+  color: var(--mv2-action-secondary-text);
+  border: 1px solid var(--mv2-action-secondary-border);
 }
 .btn-ghost:hover {
-  background: var(--surface-2);
+  background: var(--mv2-state-selected);
 }
 .btn-block {
   width: 100%;
   padding: 15px 20px;
   font-size: 15px;
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-lg);
 }
 .btn-link-center {
   background: transparent;
   border: 0;
-  color: var(--accent-ink);
+  border-radius: var(--mv2-radius-lg);
+  color: var(--mv2-action-secondary-text);
   font-family: inherit;
   font-weight: 600;
   font-size: 14px;
   padding: 8px;
   cursor: pointer;
   align-self: center;
-  transition: color 0.2s ease;
+  transition: background 0.2s ease;
 }
 .btn-link-center:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--mv2-state-hover);
 }
 
 /* Form stack used in Create Entity */
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 .form-stack .field input,
 .form-stack .field select {
-  padding: 14px 16px;
-  border-radius: 10px;
+  padding: 0 12px;
+  border-radius: var(--mv2-radius-lg);
   font-size: 14px;
 }
 .form-stack .field label {
@@ -722,7 +753,10 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--mv2-border-subtle);
 } /* Right-side action group: Save & Exit + Save & Next laid out horizontally,
      so every step footer reads [Back] ... [Save & Exit] [Save & Next]. */
 .step-actions {
@@ -730,23 +764,57 @@ textarea {
   align-items: center;
   gap: 12px;
 }
-/* Back, Save & Exit, Save & Next and the "…to continue" reminder are one unwrapping row,
-   which is 30px wider than a 360px phone - enough to scroll the whole page sideways. Let
-   the row wrap and give the reminder a line of its own: it is a sentence, not a control,
-   and it is the piece with no room. */
-@media (max-width: 560px) {
+/* Back is a Ghost button (Part 15.18): no border, link-teal text. */
+.step-nav > .btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--mv2-action-secondary-text);
+}
+.step-nav > .btn-ghost:hover {
+  background: var(--mv2-state-hover);
+}
+/* Save & Exit is a Secondary button here (SaveExitLink renders .btn-link-center). */
+.step-actions .btn-link-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--mv2-control-height);
+  padding: 0 20px;
+  background: var(--mv2-surface-card);
+  border: 1px solid var(--mv2-action-secondary-border);
+  border-radius: var(--mv2-radius-lg);
+  color: var(--mv2-action-secondary-text);
+}
+.step-actions .btn-link-center:hover:not(:disabled) {
+  background: var(--mv2-state-selected);
+  color: var(--mv2-action-secondary-text);
+}
+.step-actions .btn-link-center:disabled {
+  background: var(--mv2-action-disabled);
+  border-color: var(--mv2-action-disabled);
+  color: var(--mv2-text-disabled);
+  cursor: not-allowed;
+}
+/* Phone: one column, Primary first, then Save & Exit, then Back — all full width. */
+@media (max-width: 767px) {
   .step-nav {
-    flex-wrap: wrap;
-    row-gap: 12px;
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
   .step-actions {
-    flex: 1 1 auto;
-    min-width: 0;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: stretch;
   }
-  .step-reminder {
-    flex: 1 0 100%;
+  .step-nav > .btn,
+  .step-actions > .btn,
+  .step-actions > .btn-link-center {
+    width: 100%;
+  }
+  .step-actions > .btn-primary {
+    order: -1;
+  }
+  /* The "…to continue" reminder is capped at 340px, wider than a 360px phone's column. */
+  .step-actions > .step-reminder {
     max-width: 100%;
   }
 }
@@ -770,36 +838,35 @@ textarea {
   border: 0;
   padding: 0;
   cursor: default;
-  background: rgba(255, 255, 255, 0.6);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
+  background: var(--mv2-scrim);
 }
 .mw-modal-card {
   position: relative;
   width: 100%;
 }
+/* Minty v2 "Confirmation modal" (Part 14). */
 .mw-dialog {
-  max-width: 435px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: #fff;
-  padding: 48px;
-  box-shadow:
-    0 4px 8px rgba(15, 23, 42, 0.08),
-    0 12px 32px rgba(0, 0, 0, 0.1);
+  max-width: 440px;
+  border-radius: var(--mv2-radius-xl);
+  border: 1px solid var(--mv2-border-default);
+  background: var(--mv2-surface-card);
+  padding: 24px;
+  box-shadow: var(--mv2-elevation-modal);
 }
 .mw-dialog-title {
   margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.25;
-  color: #000;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--mv2-text-primary);
 }
 .mw-dialog-art {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
-  margin-top: 20px;
+  max-height: 160px;
+  margin: 16px auto 0;
 }
 /* minty-web's ConfirmDialog layout: the Minty picture sits BESIDE the title, in the top
    right, with the title and the company in a column that wraps inside its own width - not
@@ -822,38 +889,45 @@ textarea {
   margin: -8px -12px 0 0;
 }
 .mw-dialog-body {
-  margin: 20px 0 0;
-  font-size: 15px;
-  line-height: 1.375;
-  color: var(--ink-2);
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mv2-text-secondary);
 }
 .mw-dialog-actions {
-  margin-top: 32px;
+  margin-top: 24px;
   display: flex;
-  gap: 20px;
+  justify-content: flex-end;
+  gap: 12px;
 }
-.mw-dialog-actions.is-single {
-  justify-content: center;
-}
+/* The non-primary action is a Secondary button. */
 .mw-dialog-btn {
-  height: 66px;
-  flex: 1;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  font-size: 18px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--mv2-control-height);
+  padding: 0 20px;
+  border-radius: var(--mv2-radius-lg);
+  border: 1px solid var(--mv2-action-secondary-border);
+  background: var(--mv2-surface-card);
+  color: var(--mv2-action-secondary-text);
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.25;
   cursor: pointer;
 }
-.mw-dialog-actions.is-single .mw-dialog-btn {
-  flex: 0 0 169px;
+.mw-dialog-btn:hover {
+  background: var(--mv2-state-selected);
 }
 .mw-dialog-btn.is-teal {
-  background: #4fc7c7;
-  color: #fff;
-  font-weight: 700;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--mv2-action-on-primary);
 }
 .mw-dialog-btn.is-teal:hover {
-  opacity: 0.9;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 /* The other two tones minty-web's ConfirmDialog draws: orange to change something, and the
    grey-edged secondary beside it. Change them with it. */
@@ -897,19 +971,31 @@ textarea {
   line-height: 1.375;
   color: #dc5a5a;
 }
+.mw-dialog-btn.is-teal:active {
+  background: var(--accent-pressed);
+  border-color: var(--accent-pressed);
+}
+/* Phone: the dialog becomes a bottom sheet, actions stacked with Primary first. */
 @media (max-width: 480px) {
-  .mw-dialog {
-    padding: 32px 24px;
+  .mw-modal {
+    align-items: flex-end;
+    padding: 0;
   }
-  /* The pair stacks with the action on top, as minty-web's does under 560px. */
+  .mw-dialog {
+    max-width: none;
+    border-radius: var(--mv2-radius-xl) var(--mv2-radius-xl) 0 0;
+    border-bottom: 0;
+  }
   .mw-dialog-actions {
-    flex-direction: column-reverse;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
   }
   .mw-dialog-btn {
-    height: 56px;
-    flex: none;
     width: 100%;
+  }
+  .mw-dialog-btn.is-teal,
+  .mw-dialog-btn.is-orange {
+    order: -1;
   }
 }
 
@@ -921,11 +1007,8 @@ textarea {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  /* The design's scrim: #16202E at 12% behind a 6px blur. Far lighter than the
-       near-black wash it replaces, and the difference in job is the point — at 12% the
-       darkening barely separates anything, so it is the BLUR doing the work. Dropping the
-       blur here does not degrade to "slightly less separation", it degrades to none. */
-  background: rgba(22, 32, 46, 0.12);
+  /* Minty v2 scrim, behind the same 6px blur. */
+  background: var(--mv2-scrim);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
@@ -933,7 +1016,7 @@ textarea {
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--mv2-elevation-modal);
   padding: 26px 26px 22px;
   max-width: 440px;
   width: 100%;
@@ -973,8 +1056,8 @@ textarea {
   gap: 14px;
 }
 .pc-card {
-  border: 1.5px solid var(--line);
-  border-radius: 14px;
+  border: 1px solid var(--mv2-border-default);
+  border-radius: var(--mv2-radius-lg);
   padding: 18px 20px;
   background: var(--bg);
   transition:
@@ -982,9 +1065,9 @@ textarea {
     box-shadow 0.2s ease;
 }
 .pc-title {
-  font-weight: 700;
-  font-size: 15.5px;
-  color: var(--ink);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--mv2-text-primary);
   margin-bottom: 4px;
 }
 .pc-field {
@@ -993,9 +1076,11 @@ textarea {
   gap: 6px;
   margin-top: 12px;
 }
+/* Used as the field label of the petty-cash fields (pettyCashFields' f.label). */
 .pc-sub {
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 /* In-dropdown "+ Add '<name>' as a new contact" row + inline create panel. */
 .mselect-create {
@@ -1022,26 +1107,25 @@ textarea {
   gap: 12px;
 }
 .mselect-create-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 .mselect-create-input {
   width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid var(--line-strong);
-  border-radius: 10px;
+  height: var(--mv2-control-height);
+  padding: 0 12px;
+  color: var(--mv2-text-primary);
+  border: 1px solid var(--mv2-border-input);
+  border-radius: var(--mv2-radius-lg);
   font-size: 14px;
 }
-.mselect-create-input:focus,
-.mselect-create-input:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 25%, transparent);
+.mselect-create-input:focus {
+  border-color: var(--mv2-border-focus);
 }
 .mselect-create-error {
-  color: #c0392b;
-  font-size: 12.5px;
+  color: var(--danger);
+  font-size: 13px;
 }
 .mselect-create-actions {
   display: flex;
@@ -1051,20 +1135,27 @@ textarea {
 .mselect-create-btn {
   flex: 1;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--mv2-radius-lg);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 .mselect-create-btn.ghost {
-  background: transparent;
-  color: var(--accent-ink);
-  border: 1.5px solid var(--accent);
+  background: var(--mv2-surface-card);
+  color: var(--mv2-action-secondary-text);
+  border: 1px solid var(--mv2-action-secondary-border);
+}
+.mselect-create-btn.ghost:hover:not(:disabled) {
+  background: var(--mv2-state-selected);
 }
 .mselect-create-btn.primary {
   background: var(--accent);
-  color: #fff;
-  border: 1.5px solid var(--accent);
+  color: var(--mv2-action-on-primary);
+  border: 1px solid var(--accent);
+}
+.mselect-create-btn.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 .mselect-create-btn:disabled {
   opacity: 0.55;
@@ -1077,48 +1168,45 @@ textarea {
   text-underline-offset: 2px;
 }
 .pc-link:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .pc-hint {
-  color: var(--muted-2);
-  font-size: 12.5px;
+  color: var(--mv2-text-secondary);
+  font-size: 13px;
   font-weight: 400;
   margin-left: 4px;
 }
 .pc-field select {
   appearance: none;
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border: 1px solid var(--mv2-border-input);
+  border-radius: var(--mv2-radius-lg);
+  height: var(--mv2-control-height);
+  padding: 0 12px;
   font-size: 14px;
   background: var(--bg);
-  color: var(--ink);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8d8b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  color: var(--mv2-text-primary);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23535A5A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 38px;
 }
 .pc-field select:hover {
-  border-color: color-mix(in oklab, var(--accent) 35%, var(--line-strong));
+  border-color: color-mix(in oklab, var(--mv2-border-selected) 35%, var(--mv2-border-input));
 }
-.pc-field select:focus,
-.pc-field select:focus-visible {
-  outline: none;
-  border-color: var(--line-strong);
-  box-shadow: none;
+.pc-field select:focus {
+  border-color: var(--mv2-border-focus);
 }
 .pc-card:focus-within {
-  border-color: var(--line);
+  border-color: var(--mv2-border-default);
   box-shadow: none;
 }
 .pc-card.is-error {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 22%, transparent);
-  animation: mintRipple 0.8s ease-out;
+  border-color: var(--danger);
+  box-shadow: none;
 }
 .pc-field.field-error .input-prefix {
   border-color: var(--danger);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 18%, transparent);
+  box-shadow: none;
 }
 .field-required {
   margin-top: 8px;
@@ -1148,12 +1236,12 @@ textarea {
 .field.field-error select,
 .field.field-error textarea {
   border-color: var(--danger);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 18%, transparent);
+  box-shadow: none;
 }
 
 /* Group divider (matches step h2 size) */
 .pc-section-head {
-  margin-top: 28px;
+  margin-top: 32px;
   padding-top: 24px;
   border-top: 1px solid var(--line);
 }
@@ -1173,8 +1261,8 @@ textarea {
 }
 
 .method-card {
-  border: 1.5px solid var(--line);
-  border-radius: 14px;
+  border: 1px solid var(--mv2-border-default);
+  border-radius: var(--mv2-radius-lg);
   background: var(--bg);
   transition: border-color 0.2s ease;
 }
@@ -1194,9 +1282,9 @@ textarea {
   cursor: default;
 }
 .method-title {
-  font-weight: 700;
-  font-size: 15.5px;
-  color: var(--ink);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--mv2-text-primary);
   letter-spacing: -0.005em;
   display: inline-flex;
   align-items: center;
@@ -1206,7 +1294,7 @@ textarea {
   display: inline-flex;
   width: 18px;
   height: 18px;
-  color: #00cbc6;
+  color: var(--mv2-brand-primary);
   animation: autofillSparkle 4.5s ease-in-out infinite;
 }
 .method-sparkle svg {
@@ -1249,7 +1337,7 @@ textarea {
   border: 0;
   color: var(--muted);
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   cursor: pointer;
   display: inline-flex;
   transition:
@@ -1258,12 +1346,12 @@ textarea {
 }
 .method-trash:hover {
   color: var(--danger);
-  background: rgba(217, 83, 79, 0.1);
+  background: var(--mv2-danger-bg);
 }
 .method-drag {
   color: var(--muted);
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   cursor: grab;
   display: inline-flex;
   transition:
@@ -1285,7 +1373,7 @@ textarea {
 }
 .method-row.is-drag-over {
   background: var(--accent-soft);
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
 }
 .method-add {
   display: flex;
@@ -1295,19 +1383,19 @@ textarea {
   width: 100%;
   margin-top: 12px;
   padding: 14px;
-  border: 1.5px solid var(--accent);
-  background: transparent;
-  color: var(--accent-ink);
+  border: 1px solid var(--mv2-action-secondary-border);
+  background: var(--mv2-surface-card);
+  color: var(--mv2-action-secondary-text);
   font-weight: 600;
   font-size: 14.5px;
-  border-radius: 12px;
+  border-radius: var(--mv2-radius-lg);
   cursor: pointer;
   transition:
     background 0.15s ease,
     transform 0.12s ease;
 }
 .method-add:hover {
-  background: var(--accent-soft);
+  background: var(--mv2-state-selected);
 }
 .method-add:active {
   transform: scale(0.99);
@@ -1321,12 +1409,12 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .method-add-field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 .method-add-actions {
   display: grid;
@@ -1334,10 +1422,11 @@ textarea {
   gap: 12px;
 }
 .btn-cancel-outline {
-  background: transparent;
-  color: var(--accent-ink);
-  border: 1.5px solid var(--accent);
-  border-radius: 999px;
+  background: var(--mv2-surface-card);
+  color: var(--mv2-action-secondary-text);
+  border: 1px solid var(--mv2-action-secondary-border);
+  border-radius: var(--mv2-radius-lg);
+  min-height: var(--mv2-control-height);
   padding: 13px 20px;
   font-size: 14.5px;
   font-weight: 600;
@@ -1346,28 +1435,33 @@ textarea {
   transition: background 0.15s ease;
 }
 .btn-cancel-outline:hover {
-  background: var(--accent-soft);
+  background: var(--mv2-state-selected);
 }
 .btn-mint-pill {
   background: var(--accent);
-  color: #fff;
-  border: 1.5px solid var(--accent);
-  border-radius: 999px;
+  color: var(--mv2-action-on-primary);
+  border: 1px solid var(--accent);
+  border-radius: var(--mv2-radius-lg);
+  min-height: var(--mv2-control-height);
   padding: 13px 20px;
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition:
-    background 0.15s ease,
-    opacity 0.15s ease;
+  transition: background 0.15s ease;
 }
 .btn-mint-pill:hover:not(:disabled) {
-  background: var(--accent-ink);
-  border-color: var(--accent-ink);
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.btn-mint-pill:active:not(:disabled) {
+  background: var(--accent-pressed);
+  border-color: var(--accent-pressed);
 }
 .btn-mint-pill:disabled {
-  opacity: 0.55;
+  background: var(--mv2-action-disabled);
+  border-color: var(--mv2-action-disabled);
+  color: var(--mv2-text-disabled);
   cursor: not-allowed;
 }
 @keyframes methodMenuIn {
@@ -1409,12 +1503,12 @@ textarea {
   font-size: 18px;
   letter-spacing: -0.005em;
   padding: 8px 22px;
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-lg);
   cursor: pointer;
   line-height: 1;
-  color: var(--accent-ink);
-  background: #fff;
-  border: 2px solid #00cbc6;
+  color: var(--mv2-action-secondary-text);
+  background: var(--mv2-surface-card);
+  border: 2px solid var(--mv2-action-secondary-border);
   isolation: isolate;
   overflow: hidden;
   transition:
@@ -1423,13 +1517,13 @@ textarea {
     transform 0.12s ease,
     background 0.25s ease;
 }
-/* Solid mint fill that scales in from the centre on hover/active */
+/* Flat selected-state fill that scales in from the centre on hover/active */
 .autofill-btn::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, #00cbc6 0%, #00d5bf 100%);
+  background: var(--mv2-state-selected);
   opacity: 0;
   transform: scale(0.7);
   transition:
@@ -1443,7 +1537,7 @@ textarea {
 }
 .autofill-btn:hover {
   padding: 8px 28px;
-  color: #fff;
+  color: var(--mv2-action-secondary-text);
 }
 .autofill-btn:hover::after {
   opacity: 1;
@@ -1453,8 +1547,8 @@ textarea {
   transform: scale(0.97);
 }
 .autofill-btn.is-active {
-  color: #fff;
-  border-color: transparent;
+  color: var(--mv2-action-secondary-text);
+  border-color: var(--mv2-border-selected);
 }
 .autofill-btn.is-active::after {
   opacity: 1;
@@ -1473,7 +1567,7 @@ textarea {
   display: inline-flex;
   width: 26px;
   height: 26px;
-  color: #00cbc6;
+  color: var(--mv2-brand-primary);
   animation: autofillSparkle 4.5s ease-in-out infinite;
 }
 .autofill-spark svg {
@@ -1482,7 +1576,7 @@ textarea {
 }
 .autofill-btn:hover .autofill-spark,
 .autofill-btn.is-active .autofill-spark {
-  color: #fff;
+  color: var(--mv2-border-selected);
 }
 @keyframes autofillSparkle {
   0%,
@@ -1515,7 +1609,7 @@ textarea {
   gap: 7px;
   max-width: 340px;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--mv2-radius-md);
   font-size: 12.5px;
   line-height: 1.45;
   text-align: left;
@@ -1630,21 +1724,18 @@ textarea {
 }
 .acc-search input {
   width: 100%;
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  padding: 11px 38px 11px 14px;
+  border: 1px solid var(--mv2-border-input);
+  border-radius: var(--mv2-radius-lg);
+  height: var(--mv2-control-height);
+  padding: 0 38px 0 12px;
   font-size: 14px;
   background: var(--bg);
-  color: var(--ink);
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  color: var(--mv2-text-primary);
+  transition: border-color 0.15s ease;
   box-sizing: border-box;
 }
 .acc-search input:focus {
-  outline: none;
-  border-color: var(--line-strong);
-  box-shadow: none;
+  border-color: var(--mv2-border-focus);
 }
 .acc-search-icon {
   position: absolute;
@@ -1679,7 +1770,7 @@ textarea {
 }
 .acc-list::-webkit-scrollbar-thumb {
   background: var(--line-strong);
-  border-radius: 4px;
+  border-radius: var(--mv2-radius-full);
 }
 .acc-row {
   display: flex;
@@ -1705,14 +1796,14 @@ textarea {
 .mint-check {
   width: 22px;
   height: 22px;
-  border-radius: 6px;
-  border: 1.5px solid var(--line-strong);
+  border-radius: var(--mv2-radius-sm);
+  border: 1.5px solid var(--mv2-border-input);
   background: var(--bg);
   display: inline-grid;
   place-items: center;
   cursor: pointer;
   padding: 0;
-  color: #fff;
+  color: var(--mv2-text-inverse);
   flex-shrink: 0;
   transition:
     background 0.15s ease,
@@ -1720,15 +1811,15 @@ textarea {
     transform 0.1s ease;
 }
 .mint-check:hover {
-  border-color: var(--accent);
+  border-color: var(--mv2-border-selected);
 }
 .mint-check.on {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--mv2-border-selected);
+  border-color: var(--mv2-border-selected);
 }
 .mint-check.on:hover {
-  background: var(--accent-ink);
-  border-color: var(--accent-ink);
+  background: var(--mv2-border-focus);
+  border-color: var(--mv2-border-focus);
 }
 .mint-check:active {
   transform: scale(0.94);
@@ -1756,27 +1847,24 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--mv2-border-input);
   background: var(--bg);
-  color: var(--ink);
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 14.5px;
+  color: var(--mv2-text-primary);
+  height: var(--mv2-control-height);
+  padding: 0 12px;
+  border-radius: var(--mv2-radius-lg);
+  font-size: 14px;
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.25s ease;
+  transition: border-color 0.18s ease;
 }
 .mdp-trigger:hover {
-  border-color: color-mix(in oklab, var(--accent) 35%, var(--line-strong));
+  border-color: color-mix(in oklab, var(--mv2-border-selected) 35%, var(--mv2-border-input));
 }
 .mdp-trigger.open,
 .mdp-trigger:focus-visible {
-  outline: none;
-  border-color: var(--line-strong);
-  box-shadow: none;
+  border-color: var(--mv2-border-focus);
 }
 .mdp-value {
   flex: 1;
@@ -1798,7 +1886,7 @@ textarea {
 .mdp-today-tag {
   flex-shrink: 0;
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-full);
   background: var(--accent-soft);
   color: var(--accent-ink);
   font-size: 11.5px;
@@ -1813,11 +1901,9 @@ textarea {
   left: 0;
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--mv2-radius-lg);
   padding: 14px;
-  box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.12),
-    0 2px 6px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--mv2-elevation-overlay);
   z-index: 40;
   width: 304px;
   animation: mdpIn 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -1847,7 +1933,7 @@ textarea {
 .mdp-nav {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   border: 0;
   background: transparent;
   color: var(--ink-2);
@@ -1890,7 +1976,7 @@ textarea {
   color: var(--ink);
   font-size: 13.5px;
   font-family: inherit;
-  border-radius: 10px;
+  border-radius: var(--mv2-radius-md);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1911,7 +1997,7 @@ textarea {
 .mdp-cell.today:not(.selected) {
   font-weight: 700;
   color: var(--accent-ink);
-  box-shadow: inset 0 0 0 1.5px var(--accent);
+  box-shadow: inset 0 0 0 1.5px var(--mv2-border-selected);
 }
 .mdp-cell.disabled {
   color: var(--muted-2);
@@ -1933,10 +2019,9 @@ textarea {
   color: var(--muted-2);
 }
 .mdp-cell.selected {
-  color: #fff;
+  color: var(--mv2-text-inverse);
   font-weight: 700;
-  background: linear-gradient(90deg, #00cbc6 0%, #00d5bf 100%);
-  box-shadow: 0 4px 10px rgba(0, 203, 198, 0.32);
+  background: var(--mv2-border-selected);
 }
 .mdp-cell:active:not(.empty) {
   transform: scale(0.92);
@@ -1958,7 +2043,7 @@ textarea {
   font-weight: 600;
   font-family: inherit;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   cursor: pointer;
   transition: background 0.14s ease;
 }
@@ -1982,12 +2067,11 @@ textarea {
 }
 .invite-card {
   background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--mv2-radius-lg);
   padding: 24px;
   max-width: 460px;
   width: 100%;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
   margin-left: auto;
   margin-right: auto;
 }
@@ -2015,7 +2099,7 @@ textarea {
   color: var(--muted);
   cursor: pointer;
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   display: inline-flex;
   transition:
     background 0.12s ease,
@@ -2026,13 +2110,13 @@ textarea {
   color: var(--ink);
 }
 .invite-field {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .invite-field > label {
   display: block;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
   margin-bottom: 6px;
 }
 /* Mandatory-field marker (red asterisk) — shared by every form. */
@@ -2050,12 +2134,12 @@ textarea {
   justify-content: center;
 }
 .btn-cancel {
-  border: 1.5px solid var(--accent);
-  color: var(--accent-ink);
-  background: transparent;
+  border: 1px solid var(--mv2-action-secondary-border);
+  color: var(--mv2-action-secondary-text);
+  background: var(--mv2-surface-card);
 }
 .btn-cancel:hover {
-  background: var(--accent-soft);
+  background: var(--mv2-state-selected);
 }
 
 .invite-list {
@@ -2075,7 +2159,7 @@ textarea {
   border: 0;
   color: var(--muted);
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -2094,20 +2178,20 @@ textarea {
   align-items: center;
   gap: 14px;
   background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--mv2-radius-lg);
   padding: 14px 18px;
-  transition: border-color 0.15s ease;
+  transition: background 0.15s ease;
 }
 .invite-row-card:hover {
-  border-color: color-mix(in oklab, var(--accent) 45%, var(--line));
+  background: var(--mv2-state-hover);
 }
 .invite-avatar {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00cbc6 0%, #00d5bf 100%);
-  color: #fff;
+  background: var(--mv2-state-selected);
+  color: var(--mv2-text-link);
   font-weight: 700;
   font-size: 14px;
   display: grid;
@@ -2162,7 +2246,7 @@ textarea {
   color: var(--accent-ink);
   background: var(--accent-soft);
   padding: 5px 11px;
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-full);
 }
 
 /* Info tooltip beside section titles */
@@ -2180,7 +2264,6 @@ textarea {
   height: 18px;
   color: var(--muted);
   cursor: help;
-  outline: none;
   background: transparent;
 }
 .info-tip:hover,
@@ -2196,26 +2279,21 @@ textarea {
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background: rgba(255, 255, 255, 0.72);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-  backdrop-filter: blur(18px) saturate(180%);
-  color: #0f172a;
+  background: var(--mv2-text-primary);
+  color: var(--mv2-text-inverse);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0;
   line-height: 1.55;
   padding: 14px 16px;
-  border-radius: 14px;
+  border-radius: var(--mv2-radius-md);
   width: max-content;
   /* Never wider than the screen it has to fit on. A flat 360px is wider than a 360px
      phone, and this popup is only opacity-hidden - it sits in the layout at all times, so
      an oversized one scrolls the whole page sideways without ever being seen. */
   max-width: min(360px, calc(100vw - 32px));
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.18),
-    0 2px 6px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 0;
+  box-shadow: var(--mv2-elevation-overlay);
   opacity: 0;
   pointer-events: none;
   cursor: auto;
@@ -2236,6 +2314,11 @@ textarea {
 }
 .info-tip-pop p {
   margin: 0;
+}
+/* The tooltip is dark, so the link in it is inverse ink (underlined, as everywhere). */
+.info-tip-pop .pc-link,
+.info-tip-pop .pc-link:hover {
+  color: var(--mv2-text-inverse);
 }
 .info-tip-pop p + p {
   margin-top: 8px;
@@ -2277,28 +2360,31 @@ textarea {
   justify-content: space-between;
   gap: 10px;
   background: var(--bg);
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 12px 14px;
+  border: 1px solid var(--mv2-border-input);
+  border-radius: var(--mv2-radius-lg);
+  height: var(--mv2-control-height);
+  padding: 0 12px;
   font: inherit;
   font-size: 14px;
-  color: var(--ink);
+  color: var(--mv2-text-primary);
   text-align: left;
   cursor: pointer;
   transition:
     border-color 0.18s ease,
-    box-shadow 0.35s ease,
     background 0.15s ease;
 }
 .mselect-trigger:hover {
-  border-color: color-mix(in oklab, var(--accent) 40%, var(--line-strong));
+  border-color: color-mix(in oklab, var(--mv2-border-selected) 40%, var(--mv2-border-input));
 }
 .mselect.open .mselect-trigger,
 .mselect-trigger:focus,
-.mselect-trigger:focus-visible {
-  outline: none;
-  border-color: var(--line-strong);
-  box-shadow: none;
+.mselect-trigger:focus-within {
+  border-color: var(--mv2-border-focus);
+}
+/* The searchable trigger is a div around a borderless input: ring the div, not the text. */
+.mselect-trigger:has(.mselect-input:focus-visible) {
+  outline: var(--mv2-focus-ring);
+  outline-offset: 2px;
 }
 .mselect-value {
   flex: 1;
@@ -2319,7 +2405,7 @@ textarea {
 }
 .mselect.open .mselect-caret {
   transform: rotate(180deg);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .mselect-clear {
   flex: 0 0 auto;
@@ -2330,7 +2416,7 @@ textarea {
   padding: 0;
   margin: 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-full);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -2339,11 +2425,11 @@ textarea {
     color 0.15s ease;
 }
 .mselect-clear:hover {
-  background: color-mix(in oklab, var(--line-strong) 45%, transparent);
+  background: var(--mv2-state-hover);
   color: var(--ink);
 }
 .mselect-clear:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: var(--mv2-focus-ring);
   outline-offset: 1px;
 }
 .mselect.disabled {
@@ -2359,11 +2445,9 @@ textarea {
   z-index: 20;
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--mv2-radius-lg);
   padding: 6px;
-  box-shadow:
-    0 12px 32px rgba(15, 20, 25, 0.1),
-    0 2px 8px rgba(15, 20, 25, 0.06);
+  box-shadow: var(--mv2-elevation-overlay);
   max-height: 260px;
   overflow-y: auto;
   animation: mselectIn 0.18s ease-out;
@@ -2409,7 +2493,7 @@ textarea {
 /* Match the searchable trigger box to the sibling text inputs in form-stack. */
 .form-stack .field .mselect-trigger {
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: var(--mv2-radius-lg);
 }
 .mselect-empty {
   padding: 10px 12px;
@@ -2423,7 +2507,7 @@ textarea {
   justify-content: space-between;
   gap: 8px;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   font-size: 14px;
   color: var(--ink-2);
   cursor: pointer;
@@ -2432,19 +2516,19 @@ textarea {
     color 0.12s ease;
 }
 .mselect-opt.active {
-  background: color-mix(in oklab, var(--accent) 10%, transparent);
+  background: var(--mv2-state-hover);
   color: var(--ink);
 }
 .mselect-opt.selected {
-  background: color-mix(in oklab, var(--accent) 14%, transparent);
+  background: var(--mv2-state-selected);
   color: var(--accent-ink);
   font-weight: 600;
 }
 .mselect-opt.selected.active {
-  background: color-mix(in oklab, var(--accent) 22%, transparent);
+  background: color-mix(in oklab, var(--mv2-border-selected) 10%, var(--mv2-state-selected));
 }
 .mselect-opt-check {
-  color: var(--accent);
+  color: var(--accent-ink);
   display: grid;
   place-items: center;
 }
@@ -2453,7 +2537,7 @@ textarea {
 }
 .mselect-menu::-webkit-scrollbar-thumb {
   background: var(--line-strong);
-  border-radius: 99px;
+  border-radius: var(--mv2-radius-full);
 }
 .card-title {
   font-weight: 700;
@@ -2464,8 +2548,8 @@ textarea {
   border-color: var(--line-strong);
 }
 .status-connected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 18%, transparent);
+  border-color: var(--mv2-border-selected);
+  box-shadow: none;
 }
 .status-head {
   display: flex;
@@ -2485,19 +2569,24 @@ textarea {
   font-weight: 600;
   color: var(--ink);
 }
+/* Status pill (Part 14): soft background + deep ink, 24 tall, 12px / 600. */
 .pill-status {
-  padding: 4px 12px;
-  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--mv2-radius-full);
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .pill-status.ok {
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+  background: var(--mv2-success-bg);
+  color: var(--mv2-success-ink);
 }
 .pill-status.off {
-  background: var(--surface-2);
-  color: var(--muted);
+  background: var(--mv2-neutral-bg);
+  color: var(--mv2-neutral-ink);
 }
 /* ==========================================================================
      STEP 2 — "Which free trial would you like to start today?"
@@ -2507,25 +2596,24 @@ textarea {
      1440px wide — the same width this app lays out at, so the numbers transfer
      directly rather than being scaled by eye.
 
-     WHY THE TEALS ARE NOT var(--accent). The design draws this step in #4FC7C7 /
-     #18C4C7, which is a lighter, bluer teal than the app's #36c3b4. They are
-     tokens rather than literals so the difference is visible in one place and can
-     be unified deliberately; scattering the hexes through the rules below is how
-     two brand teals become permanent.
+     WHY THESE ARE STILL THEIR OWN TOKENS. The design drew this step in its own teals
+     (#4FC7C7 / #18C4C7). Minty v2 unified them: selection controls resolve to
+     border-selected and teal text to text-link (the old teals were ~2:1 on white). The
+     names stay so the step's roles are visible in one place.
      ========================================================================== */
 :root {
-  --pick-line: #4fc7c7; /* selected card border, checkbox fill */
-  --pick-ink: #18c4c7; /* "Selected", SuperMinty, the price */
-  --pick-tile: #e9f8f8; /* the "After trial" tile */
+  --pick-line: var(--mv2-border-selected); /* selected card border, checkbox fill */
+  --pick-ink: var(--mv2-text-link); /* "Selected", SuperMinty, the price */
+  --pick-tile: var(--mv2-state-selected); /* the "After trial" tile */
   /* Summary panel, sampled from frame 01-A rather than mapped onto the app palette —
        these are colours the design uses only here, and rounding them to --ink-2 / --accent
        is what made the panel read as a different design from the one that was drawn. */
-  --sum-label: #737a87; /* "Selected plan", "Payment method" */
-  --sum-note: #6b7280; /* "/month" */
-  --sum-price: #4fc7c7; /* "HK$280", "Add card" */
-  --sum-plan: #2e6ff2; /* a single module's name. NOT the bundle: SuperMinty is
-                                  --pick-ink, and the two states are deliberately
-                                  different colours in the design. */
+  --sum-label: var(--mv2-text-muted); /* "Selected plan", "Payment method" */
+  --sum-note: var(--mv2-text-muted); /* "/month" */
+  --sum-price: var(--mv2-text-link); /* "HK$280", "Add card" */
+  /* A single module's name. NOT the bundle: SuperMinty is --pick-ink, and the two states
+       are deliberately different colours. Plan names are not a status, so primary ink. */
+  --sum-plan: var(--mv2-text-primary);
 }
 
 .module-grid {
@@ -2618,45 +2706,43 @@ textarea {
   cursor: pointer;
   user-select: none;
 }
-/* THE CARD, PORTED FROM THE OLD LIVE APP (onboarding-old, LIVE07072026): a soft wash of the
-     module's own accent, the illustration filling the top, the description over the card
-     on hover, and a teal gradient frame when picked. The frame is a 3px padded wrapper, not
-     a border: a gradient border cannot follow a border-radius. */
+/* THE CARD, PORTED FROM THE OLD LIVE APP (onboarding-old, LIVE07072026): the illustration
+     filling the top, the description over the card on hover, and a selected frame when
+     picked. Minty v2 selection card: a 1px default border, 2px selected border when picked.
+     The frame is always 3px a side (border + padding trade off), so selecting a card
+     changes its colour and never its size. */
 .mp-frame {
   position: relative;
   z-index: 1; /* above the confetti */
   width: 100%;
-  padding: 3px;
-  border-radius: 23px;
-  background: var(--line);
-  transition:
-    background 0.25s ease,
-    transform 0.2s ease,
-    box-shadow 0.25s ease;
-}
-.module-pick:hover .mp-frame {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(15, 20, 25, 0.08);
+  padding: 2px;
+  border: 1px solid var(--mv2-border-default);
+  border-radius: calc(var(--mv2-radius-lg) + 3px);
+  background: transparent;
+  transition: border-color 0.25s ease;
 }
 .module-pick.selected .mp-frame {
-  background: linear-gradient(90deg, #00cbc6 0%, #00d5bf 100%);
-  box-shadow: 0 12px 32px rgba(0, 203, 198, 0.28);
+  padding: 1px;
+  border: 2px solid var(--mv2-border-selected);
 }
 .mp-card {
   position: relative;
   width: 100%;
   /* 360 + the frame's 2 x 3px = the 366px the row was laid out for. */
   height: 360px;
-  border-radius: 20px;
+  border-radius: var(--mv2-radius-lg);
   overflow: hidden;
-  background: linear-gradient(
-    150deg,
-    color-mix(in oklab, var(--art-accent) 12%, white),
-    white 65%
-  );
+  background: var(--mv2-surface-card);
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background 0.2s ease;
+}
+.module-pick:hover .mp-card {
+  background: var(--mv2-state-hover);
+}
+.module-pick.selected .mp-card {
+  background: var(--mv2-state-selected);
 }
 /* Takes whatever height the title and the pinned status line leave. */
 .mp-art {
@@ -2691,7 +2777,7 @@ textarea {
   letter-spacing: -0.015em;
   /* Two even lines rather than "Payment" over a stranded "Request". */
   text-wrap: balance;
-  color: #16202e;
+  color: var(--mv2-text-primary);
   text-align: center;
 }
 /* Pinned to the bottom of the card rather than flowing after the title: the two
@@ -2728,7 +2814,7 @@ textarea {
   justify-content: center;
   gap: 10px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--mv2-state-hover);
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -2745,7 +2831,7 @@ textarea {
   font-weight: 700;
   font-size: 20px;
   letter-spacing: -0.01em;
-  color: #16202e;
+  color: var(--mv2-text-primary);
 }
 .mp-desc {
   font-size: 15px;
@@ -2757,9 +2843,6 @@ textarea {
   .mp-hover {
     transition: none;
   }
-  .module-pick:hover .mp-frame {
-    transform: none;
-  }
   .mp-hover {
     transform: none;
   }
@@ -2768,31 +2851,29 @@ textarea {
 .mp-circle {
   position: relative; /* above the confetti; a flow element would sit under it */
   z-index: 1;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: 2px solid var(--line-strong);
+  /* A 20px visible box. The click target is the whole .module-pick card around it. */
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  border-radius: var(--mv2-radius-sm);
+  border: 1px solid var(--mv2-border-input);
   background: var(--bg);
   display: grid;
   place-items: center;
-  color: white;
+  color: var(--mv2-text-inverse);
   transition:
     background 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.2s ease,
-    box-shadow 0.25s ease;
+    border-color 0.25s ease;
 }
 .module-pick:hover .mp-circle {
-  border-color: var(--muted);
+  border-color: var(--mv2-border-selected);
 }
 .module-pick.selected .mp-circle {
-  background: var(--pick-line);
-  border-color: transparent;
-  box-shadow: 0 6px 14px rgba(79, 199, 199, 0.35);
-  transform: scale(1.05);
+  background: var(--mv2-border-selected);
+  border-color: var(--mv2-border-selected);
 }
 .mp-circle svg {
-  transform: scale(1.6);
+  transform: none;
 }
 
 /* --- the Subscription Summary ------------------------------------------ */
@@ -2807,8 +2888,8 @@ textarea {
   flex: 0 0 427px;
   margin-top: 8px;
   padding: 21px 40px 30px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--mv2-radius-lg);
   background: var(--bg);
   box-shadow: var(--shadow-sm);
   color: var(--ink-2);
@@ -2992,7 +3073,7 @@ textarea {
 .sub-pay-name {
   font-size: 14px;
   font-weight: 700;
-  color: #16202e;
+  color: var(--mv2-text-primary);
 }
 /* A button, not an anchor — it opens a dialog rather than going anywhere. Styled
      as a link because that is what the design draws and what the payer expects to
@@ -3023,8 +3104,13 @@ textarea {
   display: block;
   width: 84px;
   height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%);
+  border-radius: var(--mv2-radius-full);
+  background: linear-gradient(
+    90deg,
+    var(--mv2-surface-sunk) 25%,
+    var(--mv2-border-subtle) 37%,
+    var(--mv2-surface-sunk) 63%
+  );
   background-size: 400% 100%;
   animation: skeletonShimmer 1.4s ease-in-out infinite;
 }
@@ -3046,7 +3132,7 @@ textarea {
   .sub-pay-bar,
   .skel-bar {
     animation: none;
-    background: var(--surface-2);
+    background: var(--mv2-surface-sunk);
   }
 }
 
@@ -3066,7 +3152,7 @@ textarea {
   margin: 20px -10px 0;
   padding: 12px 30px 11px;
   min-height: 71px;
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-full);
   background: var(--pick-tile);
 }
 .sub-tile-label {
@@ -3232,7 +3318,7 @@ textarea {
   display: grid;
   place-items: center;
   margin: 0 auto 22px;
-  color: var(--accent);
+  color: var(--accent-ink);
   position: relative;
 }
 .check-circle::before,
@@ -3269,7 +3355,7 @@ textarea {
   text-align: left;
   font-size: 15px;
   line-height: normal;
-  color: #16202e;
+  color: var(--mv2-text-primary);
 }
 .allset-lede {
   margin: 0;
@@ -3324,8 +3410,13 @@ textarea {
   display: block;
   height: 10px;
   margin: 4px 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%);
+  border-radius: var(--mv2-radius-full);
+  background: linear-gradient(
+    90deg,
+    var(--mv2-surface-sunk) 25%,
+    var(--mv2-border-subtle) 37%,
+    var(--mv2-surface-sunk) 63%
+  );
   background-size: 400% 100%;
   animation: skeletonShimmer 1.4s ease-in-out infinite;
 }
@@ -3361,7 +3452,7 @@ textarea {
   width: 166px;
   height: 41px;
   margin: 0;
-  border-radius: 10px;
+  border-radius: var(--mv2-radius-lg);
 }
 .allset-skeleton .sk-btn.is-link {
   width: 132px;
@@ -3383,7 +3474,7 @@ textarea {
   border: 0;
   background: none;
   padding: 12px 20px;
-  border-radius: 10px;
+  border-radius: var(--mv2-radius-lg);
   font-size: 14px;
   color: var(--pick-ink);
   cursor: pointer;
@@ -3443,10 +3534,9 @@ textarea {
 .page-head p {
   font-size: 16px;
 }
-.field label,
-.pc-sub,
+/* Field labels, inputs, helper and error text, status pills and the field-group titles
+     are NOT here: they take the Minty v2 sizes set on their own rules (Part 14). */
 .pc-section-sub,
-.pc-hint,
 .acc-sub,
 .acc-all-label,
 .acc-name,
@@ -3456,7 +3546,6 @@ textarea {
 .invite-email,
 .invite-card-title,
 .invite-list-title,
-.invite-field > label,
 .invite-role,
 .module-caption,
 .autofill-hint,
@@ -3466,27 +3555,10 @@ textarea {
 .pc-side-item,
 .status-meta,
 .status-meta b,
-.card-title,
-.pill-status,
-.field-required,
-.acc-search input {
+.card-title {
   font-size: 16px;
 }
-/* Field text & form inputs */
-.field input,
-.field select,
-.field textarea {
-  font-size: 16px;
-}
-.field .input-prefix input {
-  font-size: 16px;
-}
-.field .input-prefix .prefix {
-  font-size: 16px;
-}
-/* Larger card / section titles → tighter heading hierarchy */
-.pc-title,
-.method-title,
+/* Larger section titles → tighter heading hierarchy */
 .pc-section-title {
   font-size: 18px;
 }
@@ -3539,11 +3611,8 @@ textarea {
   padding: 20px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* The design's scrim: #16202E at 12% behind a 6px blur. Far lighter than the
-       near-black wash it replaces, and the difference in job is the point — at 12% the
-       darkening barely separates anything, so it is the BLUR doing the work. Dropping the
-       blur here does not degrade to "slightly less separation", it degrades to none. */
-  background: rgba(22, 32, 46, 0.12);
+  /* Minty v2 scrim, behind the same 6px blur. */
+  background: var(--mv2-scrim);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
@@ -3559,17 +3628,15 @@ textarea {
   animation: billingSheetIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
   position: relative;
   background: var(--bg);
-  /* NO BORDER. Over a 12% scrim the shadow is the whole separation, and a 1px grey line
+  /* NO BORDER. Over the scrim the shadow is the whole separation, and a 1px grey line
        drawn on top of it reads as a seam rather than an edge.
 
-       ONE SHELL FOR ALL THREE STATES, though the frames draw three: radius 16 with this
-       shadow (01-D), radius 12 with a card-level 0 2px 8px (01-L), radius 24 with a
-       two-layer shadow (01-J). 01-D's is the only one that reads as a modal rather than a
-       rectangle with a default shadow, and a dialog that changes shape as the payer moves
-       through it is three dialogs. */
+       ONE SHELL FOR ALL THREE STATES, though the frames draw three (01-D, 01-L, 01-J): a
+       dialog that changes shape as the payer moves through it is three dialogs. Minty v2:
+       sheet radius, modal elevation. */
   border: 0;
-  border-radius: 16px;
-  box-shadow: 0 16px 44px rgba(22, 32, 46, 0.16);
+  border-radius: var(--mv2-radius-xl);
+  box-shadow: var(--mv2-elevation-modal);
   padding: 30px;
   max-width: 481px;
   width: 100%;
@@ -3622,7 +3689,7 @@ textarea {
   line-height: normal;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #16202e;
+  color: var(--mv2-text-primary);
 }
 /* The picker titles itself smaller than the form — 16px semibold against 20px bold.
      Kept as two sizes rather than normalised, because the design sizes each heading to what
@@ -3635,7 +3702,7 @@ textarea {
   margin: 0;
   font-size: 13.5px;
   line-height: normal;
-  color: #6b7a80;
+  color: var(--mv2-text-secondary);
   max-width: 434px;
 }
 .billing-close {
@@ -3646,7 +3713,7 @@ textarea {
   cursor: pointer;
   color: var(--muted);
   padding: 4px;
-  border-radius: 8px;
+  border-radius: var(--mv2-radius-md);
   line-height: 0;
 }
 .billing-close:hover {
@@ -3689,19 +3756,18 @@ textarea {
   min-height: 95px;
   padding: 14px 20px;
   cursor: pointer;
-  /* NO BORDER — the design separates one row from the next with a shadow alone. */
-  border: 0;
-  border-radius: 12px;
+  /* Minty v2: rows carry a 1px border, not a shadow. */
+  border: 1px solid var(--line-strong);
+  border-radius: var(--mv2-radius-lg);
   background: var(--bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   outline: 2px solid transparent;
   outline-offset: -2px;
   transition:
-    box-shadow 0.15s,
+    background 0.15s,
     outline-color 0.15s;
 }
 .billing-pm:hover {
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
+  background: var(--mv2-state-hover);
 }
 /* AN OUTLINE, NOT A BORDER, so choosing a row does not change its size and shunt the
      rest of the list down by 2px.
@@ -3711,7 +3777,7 @@ textarea {
      list of three, so the ring stays. */
 .billing-pm.is-chosen {
   outline-color: var(--pick-line);
-  box-shadow: 0 2px 10px rgba(79, 199, 199, 0.18);
+  background: var(--mv2-state-selected);
 }
 /* THE RADIO IS DRAWN, NOT THEMED. `accent-color` gives a coloured dot inside a thin
      ring; the design draws the inverse — a 6px teal ring around a white core — and no
@@ -3725,7 +3791,7 @@ textarea {
   width: 20px;
   height: 20px;
   margin: 0;
-  border: 2px solid #d7dee2;
+  border: 2px solid var(--mv2-border-input);
   border-radius: 50%;
   background: var(--bg);
   cursor: pointer;
@@ -3734,10 +3800,10 @@ textarea {
     border-width 0.15s;
 }
 .billing-pm input:checked {
-  border: 6px solid #2e9b9b;
+  border: 6px solid var(--mv2-border-selected);
 }
 .billing-pm input:focus-visible {
-  outline: 2px solid var(--pick-line);
+  outline: var(--mv2-focus-ring);
   outline-offset: 2px;
 }
 .billing-pm input:disabled {
@@ -3754,8 +3820,8 @@ textarea {
   justify-content: center;
   width: 56px;
   height: 36px;
-  border: 1px solid #eff1f3;
-  border-radius: 7px;
+  border: 1px solid var(--mv2-border-subtle);
+  border-radius: var(--mv2-radius-md);
   background: var(--bg);
 }
 .billing-pm-main {
@@ -3768,19 +3834,19 @@ textarea {
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  color: #16202e;
+  color: var(--mv2-text-primary);
 }
 .billing-pm-meta {
   display: flex;
   align-items: baseline;
   gap: 11px;
   font-size: 12px;
-  color: #16202e;
+  color: var(--mv2-text-primary);
 }
 /* "Expire on" is the caption and the date is the fact — the design greys the first and
      leaves the second in ink, which is why they are two elements rather than one string. */
 .billing-pm-metalabel {
-  color: #a0a8b2;
+  color: var(--mv2-text-muted);
 }
 .billing-pm-company {
   font-size: 12.5px;
@@ -3805,18 +3871,18 @@ textarea {
   letter-spacing: 0.02em;
   border: 1px solid transparent;
   padding: 3px 8px;
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-full);
   white-space: nowrap;
 }
 .billing-pm-flag.is-soon {
-  color: #9e690d;
-  background: #fce6bd;
-  border-color: #f2d59b;
+  color: var(--mv2-warning-ink);
+  background: var(--mv2-warning-bg);
+  border-color: var(--mv2-warning-bg);
 }
 .billing-pm-flag.is-expired {
-  color: #b4231f;
-  background: #fff1f1;
-  border-color: #ffcccc;
+  color: var(--mv2-danger-ink);
+  background: var(--mv2-danger-bg);
+  border-color: var(--mv2-danger-bg);
 }
 
 /* Centred under the list, in the step's teal. A button rather than an anchor — it opens
@@ -3872,40 +3938,37 @@ textarea {
   margin-top: 4px;
 }
 .billing-field {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .billing-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #16202e;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mv2-text-primary);
 }
 /* Matched to the Stripe fields below them (STRIPE_APPEARANCE in BillingSheet.jsx), so
      the three inputs the payer meets in one column are one column of inputs. Change either
-     and change the other. */
+     and change the other. (OUT OF STEP until STRIPE_APPEARANCE takes the v2 values: this
+     side moved to them first, and the .tsx side is not in a CSS-only change.) */
 .billing-input {
   display: block;
   width: 100%;
-  height: 44px;
-  padding: 12px 14px;
-  border: 1px solid #d7dee2;
-  border-radius: 8px;
+  height: var(--mv2-control-height);
+  padding: 0 12px;
+  border: 1px solid var(--mv2-border-input);
+  border-radius: var(--mv2-radius-lg);
   background: var(--bg);
   font: inherit;
   font-size: 14px;
-  color: #16202e;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+  color: var(--mv2-text-primary);
+  transition: border-color 0.15s;
 }
 .billing-input::placeholder {
-  color: #9aa6ac;
+  color: var(--mv2-text-muted);
 }
 .billing-input:focus {
-  outline: none;
-  border-color: var(--pick-line);
-  box-shadow: 0 0 0 3px rgba(79, 199, 199, 0.18);
+  border-color: var(--mv2-border-focus);
 }
 .billing-input:disabled {
   background: var(--surface);
@@ -3914,10 +3977,7 @@ textarea {
 /* The invalid state colours the border rather than adding an icon: the message below it
      says what is wrong, and the two together are the signal — colour alone would not be. */
 .billing-input.is-invalid {
-  border-color: #b4231f;
-}
-.billing-input.is-invalid:focus {
-  box-shadow: 0 0 0 3px rgba(180, 35, 31, 0.15);
+  border-color: var(--danger);
 }
 /* The red asterisk on a mandatory billing field - mirrors minty-web's SHEET_REQUIRED
    (components/ui/sheetClasses.ts). The same dialog in two apps must be the same dialog. */
@@ -3927,17 +3987,17 @@ textarea {
 }
 .billing-fielderror {
   margin: 6px 0 0;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.4;
-  color: #b4231f;
+  color: var(--mv2-danger-ink);
 }
 
 /* The bordered block around the Stripe elements. It is a boundary as much as a frame:
      everything inside it is rendered by Stripe, in Stripe's iframe, and is the one part of
      this form whose contents never reach this app. */
 .billing-stripe {
-  border: 1px solid #d7dee2;
-  border-radius: 10px;
+  border: 1px solid var(--mv2-border-default);
+  border-radius: var(--mv2-radius-lg);
   padding: 16px;
 }
 /* Spacing only. The AddressElement themes itself from the appearance object, the same as
@@ -3986,7 +4046,7 @@ textarea {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: #16202e;
+  color: var(--mv2-text-primary);
 }
 .billing-done-title span {
   color: var(--pick-ink);
@@ -4007,7 +4067,7 @@ textarea {
 /* The card that was saved, in its own colour so the sentence can be scanned for the
      one fact it carries. */
 .billing-done-card {
-  color: #ea9713;
+  color: var(--mv2-success-ink);
 }
 .billing-done-actions {
   display: flex;
@@ -4017,7 +4077,7 @@ textarea {
 .billing-done-btn {
   min-width: 169px;
   height: 66px;
-  border-radius: 14px;
+  border-radius: var(--mv2-radius-lg);
   font-size: 18px;
   font-weight: 700;
 }
@@ -4035,13 +4095,13 @@ textarea {
   font-size: 13.5px;
 }
 .billing-mandate {
-  color: #6b7a80;
+  color: var(--mv2-text-secondary);
 }
 .billing-error {
-  color: #b4231f;
-  background: #fff1f1;
-  border: 1px solid #ffcccc;
-  border-radius: var(--radius-sm);
+  color: var(--mv2-danger-ink);
+  background: var(--mv2-danger-bg);
+  border: 1px solid var(--mv2-danger-bg);
+  border-radius: var(--mv2-radius-md);
   padding: 10px 12px;
 }
 
@@ -4052,17 +4112,16 @@ textarea {
   gap: 14px;
   margin-top: 20px;
 }
-/* 8px rather than the app's 10px --radius-sm: the design draws these at the same radius
-     as the inputs above them, which is what makes the form read as one stack rather than a
-     form with a toolbar under it. */
+/* The same radius as the inputs above them, which is what makes the form read as one stack
+     rather than a form with a toolbar under it. */
 .billing-actions .btn {
-  height: 44px;
-  border-radius: 8px;
+  height: var(--mv2-control-height);
+  border-radius: var(--mv2-radius-lg);
   justify-content: center;
 }
 .billing-actions .btn-ghost {
-  border-color: #d7dee2;
-  color: #16202e;
+  border-color: var(--mv2-border-default);
+  color: var(--mv2-text-primary);
 }
 .billing-cancel {
   flex: 0 0 150px;
