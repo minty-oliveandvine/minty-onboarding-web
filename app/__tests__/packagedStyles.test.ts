@@ -38,7 +38,9 @@ describe("@minty/shared's tokens reach the stylesheet", () => {
   });
 
   it("still emits this app's own icon font and brand colours", () => {
-    expect(compiled).toMatch(/--color-secondary:\s*#54d3da/);
+    // Through the Minty v2 token since UI-updating (2026-10-15); the colour itself is unchanged.
+    expect(compiled).toMatch(/--color-secondary:\s*var\(--mv2-brand-primary\)/);
+    expect(compiled).toMatch(/--mv2-brand-primary:\s*#54d3da/);
     expect(compiled).toMatch(/material-symbols|Material Symbols/i);
   });
 });

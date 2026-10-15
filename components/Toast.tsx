@@ -104,24 +104,24 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   // keep its stale role=alert where tests and screen readers can find it.
   const node = (
     <div
-      className="pointer-events-none fixed right-4 top-4 z-[400] w-80 max-w-[calc(100vw-2rem)]"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-[400] sm:inset-x-auto sm:bottom-6 sm:left-6 sm:w-[480px] sm:max-w-[calc(100vw-3rem)]"
       aria-live="polite"
       aria-atomic="true"
     >
       {visible && toast ? (
         <div
           key={toast.id}
-          className="pointer-events-auto flex items-start gap-3 rounded border border-[#e5e7eb] bg-white p-3 text-sm text-[#171717] shadow"
+          className="pointer-events-auto mx-auto flex max-w-[480px] items-start gap-3 rounded-[12px] border border-[var(--mv2-border-default)] bg-[var(--mv2-surface-card)] px-4 py-3 text-sm text-[var(--mv2-text-primary)] shadow-[var(--mv2-elevation-overlay)] sm:mx-0"
           role={toast.tone === 'error' ? 'alert' : 'status'}
           data-toast-type={toast.tone}
         >
           <div className="min-w-0 flex-1">
-            <p className="font-semibold">{LABEL[toast.tone]}</p>
-            <p className="break-words text-[#6b7280]">{toast.message}</p>
+            <p className="font-semibold text-[var(--mv2-text-primary)]">{LABEL[toast.tone]}</p>
+            <p className="break-words text-[var(--mv2-text-secondary)]">{toast.message}</p>
           </div>
           <button
             type="button"
-            className="cursor-pointer text-[#6b7280] hover:text-[#171717]"
+            className="cursor-pointer text-[var(--mv2-text-muted)] hover:text-[var(--mv2-text-primary)]"
             onClick={hide}
             aria-label="Dismiss"
           >
