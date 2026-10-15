@@ -134,7 +134,9 @@ test('the shipped bundle addresses each service the way lib/apiRoutes says', asy
 
 test('Flask is up, because the wizard hands off to it for auth and Xero', async ({ request }) => {
   test.skip(!(await reachable(PETTY_CASH_URL)), `Flask is not answering on ${PETTY_CASH_URL}`);
-  const res = await request.get(`${PETTY_CASH_URL}/legal/current`, { maxRedirects: 0 });
+  const res = await request.get(`${PETTY_CASH_URL}/health`, { maxRedirects: 0 });
   // Any answered status: the point is that the host is serving, not what this route says.
+  // (It probed /legal/current until 2026-10-12, when the legal documents moved to minty-web;
+  // /health is the route that exists to answer exactly this question.)
   expect(res.status()).toBeLessThan(500);
 });

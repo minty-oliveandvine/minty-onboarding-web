@@ -133,36 +133,53 @@ function reason(err: unknown, fallback: string): string {
  *
  * Frozen at module scope because a new object identity on every render remounts the
  * Element — the payer would watch a half-typed card number disappear.
+ *
+ * The colour literals mirror the --mv2-* tokens in app/globals.css (Stripe cannot read CSS
+ * variables): #242828 text-primary, #676F6F text-muted, #A82A2F danger-ink, #848C8C
+ * border-input, #19676B border-focus. Change a token, change it here too.
  */
 const STRIPE_APPEARANCE: Appearance = {
   theme: 'stripe',
   variables: {
     fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     fontSizeBase: '14px',
-    colorText: '#16202E',
-    colorTextPlaceholder: '#9AA6AC',
-    colorDanger: '#b4231f',
-    borderRadius: '8px',
+    colorText: '#242828',
+    colorTextPlaceholder: '#676F6F',
+    colorDanger: '#A82A2F',
+    borderRadius: '12px',
     spacingUnit: '4px',
   },
   rules: {
     '.Input': {
-      border: '1px solid #D7DEE2',
+      border: '1px solid #848C8C',
       boxShadow: 'none',
-      padding: '12px 14px',
+      padding: '11px 12px',
     },
     '.Input:focus': {
-      border: '1px solid #4FC7C7',
-      boxShadow: '0 0 0 3px rgba(79, 199, 199, 0.18)',
+      border: '1px solid #19676B',
+      boxShadow: '0 0 0 2px #19676B',
       outline: 'none',
     },
+    '.Input--invalid': {
+      border: '1px solid #A82A2F',
+      boxShadow: 'none',
+    },
     '.Label': {
-      fontWeight: '600',
-      fontSize: '13px',
-      color: '#16202E',
+      color: '#242828',
+      fontSize: '14px',
+      fontWeight: '500',
     },
   },
 };
+
+/* The face the appearance above names, handed to the iframe that has to render it. Naming
+   'Inter' in `variables.fontFamily` is only a request: the fields are a cross-origin document,
+   so the stylesheet this app loads does not reach them and the name silently resolved to the
+   system face. `fonts` is the only way in, and it has to be a URL — the same Google copy
+   app/layout.tsx loads for the rest of the app, cut to the weights the fields use. */
+const STRIPE_FONTS = [
+  { cssSrc: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap' },
+];
 
 /* Options objects, out here for the same reason: a fresh literal each render is a new
    prop, and these Elements remount when their options change identity. */
@@ -182,6 +199,16 @@ const ADDRESS_ELEMENT_OPTIONS: StripeAddressElementOptions = {
   mode: 'billing',
   display: { name: 'full' },
 };
+
+/** The address form starting on the company's own country. Left to itself Stripe guesses from
+ *  the browser's location, so a Hong Kong payer on a VPN or a US-set browser met "United
+ *  States". Anything but an ISO alpha-2 code (the Step 1 label before the registry loads)
+ *  leaves Stripe's guess alone rather than sending it a country it does not know. */
+function addressOptions(country?: string): StripeAddressElementOptions {
+  return country && /^[A-Z]{2}$/.test(country)
+    ? { ...ADDRESS_ELEMENT_OPTIONS, defaultValues: { address: { country } } }
+    : ADDRESS_ELEMENT_OPTIONS;
+}
 
 /**
  * 01-D — the new billing account form.
@@ -210,9 +237,14 @@ type CardFormProps = {
   ) => Promise<void>;
   onBack: () => void;
   busyLabel: string;
+  /** The company's country (ISO alpha-2), where the address form starts. */
+  country?: string;
 };
 
-function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
+function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardFormProps) {
+  // Stable per country: a new options object on every render would make Stripe update the
+  // element each time.
+  const addressElementOptions = useMemo(() => addressOptions(country), [country]);
   const stripe = useStripe();
   const elements = useElements();
   const [busy, setBusy] = useState(false);
@@ -409,7 +441,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel }: CardFormProps) {
               left out: the payer portal shows both on the saved card, and a method saved
               without them shows blanks a payer cannot fill in from anywhere. */}
           <div className="billing-address">
-            <AddressElement options={ADDRESS_ELEMENT_OPTIONS} />
+            <AddressElement options={addressElementOptions} />
           </div>
         </div>
       </div>
@@ -556,6 +588,8 @@ type BillingSheetProps = {
   entityId: string;
   /** The card this entity is already nominated onto, if any. */
   nominatedId?: string | null;
+  /** The company's country (Step 1's ISO code): where a new card's address starts. */
+  country?: string;
   onClose: () => void;
   onDone: () => void;
 };
@@ -564,6 +598,7 @@ export default function BillingSheet({
   token,
   entityId,
   nominatedId,
+  country,
   onClose,
   onDone,
 }: BillingSheetProps) {
@@ -878,6 +913,7 @@ export default function BillingSheet({
                   options={{
                     clientSecret: intent.client_secret,
                     appearance: STRIPE_APPEARANCE,
+                    fonts: STRIPE_FONTS,
                   }}
                 >
                   <CardForm
@@ -885,6 +921,7 @@ export default function BillingSheet({
                     onSaved={saveNewCard}
                     onBack={methods.length > 0 ? () => setAdding(false) : onClose}
                     busyLabel="Saving…"
+                    country={country}
                   />
                 </Elements>
               ) : error ? (

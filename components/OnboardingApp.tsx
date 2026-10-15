@@ -17,6 +17,9 @@ import {
   StepAllSet,
 } from './OnboardingSteps';
 import { toAmountString } from '@/lib/amount';
+import { browserTimezone } from '@/lib/browserTimezone';
+import { fetchCurrencies } from '@/lib/refData';
+import { currencyDecimals } from './steps/pettyCashFields';
 import { formatToday } from '@/lib/date';
 import { urlFor } from '../lib/apiRoutes';
 import { MODULE_CODE_BY_ID, MODULE_ID_BY_CODE } from '../lib/modules';
@@ -63,13 +66,15 @@ import type {
 } from '../lib/api';
 import type { AccountOptions, StepProps, SubmitFn, WizardState, SetState, XeroConflict } from '../lib/types';
 import { inviteRows } from '../lib/invites';
+import { phoneForApi } from '../lib/validation';
 import { useMounted } from '../lib/useMounted';
 
 // Baked-in defaults that used to live in TWEAK_DEFAULTS (tweaks-panel removed from prod build)
+// Minty v2 values (mirror --mv2-action-primary / --mv2-text-link / --mv2-state-selected).
 const ACCENT_DEFAULTS = {
-  accent: '#36c3b4',
-  accentInk: '#0f7a6e',
-  accentSoft: '#e6f7f4',
+  accent: '#3cbcc3',
+  accentInk: '#19676b',
+  accentSoft: '#effafa',
 };
 
 export default function OnboardingApp() {
@@ -213,6 +218,11 @@ export default function OnboardingApp() {
     persistSavedStep(n);
   };
   const back = () => setCurrent((c) => prevActiveId(c));
+  // All Set locks the stepper (goto below); this is its one way back, to a step finalize
+  // named as unfinished.
+  const returnToStep = (id: number) => {
+    if (activeIds.includes(id)) setCurrent(id);
+  };
   const goto = (id: number) => {
     if (!activeIds.includes(id)) return;
     // Onboarding is finished on the "All Set" step (9) — lock the stepper so the
@@ -369,7 +379,7 @@ export default function OnboardingApp() {
         country: nextState.entity.country,
         currency: nextState.entity.currency,
         business_email: (nextState.entity.email || '').trim(),
-        contact_phone: (nextState.entity.phone || '').replace(/\D/g, ''),
+        contact_phone: phoneForApi(nextState.entity.phone || ''),
       };
       // Land on the FE step the backend persisted (`payload.saved_step`), with
       // the Xero gate applied — deriveResumeStep handles the contract, including
@@ -836,7 +846,9 @@ export default function OnboardingApp() {
       // string as "clear this field", so a user who deletes their phone number
       // on revisit actually gets it removed.
       business_email: (state.entity.email || '').trim(),
-      contact_phone: (state.entity.phone || '').replace(/\D/g, ''),
+      contact_phone: phoneForApi(state.entity.phone || ''),
+      // The browser's zone, with no field on screen: the company's emails are dated in it.
+      timezone: browserTimezone(),
     };
 
     // --- Revisit: entity already exists, so this is an EDIT, not a create. ---
@@ -985,6 +997,8 @@ export default function OnboardingApp() {
       p.openingBalance === null ||
       String(p.openingBalance).trim() === '';
     if (empty) return { ok: true };
+    // In the company currency's places (JPY is whole amounts); the API refuses finer ones.
+    const decimals = currencyDecimals(state.entity.currency, await fetchCurrencies());
     try {
       const res = await fetch(urlFor(`/api/onboarding/opening-balance`), {
         method: 'POST',
@@ -996,7 +1010,7 @@ export default function OnboardingApp() {
           // is forced to 0 by the backend); send it here so save and resume agree.
           // Normalized to an exact 2dp decimal string so the payload doesn't depend
           // on whether the user blurred the field before saving.
-          opening_balance: toAmountString(p.openingBalance ?? ''),
+          opening_balance: toAmountString(p.openingBalance ?? '', decimals),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1220,7 +1234,10 @@ export default function OnboardingApp() {
           });
           billCodesVal = { all: false, selected: selMap };
         }
-        setState((prev) => ({ ...prev, bills: { ...prev.bills, billCodes: billCodesVal } }));
+        setState((prev) => ({
+          ...prev,
+          bills: { ...prev.bills, billCodes: billCodesVal, defaultCode: data.default_code || '' },
+        }));
       })
       .catch((err) => {
         console.error('[onboarding] the payment account codes did not load', err);
@@ -1237,11 +1254,19 @@ export default function OnboardingApp() {
     const isAll = bc.all !== false;
     const sel = bc.selected || {};
     const selectedCodes = allCodes.filter((c) => (isAll ? sel[c] !== false : sel[c] === true));
+    // A default that was unticked since it was chosen is dropped, never sent: the API refuses it.
+    const defaultCode = selectedCodes.includes(state.bills.defaultCode || '')
+      ? state.bills.defaultCode
+      : '';
     try {
       const res = await fetch(urlFor(`/api/onboarding/bill-codes`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ entity_id: state.entity.id, selected_codes: selectedCodes }),
+        body: JSON.stringify({
+          entity_id: state.entity.id,
+          selected_codes: selectedCodes,
+          default_code: defaultCode,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok)
@@ -1312,6 +1337,28 @@ export default function OnboardingApp() {
     }
   };
 
+  const resendInvite: StepProps['resendInvite'] = async (invitationId) => {
+    if (!token || !invitationId) return { ok: true };
+    try {
+      const res = await fetch(urlFor(`/api/onboarding/invite/resend`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ invitation_id: invitationId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const error = friendlyError(data, "I couldn't resend that. Mind trying again?");
+        // The resend cooldown: say when it can go again rather than the API's sentence.
+        if (res.status === 429 && typeof data.retry_after === 'number')
+          return { ok: false, error, retryAfter: data.retry_after };
+        return { ok: false, error };
+      }
+      return { ok: true, invitation: data.invitation };
+    } catch {
+      return { ok: false, error: "I couldn't reach the server. Mind trying again?" };
+    }
+  };
+
   const invitesLoadedRef = useRef(false);
   useEffect(() => {
     if (current !== 8 || invitesLoadedRef.current) return;
@@ -1369,6 +1416,13 @@ export default function OnboardingApp() {
         body: JSON.stringify({ entity_id: state.entity.id }),
       });
       const data = await res.json().catch(() => ({}));
+      // Setup not finished for the chosen modules: say what, so All Set can link to it.
+      if (res.status === 409 && Array.isArray(data.missing))
+        return {
+          ok: false,
+          error: "A few things still need setting up first.",
+          missing: data.missing,
+        };
       if (!res.ok)
         return {
           ok: false,
@@ -1479,7 +1533,9 @@ export default function OnboardingApp() {
     submitBills,
     submitInvite,
     cancelInvite,
+    resendInvite,
     completeOnboarding,
+    returnToStep,
     exitToEntityList,
     saveAndExit,
     isLastContentStep,
@@ -1558,7 +1614,10 @@ export default function OnboardingApp() {
         {current === 9 && <StepAllSet {...stepProps} />}
       </main>
 
+      {/* Not on All Set: finalize's refusal already lists "Connect Xero" there with its own
+          way back to step 4, and this dialog over it hid that list (2026-10-13). */}
       {needsXeroPrompt &&
+        current !== 9 &&
         mounted &&
         ReactDOM.createPortal(
           <div
@@ -1583,7 +1642,7 @@ export default function OnboardingApp() {
               aria-labelledby="xero-prompt-title"
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#f1f3f4',
+                background: 'var(--mv2-surface-sunk)',
                 border: '1px solid var(--line)',
                 borderRadius: 'var(--radius)',
                 boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22)',

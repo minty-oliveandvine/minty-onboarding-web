@@ -10,15 +10,15 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 
 | # | Screen | Component | Writes |
 |---|---|---|---|
-| 1 | Basic Information — name, country, currency, phone, email | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
+| 1 | Basic Information — name, country, currency, phone, email; picking a country fills an empty currency with its own (`lib/countryCurrency.ts`), and the browser's timezone goes with the save, with nothing on screen (`lib/browserTimezone.ts`) | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
 | 2 | Select Module — Petty Cash, Payment Request (cards in the old live app's design: accent gradient, large illustration, the description over the card on hover/focus, a teal gradient frame when picked); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
-| 3 | User Invite — invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip; *Add later* at the foot of the page moves on) | `StepInvite` | `POST /invite`, `/invite/cancel` |
+| 3 | User Invite — invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip; *Add later* at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers *Resend* | `StepInvite` | `POST /invite`, `/invite/cancel`, `/invite/resend` |
 | 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
-| 5 | Sales Setting — electronic and delivery methods (both start empty; *Auto Fill* fills Flask's default set, *Revert* empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
+| 5 | Sales Setting — electronic and delivery methods (both start empty; *Auto Fill* fills Flask's default set, *Revert* empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one), typed in the currency's decimal places (`currencyDecimals`; JPY is whole amounts) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
 | 6 | Account Code Setting — the expense accounts and the petty-cash account mapping | `StepAccountCode` | `POST /account-codes` |
 | 7 | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero; the open list says to type a name to add one) | `StepOthers` | `POST /contacts`, `/contacts/create` |
-| 8 | Payment Request Settings — the bills' account codes | `StepBills` | `POST /bill-codes` |
-| 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival**; *Try again* re-posts it after a failure |
+| 8 | Payment Request Settings — the bills' account codes, and an optional default code from the ticked ones | `StepBills` | `POST /bill-codes` (`default_code`) |
+| 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival**; *Try again* re-posts it after a failure; a 409 for unfinished setup lists each gap with *Go to <step>* (`returnToStep`, the one way out of the locked stepper), titles the screen *Almost there* and holds the confetti (it flies only once finalize succeeds); the needs-Xero dialog never opens over All Set |
 
 The rail groups 5–7 as *Petty Cash Settings* and shows 8 only when that module was
 chosen (`getDisplaySteps`); `isStepComplete` decides the ticks. Each screen's chrome (the
@@ -26,6 +26,49 @@ Save & Next / Save & Exit buttons, the errors) is `components/steps/StepChrome.t
 shared fields in `components/steps/pettyCashFields.tsx`, the pricing in
 `components/steps/modulePricing.tsx`; selects and the date picker are the app's own
 (`MintySelect`, `MintyDatePicker`).
+
+### Phone Number (Step 1, `components/PhoneField.tsx`, since 2026-10-12)
+
+A dial-code picker beside the number, labelled *Phone Number (optional)* (it was *Contact
+Phone*, an 8–11-digit box with no country code). No hint line under it (the user's call).
+- **The picker** is a searchable `MintySelect`: the menu rows read `Hong Kong +852`, the closed
+  field `HK +852` (`valueLabel`). No flag emoji: Windows draws them as letters. Its list is
+  `GET /countries`' `phone_code`, so a country without one is not offered. Those codes live in
+  `country_info.phone_code`, filled by `Minty/docs/schema/seed_country_phone_codes.sql`
+  (`load_catalogue.py` loads it). A database without them offers no codes, and the API refuses
+  every number.
+- **It follows the Country** until the user picks a code; picking the Country's own code
+  makes it follow again. Pasting `+65 6123 4567` into the number moves it to +65. On a shared
+  code (+1, +44, +7…) the company's Country wins when it is one of them, else the code's main
+  country (`MAIN_COUNTRY`: +44 is the UK, not Guernsey, which sorts first). A pasted number's
+  national part is kept as digits only.
+- **State** (`EntityForm.phone`) is `+<code> <national as typed>` ("+852 9123 4567"), and
+  `phoneCountry` is the user's own pick ("" = follows). The API is sent compact E.164
+  (`phoneForApi`: "+85291234567", the domestic trunk 0 dropped except for +39/+378). A stored
+  number, or a digits-only one from before the picker, is split back into the field's form once
+  the list is in (`splitStoredPhone`, under the Country's code, minus that code if it was typed
+  in front).
+- **The rule** (`lib/validation.ts` `phoneError`, mirrored in the API's `resolve.PHONE_LENGTHS`,
+  change both together): exactly 8 digits for +852, the one market Minty sells in (the user,
+  2026-10-12: strict on Hong Kong only for now - add a code when its market opens); otherwise
+  E.164's bounds (4+ national digits, 15 in all). The message (*A +852 number has 8 digits.*,
+  worded by code because the registry's names are the official ones, "Hong Kong SAR China")
+  waits for the first blur; Save & Next stays off while it stands. A number with no code to
+  judge it by is blocked the same way (*Please choose a country code.*), so a bare number can
+  never reach the API, which refuses it.
+- **No digit past the maximum** (`maxNationalDigits`: 8 for +852, else what 15 leaves after the
+  code). A keystroke on a full number is refused outright (so a digit typed mid-number cannot
+  push the last one out), a paste is cut at the limit (`capNational`, punctuation kept, a
+  dropped trunk 0 not counted), and deleting always works, even on a number a code change
+  left too long.
+- **The default Country** is the label `'Hong Kong'` until the registry loads, then the row's
+  id. The registry holds the official name ("Hong Kong SAR China"), so the label is matched
+  exactly or by a UNIQUE prefix (the API's own fallback). Until 2026-10-12 it was exact only:
+  a new company kept the bare label, and its phone picker had no code at all.
+
+The billing sheet's address (Stripe's AddressElement) starts on the company's Step 1 Country
+(`BillingSheet`'s `country` → `defaultValues`, since 2026-10-12). Left to itself Stripe guesses
+from the browser's location, so a Hong Kong payer on a US-set browser met "United States".
 
 A card's network mark is `components/CardBrand.tsx`: our own wordmark (Mastercard's circles
 drawn as circles), never the issuers' licensed artwork. It has two fits — `tile`, the picker
@@ -121,7 +164,7 @@ for that, so no new state was needed).
   field is the one that has to say so.
 - Marked: Entity Name (step 1), the "Add New Method" name (step 5), the six account-code fields
   (step 6), the three contacts (step 7), Payment Account Code (step 8), and the billing sheet's
-  Email and Billing company. Country, Currency, Contact Phone and Business Email stay unmarked -
+  Email and Billing company. Country, Currency, Phone Number and Business Email stay unmarked -
   the first two are pre-filled and the last two are genuinely optional, and already labelled so.
 
 ### The dropdowns could not turn red at all

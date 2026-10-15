@@ -21,6 +21,7 @@ import type {
   ContactResult,
   EntityResult,
   FinalizeResult,
+  Invitation,
   InvitePayload,
   InviteResult,
   ModuleId,
@@ -40,7 +41,10 @@ export type EntityForm = {
   country: string;
   currency: string;
   fyStart: string;
+  /** `+<code> <national as typed>` ("+852 9123 4567"); see lib/validation's phone rules. */
   phone: string;
+  /** The Phone Number picker's country when the user chose it; "" = it follows `country`. */
+  phoneCountry: string;
   email: string;
 };
 
@@ -99,6 +103,8 @@ export type BillsForm = {
   dedupe: boolean;
   /** Filled by the bill-codes fetch on step 8. Absent before. */
   billCodes?: CodeSelection;
+  /** The ticked code a new payment request preselects; "" for none. */
+  defaultCode?: string;
 };
 
 export type XeroForm = {
@@ -137,6 +143,9 @@ export type InviteRow = {
   role: string;
   first?: string;
   last?: string;
+  /** From the API: when the link stops working, and whether it already has. */
+  expiresAt?: string | null;
+  expired?: boolean;
 };
 
 /** Everything the wizard remembers. `initialState()` in lib/wizardSteps builds it. */
@@ -224,7 +233,14 @@ export type StepProps = {
   submitBills: () => Promise<Result>;
   submitInvite: (invite: InvitePayload) => Promise<InviteResult>;
   cancelInvite: (invitationId: string) => Promise<Result>;
+  /** Send a pending invitation again (fresh link and expiry). `retryAfter` (seconds) is set
+   * when the resend cooldown refused it. */
+  resendInvite: (
+    invitationId: string,
+  ) => Promise<Result<{ invitation?: Invitation }> | { ok: false; error: string; retryAfter: number }>;
   completeOnboarding: () => Promise<FinalizeResult | Result>;
+  /** From All Set back to a step finalize said is unfinished (the stepper is locked there). */
+  returnToStep: (id: number) => void;
 
   connectXero: () => void;
   disconnectXero: () => Promise<Result>;

@@ -37,6 +37,15 @@ export const currencyCode = (
   return CURRENCY_CODES[c || ''] || (c || '').split(' ')[0];
 };
 
+/** The company currency's decimal places for amounts (JPY is 0); 2 until the registry is in. */
+export const currencyDecimals = (
+  c: string | null | undefined,
+  registry: readonly Pick<CurrencyRow, 'currency_id' | 'decimal_places'>[] = [],
+): number => {
+  const places = registry.find((r) => r.currency_id === c)?.decimal_places;
+  return typeof places === 'number' && places >= 0 ? places : 2;
+};
+
 type MethodListProps = {
   title: string;
   methods: string[];

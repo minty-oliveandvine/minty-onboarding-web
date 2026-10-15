@@ -32,6 +32,13 @@ Flask's `/` (log in). Deleted with the pages:
 `lib/authHandover.ts`, `lib/pendingInvite.ts`, `components/AuthTopbar.tsx`,
 `components/TermsModal.tsx`.
 
+## Branch preview sets (2026-10-13)
+
+On `pr-<branch>-onboarding.dailyminty.com` this app has no sign-in page and no token of its own:
+sign in on the set's `my` host, and Flask launches the wizard (and returns the Xero step) into the
+same set - it remembers the set for 30 minutes from any same-site trip (Minty
+`docs/features/authentication.md` 6.1). No code here changed for it.
+
 ## Where the calls go
 
 `lib/flaskBase.ts`: `PETTY_CASH_URL` — Minty; `lib/apiRoutes.ts`:

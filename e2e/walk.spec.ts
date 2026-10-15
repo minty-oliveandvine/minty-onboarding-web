@@ -155,7 +155,8 @@ test('walks from Connect to All Set and finalizes the disposable entity', async 
     await expect(activeTile(page)).toHaveAttribute('data-step-key', '9');
     await expect(page.locator('h2.allset-title')).toHaveText("You're all set!");
     expect(fake.posted['bill-codes']).toEqual([
-      { entity_id: creds.entityId, selected_codes: ['300', '310', '469'] },
+      // no default picked on step 8: "" (an empty default clears any saved one)
+      { entity_id: creds.entityId, selected_codes: ['300', '310', '469'], default_code: '' },
     ]);
 
     await expect(page.locator('.allset-facts').getByRole('alert')).toHaveText(trialFailure);

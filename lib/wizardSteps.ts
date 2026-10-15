@@ -11,7 +11,7 @@
 
 import type { ModuleId } from './api';
 import type { DisplayStep, ResumeDecision, WizardState } from './types';
-import { isEmail } from './validation';
+import { isEmail, phoneOk } from './validation';
 import { toIsoDate } from './date';
 
 // Derive the frontend step id to land on from a backend /state payload. The
@@ -133,6 +133,7 @@ export const initialState = (): WizardState => ({
     currency: 'Hong Kong Dollar',
     fyStart: 'Jan',
     phone: '',
+    phoneCountry: '',
     email: '',
   },
   modules: [],
@@ -174,12 +175,9 @@ export function isStepComplete(id: number, state: WizardState): boolean {
   switch (id) {
     case 1: {
       const e = state.entity;
-      // Phone and email are optional — valid only if non-empty.
+      // Phone and email are optional — judged only when non-empty.
       const emailOk = e.email.trim() === '' || isEmail(e.email);
-      const phoneDigits = e.phone.replace(/\D/g, '');
-      const phoneOk =
-        phoneDigits.length === 0 || (phoneDigits.length >= 8 && phoneDigits.length <= 11);
-      return e.name.trim().length > 1 && phoneOk && emailOk;
+      return e.name.trim().length > 1 && phoneOk(e.phone) && emailOk;
     }
     case 2:
       return state.modules.length > 0;

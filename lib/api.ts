@@ -74,6 +74,10 @@ export type Invitation = {
   last_name: string;
   /** ISO timestamp, or null. */
   created_at: string | null;
+  /** When the invitation's link stops working (ISO), or null for one that never expires. */
+  expires_at?: string | null;
+  /** True once expires_at has passed: the invitee needs a Resend. */
+  expired?: boolean;
 };
 
 /**
@@ -159,6 +163,8 @@ export type BillCodesResponse = {
   bill_codes?: CodeOption[];
   default_all?: boolean;
   selected_codes?: string[];
+  /** The code a new payment request preselects; "" when none is set. */
+  default_code?: string;
 };
 
 //  ── Writes ──────────────────────────────────────────────────────────
@@ -230,4 +236,10 @@ export type ContactResult =
 /** `invitation` is absent when the server answered without one; the step tolerates that. */
 export type InviteResult = Result<{ invitation?: Invitation | InvitePayload; emailSent?: boolean }>;
 
-export type FinalizeResult = Result<{ trialEnd: string | null }>;
+/** One thing finalize found unfinished: the wizard step that fixes it, and the sentence. */
+export type SetupGap = { step: number; message: string };
+
+/** Finalize refuses (409) a company whose chosen modules are not set up, naming each gap. */
+export type FinalizeResult =
+  | Result<{ trialEnd: string | null }>
+  | { ok: false; error: string; missing: SetupGap[] };

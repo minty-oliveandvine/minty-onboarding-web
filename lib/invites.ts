@@ -24,6 +24,8 @@ export function inviteRow(inv: Invitation, prior?: Partial<InviteRow>): InviteRo
     role: inv.role,
     first: inv.first_name || prior?.first || '',
     last: inv.last_name || prior?.last || '',
+    expiresAt: inv.expires_at ?? null,
+    expired: !!inv.expired,
   };
 }
 
@@ -32,4 +34,22 @@ export function inviteRows(list: Invitation[], prior: InviteRow[] = []): InviteR
   const known: Record<string, InviteRow> = {};
   for (const x of prior) if (x.email) known[x.email.toLowerCase()] = x;
   return list.map((inv) => inviteRow(inv, known[(inv.email || '').toLowerCase()]));
+}
+
+/**
+ * Step 3's line under a pending invitation: "Expired", "Expires within a day" or "Expires in N
+ * days", N rounded UP - a 7-day invitation sent a minute ago says 7, not 6.
+ * Empty for an invitation that never expires (older rows) or has no date yet.
+ */
+export function inviteExpiryLabel(
+  row: Pick<InviteRow, 'expiresAt' | 'expired'>,
+  now: Date = new Date(),
+): string {
+  if (row.expired) return 'Expired';
+  if (!row.expiresAt) return '';
+  const ms = new Date(row.expiresAt).getTime() - now.getTime();
+  if (Number.isNaN(ms)) return '';
+  if (ms <= 0) return 'Expired';
+  const days = Math.ceil(ms / 86_400_000);
+  return days <= 1 ? 'Expires within a day' : `Expires in ${days} days`;
 }

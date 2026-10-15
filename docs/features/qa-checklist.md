@@ -119,10 +119,23 @@ release. Tick each box against a disposable test entity — never one you care a
       discrepancy_contact_id FROM pettycashv3.entity_pettycash_settings WHERE entity_id =
       '<id>';` — one row per entity; step 5 fills `opening_balance`/`start_date`, step 6
       the four account columns, step 7 the three contact columns.
-- [ ] **DB:** `SELECT status, opening_balance, cash_addition FROM pettycashv3.report WHERE
-      entity_id = '<id>' AND status = 'draft';` — the one draft row mirrors step 5's
-      opening balance; `cash_addition` stays `0`/`NULL` here — it is never written by the
-      wizard (the API checklist's dead-field warning, confirmed at the row level).
+- [ ] Step 1: picking a country fills an EMPTY Currency with that country's currency and
+      never replaces one already chosen; `entities.timezone` holds the browser's zone.
+- [ ] Step 5's amount follows the currency: two decimals for HKD, whole numbers for a
+      zero-decimal currency (a "." is refused while typing).
+- [ ] Step 3: each pending invite says "Expires in N days" / "Expires within a day" / "Expired"; Resend
+      sends it again (toast), and pressing again at once says when it can go.
+- [ ] Step 8: "Default account code" lists only ticked codes plus "No default"; unticking the
+      chosen default drops it; a revisit shows the saved default.
+- [ ] Step 9 with Petty Cash on and no Xero (or a mapping left short): the screen lists what is
+      missing, each with "Go to <step>", and nothing went live; finishing the step and coming
+      back to All Set completes it.
+- [ ] **DB:** `SELECT count(*) FROM pettycashv3.report WHERE entity_id = '<id>';` — `0`:
+      the wizard writes no report. The first report, opened in Petty Cash after step 9,
+      starts at step 5's opening balance on its start date.
+- [ ] **DB:** `SELECT cash_id, is_active, display_order FROM
+      pettycashv3.entity_cash_setting WHERE entity_id = '<id>';` — one row per active
+      denomination of the step 1 currency; changing the currency on step 1 swaps them.
 
 ## Step 8 — Payment Request Settings (only when that module is chosen)
 
@@ -238,6 +251,12 @@ For a manual session:
 - [ ] Press Next on an empty step 6 or 7: the first missing field scrolls into view, **its
       dropdown turns red** (not just the sentence under it - nine of these could not redden at
       all before 2026-10-09) and the message appears. Choosing a value clears both.
-- [ ] Country, Currency, Contact Phone and Business Email are **not** marked - the first two
+- [ ] Phone Number: the picker shows `HK +852` beside an empty number; typing `sing` or `65`
+      in it finds Singapore. Change Country to Singapore and the code follows (+65); pick a code
+      yourself and changing Country no longer moves it. Paste `+44 07700 900123` into the number:
+      the picker moves to +44 and the save stores `+447700900123`. Type 7 digits under +852 and
+      leave the box: *A +852 number has 8 digits.* and Save & Next is off. Reload: the
+      code and number come back as saved. No line of hint text under the field.
+- [ ] Country, Currency, Phone Number and Business Email are **not** marked - the first two
       are pre-filled, the last two are optional and say so.
 - [ ] A screen reader says "Entity Name, required", not "Entity Name star".
