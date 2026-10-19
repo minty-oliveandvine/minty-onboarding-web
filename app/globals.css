@@ -264,6 +264,9 @@ textarea::placeholder {
   justify-items: center;
   align-items: start;
   padding: 0;
+  border: 0;
+  width: 100%;
+  font: inherit;
   font-size: 12.5px;
   color: var(--mv2-text-muted);
   text-align: center;
@@ -420,7 +423,7 @@ textarea::placeholder {
   align-items: center;
   justify-content: center;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   flex-shrink: 0;
@@ -558,10 +561,10 @@ textarea::placeholder {
   flex-direction: column;
   gap: 6px;
 }
-/* Field label (Part 14): 14px / 500, primary ink, 6px above the field (.field's gap). */
+/* Field label (Part 13 "label"): 12px / 600, primary ink, 6px above the field (.field's gap). */
 .field label {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--mv2-text-primary);
 }
 .field label .field-optional {
@@ -577,7 +580,7 @@ textarea::placeholder {
   border-radius: var(--mv2-radius-lg);
   height: var(--mv2-control-height);
   padding: 0 12px;
-  font-size: 14px;
+  font-size: 16px;
   background: var(--bg);
   color: var(--mv2-text-primary);
   transition: border-color 0.18s ease;
@@ -604,7 +607,7 @@ textarea::placeholder {
 .field .input-prefix .prefix {
   padding: 0 12px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   background: transparent;
   height: 100%;
   display: grid;
@@ -617,7 +620,7 @@ textarea::placeholder {
   height: 100%;
   min-height: 0;
   padding: 0 12px;
-  font-size: 14px;
+  font-size: 16px;
   background: transparent;
   outline: none;
   color: var(--mv2-text-primary);
@@ -733,14 +736,15 @@ textarea::placeholder {
 .form-stack .field select {
   padding: 0 12px;
   border-radius: var(--mv2-radius-lg);
-  font-size: 14px;
+  font-size: 16px;
 }
 .form-stack .field label {
-  font-size: 14px;
+  font-size: 12px;
 }
 .cta-stack {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 10px;
   margin-top: 32px;
   max-width: 420px;
@@ -765,16 +769,19 @@ textarea::placeholder {
   gap: 12px;
 }
 /* Back is a Ghost button (Part 15.18): no border, link-teal text. */
-.step-nav > .btn-ghost {
+.step-nav > .btn-ghost,
+.cta-stack > .cta-ghost {
   background: transparent;
   border-color: transparent;
   color: var(--mv2-action-secondary-text);
 }
-.step-nav > .btn-ghost:hover {
+.step-nav > .btn-ghost:hover,
+.cta-stack > .cta-ghost:hover {
   background: var(--mv2-state-hover);
 }
 /* Save & Exit is a Secondary button here (SaveExitLink renders .btn-link-center). */
-.step-actions .btn-link-center {
+.step-actions .btn-link-center,
+.cta-stack > .cta-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -785,11 +792,13 @@ textarea::placeholder {
   border-radius: var(--mv2-radius-lg);
   color: var(--mv2-action-secondary-text);
 }
-.step-actions .btn-link-center:hover:not(:disabled) {
+.step-actions .btn-link-center:hover:not(:disabled),
+.cta-stack > .cta-secondary:hover:not(:disabled) {
   background: var(--mv2-state-selected);
   color: var(--mv2-action-secondary-text);
 }
-.step-actions .btn-link-center:disabled {
+.step-actions .btn-link-center:disabled,
+.cta-stack > .cta-secondary:disabled {
   background: var(--mv2-action-disabled);
   border-color: var(--mv2-action-disabled);
   color: var(--mv2-text-disabled);
@@ -1013,33 +1022,62 @@ textarea::placeholder {
   backdrop-filter: blur(6px);
 }
 .skip-modal {
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  background: var(--mv2-surface-card);
+  border: 1px solid var(--mv2-border-default);
+  border-radius: var(--mv2-radius-xl);
   box-shadow: var(--mv2-elevation-modal);
-  padding: 26px 26px 22px;
+  padding: 24px;
   max-width: 440px;
   width: 100%;
 }
 .skip-modal-lead {
-  margin: 0 0 12px;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ink);
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--mv2-text-primary);
 }
 .skip-modal-body {
   margin: 0 0 12px;
   font-size: 14px;
   line-height: 1.55;
-  color: var(--ink-2);
+  color: var(--mv2-text-secondary);
 }
 .skip-modal-body:last-of-type {
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 .skip-modal-actions {
   display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+/* Phone: the same bottom sheet as .mw-dialog, actions full width. */
+@media (max-width: 480px) {
+  .skip-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .skip-modal {
+    max-width: none;
+    border-radius: var(--mv2-radius-xl) var(--mv2-radius-xl) 0 0;
+    border-bottom: 0;
+  }
+  .skip-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+/* "Xero Connected" (step 4): a settled state in the success pair, not a button. */
+.xero-connected {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+  background: var(--mv2-success-bg);
+  color: var(--mv2-success-ink);
+  border: 1px solid var(--mv2-success-ink);
+  cursor: default;
 }
 
 /* Cards */
@@ -1078,8 +1116,8 @@ textarea::placeholder {
 }
 /* Used as the field label of the petty-cash fields (pettyCashFields' f.label). */
 .pc-sub {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--mv2-text-primary);
 }
 /* In-dropdown "+ Add '<name>' as a new contact" row + inline create panel. */
@@ -1107,8 +1145,8 @@ textarea::placeholder {
   gap: 12px;
 }
 .mselect-create-label {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--mv2-text-primary);
 }
 .mselect-create-input {
@@ -1118,7 +1156,7 @@ textarea::placeholder {
   color: var(--mv2-text-primary);
   border: 1px solid var(--mv2-border-input);
   border-radius: var(--mv2-radius-lg);
-  font-size: 14px;
+  font-size: 16px;
 }
 .mselect-create-input:focus {
   border-color: var(--mv2-border-focus);
@@ -1412,8 +1450,8 @@ textarea::placeholder {
   margin-bottom: 16px;
 }
 .method-add-field label {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--mv2-text-primary);
 }
 .method-add-actions {
@@ -1853,7 +1891,7 @@ textarea::placeholder {
   height: var(--mv2-control-height);
   padding: 0 12px;
   border-radius: var(--mv2-radius-lg);
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   cursor: pointer;
   text-align: left;
@@ -1889,7 +1927,7 @@ textarea::placeholder {
   border-radius: var(--mv2-radius-full);
   background: var(--accent-soft);
   color: var(--accent-ink);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -1957,7 +1995,7 @@ textarea::placeholder {
 }
 .mdp-dow-cell {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--muted);
   padding: 6px 0;
@@ -2114,8 +2152,8 @@ textarea::placeholder {
 }
 .invite-field > label {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--mv2-text-primary);
   margin-bottom: 6px;
 }
@@ -2365,7 +2403,7 @@ textarea::placeholder {
   height: var(--mv2-control-height);
   padding: 0 12px;
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--mv2-text-primary);
   text-align: left;
   cursor: pointer;
@@ -2478,7 +2516,7 @@ textarea::placeholder {
   height: auto;
   min-height: 0;
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
   color: var(--ink);
 }
@@ -3866,7 +3904,7 @@ textarea::placeholder {
 }
 .billing-pm-flag {
   flex: none;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
   border: 1px solid transparent;
@@ -3943,8 +3981,8 @@ textarea::placeholder {
 .billing-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--mv2-text-primary);
 }
 /* Matched to the Stripe fields below them (STRIPE_APPEARANCE in BillingSheet.jsx), so
@@ -3960,7 +3998,7 @@ textarea::placeholder {
   border-radius: var(--mv2-radius-lg);
   background: var(--bg);
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--mv2-text-primary);
   transition: border-color 0.15s;
 }
@@ -4285,4 +4323,23 @@ textarea::placeholder {
 }
 .allset-gap-go {
   min-height: 44px;
+}
+
+/* iOS zooms into any text control under 16px: 16px on phones and tablets in portrait,
+   the 14px body size from 768px (Round 2.1). */
+@media (min-width: 768px) {
+  .field input,
+  .field select,
+  .field textarea,
+  .field .input-prefix .prefix,
+  .field .input-prefix input,
+  .form-stack .field input,
+  .form-stack .field select,
+  .mselect-trigger,
+  .mselect-create-input,
+  .mdp-trigger,
+  .billing-input,
+  .mselect .mselect-trigger .mselect-input {
+    font-size: 14px;
+  }
 }

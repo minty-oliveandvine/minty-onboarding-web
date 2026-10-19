@@ -21,7 +21,10 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival**; *Try again* re-posts it after a failure; a 409 for unfinished setup lists each gap with *Go to <step>* (`returnToStep`, the one way out of the locked stepper), titles the screen *Almost there* and holds the confetti (it flies only once finalize succeeds); the needs-Xero dialog never opens over All Set |
 
 The rail groups 5–7 as *Petty Cash Settings* and shows 8 only when that module was
-chosen (`getDisplaySteps`); `isStepComplete` decides the ticks. Each screen's chrome (the
+chosen (`getDisplaySteps`); `isStepComplete` decides the ticks. Its tiles are buttons (Round
+2.1, 2026-10-16): a reachable tile takes Tab and Enter, the active one is `aria-current="step"`,
+and one that leads nowhere (locked, or every tile once on All Set) is `aria-disabled` and out of
+the Tab order. Each screen's chrome (the
 Save & Next / Save & Exit buttons, the errors) is `components/steps/StepChrome.tsx`;
 shared fields in `components/steps/pettyCashFields.tsx`, the pricing in
 `components/steps/modulePricing.tsx`; selects and the date picker are the app's own

@@ -1500,7 +1500,8 @@ export default function OnboardingApp() {
     r.style.setProperty('--accent', ACCENT_DEFAULTS.accent);
     r.style.setProperty('--accent-ink', ACCENT_DEFAULTS.accentInk);
     r.style.setProperty('--accent-soft', ACCENT_DEFAULTS.accentSoft);
-    r.style.setProperty('--accent-hover', ACCENT_DEFAULTS.accent);
+    r.style.setProperty('--accent-hover', 'var(--mv2-action-primary-hover)');
+    r.style.setProperty('--accent-pressed', 'var(--mv2-action-primary-pressed)');
   }, []);
 
   // The last content step (immediately before "All Set", step 9) shows a
@@ -1624,16 +1625,6 @@ export default function OnboardingApp() {
             className="skip-modal-overlay"
             role="presentation"
             onClick={() => setNeedsXeroPrompt(false)}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 20,
-              background: 'rgba(15, 23, 27, 0.45)',
-            }}
           >
             <div
               className="skip-modal"
@@ -1641,30 +1632,18 @@ export default function OnboardingApp() {
               aria-modal="true"
               aria-labelledby="xero-prompt-title"
               onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'var(--mv2-surface-sunk)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--radius)',
-                boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22)',
-                padding: '26px 26px 22px',
-                maxWidth: 440,
-                width: '100%',
-              }}
             >
               <p id="xero-prompt-title" className="skip-modal-lead">
                 {xeroPromptReason === 'expired'
                   ? 'Your session has timed out.'
                   : 'Connect to your accounting system first.'}
               </p>
-              <p className="skip-modal-body" style={{ marginBottom: 32 }}>
+              <p className="skip-modal-body">
                 {xeroPromptReason === 'expired'
                   ? 'It has been more than 30 minutes, so your connection to Xero has expired. Please go back to the “Connect to Accounting System” step and reconnect to continue your setup.'
                   : 'You’re not connected to Xero yet. Please go back to the “Connect to Accounting System” step and connect before continuing your setup.'}
               </p>
-              <div
-                className="skip-modal-actions"
-                style={{ display: 'flex', justifyContent: 'center', gap: 10 }}
-              >
+              <div className="skip-modal-actions">
                 <button
                   type="button"
                   className="btn btn-primary"

@@ -74,7 +74,8 @@ export default function Stepper({ current, onClick, maxReached, displaySteps }: 
           ? current
           : (d.ids.filter((i) => i <= maxReached).pop() ?? firstId);
         return (
-          <div
+          <button
+            type="button"
             key={d.ids[0]}
             data-step-key={d.ids[0]}
             className={
@@ -82,6 +83,9 @@ export default function Stepper({ current, onClick, maxReached, displaySteps }: 
             }
             onClick={() => clickable && onClick(targetId)}
             title={reachable ? undefined : 'Complete the previous steps first'}
+            aria-current={isActive ? 'step' : undefined}
+            aria-disabled={clickable ? undefined : true}
+            tabIndex={clickable ? undefined : -1}
           >
             {(isDone || !reachable) && (
               <span className="num">{isDone ? <Icon.Check /> : <Icon.Lock />}</span>
@@ -92,7 +96,7 @@ export default function Stepper({ current, onClick, maxReached, displaySteps }: 
             <span className="label label-tiny">
               <span className="label-inner">{d.tiny}</span>
             </span>
-          </div>
+          </button>
         );
       })}
     </div>

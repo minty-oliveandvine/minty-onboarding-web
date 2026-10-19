@@ -277,8 +277,13 @@ export function StepCreateEntity({
         >
           {saving ? 'Saving…' : 'Save & Next'}
         </button>
-        <SaveExitLink saveAndExit={saveAndExit} submitFn={submitEntity} disabled={saving} />
-        <button className="btn-link-center" onClick={backToEntityList}>
+        <SaveExitLink
+          saveAndExit={saveAndExit}
+          submitFn={submitEntity}
+          disabled={saving}
+          className="btn-link-center cta-secondary"
+        />
+        <button className="btn btn-ghost cta-ghost" onClick={backToEntityList}>
           Back to Entity List
         </button>
       </div>
@@ -762,21 +767,7 @@ export function StepConnectXero({
           </span>
         </div>
         {connected ? (
-          <div
-            className="btn btn-block"
-            style={{
-              marginTop: 16,
-              background: 'var(--accent-soft)',
-              color: 'var(--accent-ink)',
-              border: '1px solid var(--accent)',
-              cursor: 'default',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-            }}
-            aria-disabled="true"
-          >
+          <div className="btn btn-block xero-connected" aria-disabled="true">
             <Icon.Check /> Xero Connected
           </div>
         ) : null}
