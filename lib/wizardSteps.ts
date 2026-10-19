@@ -180,9 +180,10 @@ export function isStepComplete(id: number, state: WizardState): boolean {
       // Phone and email are optional — judged only when non-empty.
       const emailOk = e.email.trim() === '' || isEmail(e.email);
       // Country and currency are required (2026-10-19): a resume never counts a company
-      // without them as past step 1.
+      // without them as past step 1. Any non-empty name, as the page and the API take it
+      // (the owner, 2026-10-19 - a two-character rule here made "A" save and then stall).
       return (
-        e.name.trim().length > 1 && !!e.country && !!e.currency && phoneOk(e.phone) && emailOk
+        e.name.trim().length > 0 && !!e.country && !!e.currency && phoneOk(e.phone) && emailOk
       );
     }
     case 2:

@@ -335,9 +335,11 @@ describe('initialState', () => {
 
 describe('isStepComplete', () => {
   describe('step 1 -- basic information', () => {
-    it('needs a name longer than one character', () => {
+    it('needs a name - any non-empty one, as the page and the API take', () => {
+      // The owner, 2026-10-19: a one-character name ("A") is a valid company name. The old
+      // two-character rule lived only here, so "A" saved and then Save & Next silently stalled.
       expect(isStepComplete(1, state({ entity: { name: '' } }))).toBe(false);
-      expect(isStepComplete(1, state({ entity: { name: 'A' } }))).toBe(false);
+      expect(isStepComplete(1, state({ entity: { name: 'A' } }))).toBe(true);
       expect(isStepComplete(1, state({ entity: { name: 'AB' } }))).toBe(true);
     });
 
