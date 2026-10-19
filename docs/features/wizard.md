@@ -11,8 +11,8 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | # | Screen | Component | Writes |
 |---|---|---|---|
 | 1 | Basic Information — name, country, currency (all three required), phone, email (optional). A new company starts **empty**, Country and Currency included, like the phone's code (owner, 2026-10-19; *Select a country* / *Select a currency*); picking a country fills an empty currency with its own (`lib/countryCurrency.ts`) and moves the phone's code, and the browser's timezone goes with the save, with nothing on screen (`lib/browserTimezone.ts`) | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
-| 2 | Select Module — Petty Cash, Payment Request (cards in the old live app's design: accent gradient, large illustration, the description over the card on hover/focus, a teal gradient frame when picked); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
-| 3 | User Invite — invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip; *Add later* at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers *Resend* | `StepInvite` | `POST /invite`, `/invite/cancel`, `/invite/resend` |
+| 2 | Select Module — Petty Cash, Payment Request (the 9C hybrid, 2026-10-19 - see *Step 2's module cards* below); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
+| 3 | User Invite — **optional** (the 9E choices, 2026-10-19 - see *Step 3's choices* below): invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip in it; *Skip for now* at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers *Resend* | `StepInvite` | `POST /invite`, `/invite/cancel`, `/invite/resend` |
 | 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
 | 5 | Sales Setting — electronic and delivery methods (both start empty; *Auto Fill* fills Flask's default set, *Revert* empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one), typed in the currency's decimal places (`currencyDecimals`; JPY is whole amounts) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
 | 6 | Account Code Setting — the expense accounts and the petty-cash account mapping | `StepAccountCode` | `POST /account-codes` |
@@ -29,6 +29,61 @@ Save & Next / Save & Exit buttons, the errors) is `components/steps/StepChrome.t
 shared fields in `components/steps/pettyCashFields.tsx`, the pricing in
 `components/steps/modulePricing.tsx`; selects and the date picker are the app's own
 (`MintySelect`, `MintyDatePicker`).
+
+### Step 2's module cards (9C, 2026-10-19)
+
+The owner asked for a hybrid: the revised step's copy, selection logic, pricing summary and
+progress, with the old live app's bigger, coloured module art. Each card (`StepSelectModule`,
+`.module-pick` in `app/globals.css`):
+
+- **is a checkbox** (`role="checkbox"`, `aria-checked`, named by the module, described by its
+  benefit and trial lines) - several may be picked (Part 15.8c), so not a radio. Tab reaches it;
+  Space or Enter toggles it; the whole card is the target.
+- **has an identity band**: the module's Part 13 wash with a 4px stripe of its identity colour
+  and the module art at up to 208px (Part 13 §13.10's ceiling for selection). The colours are
+  `--mv2-module-pettycash|payment` (`-wash`, `-ink`) in `:root`, the same values as
+  `@minty/shared`'s `--color-module-*` (this app does not import `tokens.css`); `MODULES[].tone`
+  picks them, so no hex lives in the component. Identity only - the name, the state and the
+  buttons stay neutral/teal.
+- **always shows its benefit line** (`MODULES[].desc`). It used to appear only over the card on
+  hover/focus, which a touch screen never shows.
+- **shows the picked state three ways**: the selected (teal) border, a filled check box, and the
+  word *Selected* (*Select* when not) - never colour alone.
+- On a phone (≤ 700px) the cards stack full width; from 701px they sit side by side at 300px.
+
+Unchanged: multi-select, Save & Next held until one is picked (with its reason), the save-then-
+advance order, the price summary beside the cards, and the confetti on the click that completes
+the pair (it is decorative and blocks nothing). Tests: `StepSelectModule.cards.test.tsx` (the
+card's accessibility), `StepSelectModule.selection.test.tsx` (what must not change),
+`StepSelectModule.test.tsx` (confetti).
+
+### Step 3's choices (9E, 2026-10-19)
+
+The step is optional and says so with three explicit choices, not copy alone:
+
+- **An *Optional* pill** (neutral `pill-status off`) beside the *User Invite* title, and one line
+  under it.
+- **The people to invite**: one row (a `<fieldset>`, *Invite a person*) to start;
+  **+ Add another person** (secondary button) adds *Person 2*, *Person 3*… each with a 44px
+  remove button. Rows live in the component only, never in `WizardState`.
+- **Footer**: Back · Save & Exit · **Skip for now** (a secondary button, same row/stack, never a
+  link) · **Send invitations** (primary).
+  - *Send invitations* sends every complete row (one `POST /invite` each), ignores empty rows,
+    and moves on once all went out. A row that fails (or whose email did not go out) stays
+    filled and the step stays. A started-but-unfinished row refuses the send: each field gives
+    its Part 11 message (*The role is still empty. Choose their role to send this invitation.*),
+    one problem takes focus, two or more raise the error summary (with *Person N:* once there
+    are several rows). Empty fields turn red only after that refused send; the email's format
+    message waits for the field to be left once, then follows each keystroke. With nothing typed
+    and nobody invited it is disabled with its reason beside it.
+  - *Skip for now* moves on and **sends nothing**, whatever the rows hold - a half-filled row
+    never blocks it. Once somebody has been invited and the rows are empty, the primary reads
+    *Continue* and Skip is not shown (they would be the same move).
+- `isStepComplete(3)` is still always true and `deriveResumeStep` still counts step 3 as saved
+  only when an invitation was sent, so skipping leaves nothing to resume to.
+
+Tests: `StepInvite.flow.test.tsx` (the choices), `StepInvite.test.tsx` (the arrival prompt);
+`e2e/responsive.spec.ts` checks both steps at 360/768/1440 against the disposable entity.
 
 ### Phone Number (Step 1, `components/PhoneField.tsx`, since 2026-10-12)
 
@@ -143,7 +198,7 @@ words the wizard shows; the app never invents a message for a status it does not
 ## Tests
 
 Unit (`npm test`): `lib/__tests__/wizardSteps.test.ts`, `validation.test.ts`, `invites.test.ts`,
-`components/__tests__/Stepper.test.tsx`, `StepChrome.test.tsx`, `StepInvite.test.tsx` (the arrival prompt's Ok / Skip), `MintySelect.test.tsx` (the type-to-add hint), `pettyCashFields.test.tsx`,
+`components/__tests__/Stepper.test.tsx`, `StepChrome.test.tsx`, `StepInvite.test.tsx` (the arrival prompt's Ok), `StepInvite.flow.test.tsx` (Optional, Add another person, Skip for now, Send invitations), `StepSelectModule*.test.tsx` (the module cards, the selection, the confetti), `MintySelect.test.tsx` (the type-to-add hint), `pettyCashFields.test.tsx`,
 `MethodList.test.tsx`, `CardBrand.test.tsx` (the two fits and their crops). Browser (`npm run test:e2e`): `e2e/stack.spec.ts` (the two backends
 answer), `resume.spec.ts` (the database decides the landing step; `saved_step` and
 `current_step` may disagree; an out-of-range step is refused), `xero.spec.ts`,

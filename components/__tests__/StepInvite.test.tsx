@@ -2,7 +2,8 @@
 //
 // It opens on its own every time the step mounts, in minty-web's modal design. Its one
 // button, "Ok", only closes it (the user stays to invite someone); so do Escape and a click
-// on the backdrop. There is no Skip: a user with nobody to invite uses "Add later".
+// on the backdrop. There is no Skip in it: a user with nobody to invite uses "Skip for now"
+// at the foot of the page (StepInvite.flow.test.tsx).
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

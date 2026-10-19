@@ -7,10 +7,9 @@
 // discount field, and inventing one would double-count.
 
 // --- Step 2: Select Module ---
-// `tile` and `art` come off the card exports rather than being derived from `accent`:
-// the design gives each module its own tile wash and its own illustration size (Petty
-// Cash 80px, Payment Request 95px), and a colour-mix of the accent landed near neither.
-// `accent` is kept because the illustration inherits it as `currentColor`.
+// `tone` names the module's Part 13 identity colour (module/<tone>, -wash, -ink), which
+// `app/globals.css` holds as `--mv2-module-*` tokens: the card's identity band is drawn
+// on the wash, never from a hex here (9C, 2026-10-19).
 
 import CardBrand from '../CardBrand';
 import Icon from '../Icon';
@@ -25,9 +24,10 @@ export type ModuleCard = {
   title: string;
   desc: string;
   img: string;
-  accent: string;
+  /** Part 13 module identity: `.module-pick.is-<tone>` picks the module's colour tokens. */
+  tone: 'pettycash' | 'payment';
   price: string;
-  /** An Icon member to draw instead of `img`. No card sets it today. */
+  /** An Icon member to draw instead of `img` (in the module's ink). No card sets it today. */
   icon?: keyof typeof Icon;
 };
 
@@ -39,7 +39,7 @@ export const MODULES: ModuleCard[] = [
     title: 'Petty Cash',
     desc: 'Track and reimburse small office expenses with receipt capture and instant approvals.',
     img: '/pettycash-icon.png',
-    accent: '#f5b945',
+    tone: 'pettycash',
     price: '280 HKD per Month',
   },
   {
@@ -47,7 +47,7 @@ export const MODULES: ModuleCard[] = [
     title: 'Payment Request',
     desc: 'Capture vendor payments, schedule payments, and reconcile with your accounting ledger.',
     img: '/payment-icon.png',
-    accent: '#3aa6f5',
+    tone: 'payment',
     price: '280 HKD per Month',
   },
 ];

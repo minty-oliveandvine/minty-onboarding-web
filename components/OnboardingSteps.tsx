@@ -1,7 +1,7 @@
 'use client';
 
 // Step content components. Each receives { state, set, next, back }.
-import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Icon from './Icon';
 import MintySelect from './MintySelect';
 import PhoneField, { phoneFieldError } from './PhoneField';
@@ -559,16 +559,26 @@ export function StepSelectModule({
       {burst && <Confetti key={burst.n} count={80} origins={burst.origins} />}
       <div className={'module-layout' + wide}>
         <div className="module-grid module-grid-2" ref={gridRef}>
+          {/* THE 9C HYBRID (owner, 2026-10-19): the old live app's large, coloured art with
+              the revised step's clear copy. Each card is a CHECKBOX (several may be picked,
+              Part 15.8c), keyboard operable, and the whole card is the target. Its module
+              identity band sits on the Part 13 module wash; the benefit line is ALWAYS shown
+              (it used to appear only on hover, which a touch screen never has); and the picked
+              state is a check, the word "Selected" and the selected border, never colour alone.
+              The price is deliberately not on the card: nothing here is charged, and the one
+              figure on this step is the summary's "After trial", where it is true. */}
           {MODULES.map((m) => {
             const I = m.icon ? Icon[m.icon] : null;
             const on = sel.includes(m.id);
             return (
               <div
                 key={m.id}
-                role="radio"
+                role="checkbox"
                 aria-checked={on}
+                aria-labelledby={`mp-name-${m.id}`}
+                aria-describedby={`mp-desc-${m.id} mp-trial-${m.id}`}
                 tabIndex={0}
-                className={'module-pick' + (on ? ' selected' : '')}
+                className={`module-pick is-${m.tone}` + (on ? ' selected' : '')}
                 onClick={() => pick(m.id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -577,36 +587,32 @@ export function StepSelectModule({
                   }
                 }}
               >
-                {/* The frame is the card's border: grey, or the teal gradient when picked. */}
+                {/* The frame is the card's border: grey, or the selected teal when picked. */}
                 <div className="mp-frame">
-                  <div className="mp-card" style={{ '--art-accent': m.accent } as CSSProperties}>
-                    <div className="mp-art">
+                  <div className="mp-card">
+                    <div className="mp-band">
                       {m.img ? (
                         <img src={m.img} alt="" className="mp-img" />
                       ) : I ? (
-                        <I width={72} height={72} />
+                        <I width={96} height={96} />
                       ) : null}
                     </div>
-                    <div className="mp-name">{m.title}</div>
-                    {/* The card's whole status line. "Available" and "Selected" are the two
-                    states this screen actually has — the price is deliberately not here
-                    any more, because nothing on this step is being charged and a figure
-                    beside a trial reads as one that is. It is in the summary, under
-                    "After trial", where it is true. */}
-                    <div className="mp-trial">
-                      <span className="mp-trial-term">{trialDaysLabel} free trial</span>
-                      <span className="mp-trial-state">{on ? 'Selected' : 'Available'}</span>
-                    </div>
-                    {/* What the module does, over the whole card on hover or keyboard focus.
-                    Inert, so a click still lands on the card and toggles it. */}
-                    <div className="mp-hover">
-                      <div className="mp-title">{m.title}</div>
-                      <div className="mp-desc">{m.desc}</div>
+                    <div className="mp-body">
+                      <div className="mp-name" id={`mp-name-${m.id}`}>
+                        {m.title}
+                      </div>
+                      <p className="mp-desc" id={`mp-desc-${m.id}`}>
+                        {m.desc}
+                      </p>
+                      <div className="mp-trial" id={`mp-trial-${m.id}`}>
+                        {trialDaysLabel} free trial
+                      </div>
+                      <div className="mp-state" aria-hidden>
+                        <span className="mp-check">{on && <Icon.CheckSm />}</span>
+                        {on ? 'Selected' : 'Select'}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="mp-circle" aria-hidden>
-                  {on && <Icon.CheckSm />}
                 </div>
               </div>
             );
@@ -1774,6 +1780,204 @@ const roleToValue = (label: string | null | undefined): string =>
 const roleLabel = (value: string | null | undefined): string =>
   (value || '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
+/** One person typed into the invite form, before anything is sent. `key` is local only. */
+type InviteDraft = { key: number; first: string; last: string; email: string; role: string };
+let inviteDraftSeq = 0;
+const blankDraft = (): InviteDraft => ({
+  key: ++inviteDraftSeq,
+  first: '',
+  last: '',
+  email: '',
+  role: '',
+});
+/** Nothing typed: an untouched row is ignored by every action, never an error. */
+const draftIsEmpty = (d: InviteDraft) =>
+  !d.first.trim() && !d.last.trim() && !d.email.trim() && !d.role;
+type DraftField = 'first' | 'last' | 'email' | 'role';
+const draftFieldId = (d: InviteDraft, field: DraftField) => `invite-${d.key}-${field}`;
+/** The email's own format rule, as typed (CLAUDE.md "Validation while typing"). */
+const INVITE_EMAIL_FORMAT =
+  "This email address isn't complete yet. Check it reads like name@company.com.";
+
+/**
+ * What stops a started row from being sent, in Part 11 wording (issue, then action). An
+ * empty row has none: it is not an invitation, so it is ignored, never reported.
+ */
+function draftProblems(d: InviteDraft): SummaryItem[] {
+  if (draftIsEmpty(d)) return [];
+  const out: SummaryItem[] = [];
+  if (!d.first.trim())
+    out.push({
+      fieldId: draftFieldId(d, 'first'),
+      message: 'The first name is still empty. Add their first name to send this invitation.',
+    });
+  if (!d.last.trim())
+    out.push({
+      fieldId: draftFieldId(d, 'last'),
+      message: 'The last name is still empty. Add their last name to send this invitation.',
+    });
+  if (!d.email.trim())
+    out.push({
+      fieldId: draftFieldId(d, 'email'),
+      message: 'The email address is still empty. Add their email address to send this invitation.',
+    });
+  else if (!isEmail(d.email))
+    out.push({ fieldId: draftFieldId(d, 'email'), message: INVITE_EMAIL_FORMAT });
+  if (!d.role)
+    out.push({
+      fieldId: draftFieldId(d, 'role'),
+      message: 'The role is still empty. Choose their role to send this invitation.',
+    });
+  return out;
+}
+
+/** One person's fields. Its own component so each row has its own email-input guard. */
+function InviteDraftRow({
+  draft,
+  index,
+  count,
+  showErrors,
+  onChange,
+  onRemove,
+}: {
+  draft: InviteDraft;
+  index: number;
+  count: number;
+  /** Set by a refused "Send invitations"; empty fields only turn red from then on. */
+  showErrors: boolean;
+  onChange: (patch: Partial<InviteDraft>) => void;
+  onRemove: () => void;
+}) {
+  const email = useEmailInput((v) => onChange({ email: v }));
+  // A half-typed email only "isn't finished yet", so its format message waits for the field
+  // to be left once; from then on it follows every keystroke.
+  const [emailLeft, setEmailLeft] = useState(false);
+  const problems = draftProblems(draft);
+  const messageFor = (field: DraftField) => {
+    const p = problems.find((x) => x.fieldId === draftFieldId(draft, field));
+    if (!p) return null;
+    if (p.message === INVITE_EMAIL_FORMAT) return emailLeft || showErrors ? p.message : null;
+    return showErrors ? p.message : null;
+  };
+  const label = (id: string, text: string) => (
+    <label htmlFor={id}>
+      {text}
+      <span className="req" aria-hidden>
+        *
+      </span>
+      <span className="sr-only"> (required)</span>
+    </label>
+  );
+  const nameField = (key: 'first' | 'last', text: string, placeholder: string) => {
+    const id = draftFieldId(draft, key);
+    const msg = messageFor(key);
+    return (
+      <div className="invite-field">
+        {label(id, text)}
+        <div className={'field' + (msg ? ' field-error' : '')}>
+          <input
+            id={id}
+            type="text"
+            placeholder={placeholder}
+            aria-required="true"
+            aria-invalid={!!msg}
+            aria-describedby={msg ? `${id}-error` : undefined}
+            value={draft[key]}
+            onChange={(e) => onChange({ [key]: e.target.value })}
+          />
+        </div>
+        {msg && (
+          <div className="field-required" id={`${id}-error`}>
+            {msg}
+          </div>
+        )}
+      </div>
+    );
+  };
+  const emailId = draftFieldId(draft, 'email');
+  const emailMsg = messageFor('email');
+  const roleId = draftFieldId(draft, 'role');
+  const roleMsg = messageFor('role');
+  return (
+    <fieldset className="invite-card">
+      {/* The legend must be the fieldset's first child to name it; CSS keeps it inside. */}
+      <legend className="invite-card-title">
+        {count > 1 ? `Person ${index + 1}` : 'Invite a person'}
+      </legend>
+      {count > 1 && (
+        <button
+          type="button"
+          className="invite-close invite-remove"
+          onClick={onRemove}
+          aria-label={`Remove person ${index + 1}`}
+        >
+          <Icon.Close />
+        </button>
+      )}
+      {nameField('first', 'First Name', 'Enter first name')}
+      {nameField('last', 'Last Name', 'Enter last name')}
+      <div className="invite-field">
+        {label(emailId, 'Email Address')}
+        <div className={'field' + (emailMsg ? ' field-error' : '')}>
+          <input
+            {...email.props}
+            id={emailId}
+            placeholder="Enter email address"
+            value={draft.email}
+            onBlur={() => setEmailLeft(true)}
+            aria-invalid={!!emailMsg}
+            aria-required="true"
+            aria-describedby={emailMsg ? `${emailId}-error` : undefined}
+          />
+        </div>
+        {email.rejected && (
+          <div className="field-required" role="status">
+            {EMAIL_ASCII_HINT}
+          </div>
+        )}
+        {emailMsg && (
+          <div className="field-required" id={`${emailId}-error`}>
+            {emailMsg}
+          </div>
+        )}
+      </div>
+      <div className={'invite-field' + (roleMsg ? ' field-error' : '')}>
+        {label(roleId, 'Role')}
+        <MintySelect
+          id={roleId}
+          value={draft.role}
+          onChange={(v) => onChange({ role: v })}
+          options={ROLES}
+          placeholder="Select a role"
+          required
+          invalid={!!roleMsg}
+          ariaDescribedBy={roleMsg ? `${roleId}-error` : undefined}
+        />
+        {roleMsg && (
+          <div className="field-required" id={`${roleId}-error`}>
+            {roleMsg}
+          </div>
+        )}
+      </div>
+    </fieldset>
+  );
+}
+
+/**
+ * Step 3 — User Invite. OPTIONAL, and it says so (9E, owner 2026-10-19): an "Optional" pill
+ * beside the title, and three explicit choices rather than copy alone — add people now
+ * (the rows), "+ Add another person", or "Skip for now".
+ *
+ * - "Send invitations" (primary) sends every COMPLETE row, one invitation each, then moves on
+ *   once all of them went out. Empty rows are ignored; a started-but-unfinished row refuses the
+ *   send (its fields say what is missing; two or more problems raise the error summary). A row
+ *   that fails stays filled for a retry, and the step stays.
+ * - "Skip for now" (secondary, never a link) moves on and sends nothing, whatever the rows
+ *   hold — a half-filled row never blocks it. It is offered until somebody has been invited;
+ *   after that the primary reads "Continue" while the rows are empty, which is the same move.
+ * - Save & Exit is unchanged. Resume never lands here unless an invitation was sent
+ *   (`deriveResumeStep`), so skipping leaves no trace to come back to.
+ */
 export function StepInvite({
   state,
   set,
@@ -1795,7 +1999,7 @@ export function StepInvite({
   | 'saveAndExit'
 >) {
   const list = state.invites.filter((x) => x.email && x.email.includes('@'));
-  const [form, setForm] = useState({ first: '', last: '', email: '', role: '' });
+  const [drafts, setDrafts] = useState<InviteDraft[]>(() => [blankDraft()]);
   const notify = useToast();
   // Rows whose long name/email is expanded (wrapped) instead of truncated.
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -1803,72 +2007,115 @@ export function StepInvite({
     setExpandedRows((prev) => ({ ...prev, [key]: !prev[key] }));
   // The prompt nudging the user to invite an accountant: the later steps need expertise.
   // Shown automatically on arrival at the Invite step. Its one button, "Ok", only closes it
-  // and the user stays here; there is no Skip (a user with nobody to invite uses "Add later"
-  // at the foot of the page).
+  // and the user stays here; there is no Skip in it (a user with nobody to invite uses
+  // "Skip for now" at the foot of the page).
   const [accountantPrompt, setAccountantPrompt] = useState(true);
   const [sending, setSending] = useState(false);
-  const setF = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v });
-  const inviteEmail = useEmailInput((v) => setF('email', v));
-  // Show the "invalid email" hint only once the user has interacted with the
-  // field, so a pristine empty form doesn't start out shouting an error.
-  const [emailTouched, setEmailTouched] = useState(false);
+  // Set by a refused "Send invitations"; `attempt` re-focuses the error summary each time.
+  const [showErrors, setShowErrors] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
-  const emailOk = isEmail(form.email);
-  const emailInvalid = emailTouched && form.email.trim() !== '' && !emailOk;
-  // Don't gate the button on email format — let the user click Send and get an
-  // explicit toast explaining why, instead of a silently-disabled button.
-  const canSend =
-    form.first.trim() && form.last.trim() && form.email.trim() && form.role && !sending;
+  const started = drafts.filter((d) => !draftIsEmpty(d));
+  const problems = started.flatMap(draftProblems);
+  // In the summary each message names its person once there is more than one row.
+  const summary: SummaryItem[] = showErrors
+    ? drafts.flatMap((d, i) =>
+        draftProblems(d).map((p) => ({
+          ...p,
+          message: drafts.length > 1 ? `Person ${i + 1}: ${p.message}` : p.message,
+        })),
+      )
+    : [];
 
-  const send = async () => {
-    if (!canSend) return;
-    if (!emailOk) {
-      setEmailTouched(true);
-      notify.error("That doesn't look like an email. Try user@domain.com?");
-      return;
+  const updateDraft = (key: number, patch: Partial<InviteDraft>) =>
+    setDrafts((ds) => ds.map((d) => (d.key === key ? { ...d, ...patch } : d)));
+  const addPerson = () => {
+    const row = blankDraft();
+    setDrafts((ds) => [...ds, row]);
+    requestAnimationFrame(() => document.getElementById(draftFieldId(row, 'first'))?.focus());
+  };
+  const removePerson = (key: number) =>
+    setDrafts((ds) => (ds.length > 1 ? ds.filter((d) => d.key !== key) : ds));
+
+  /** Sends every started (and by now complete) row; true when all of them went out. */
+  const sendAll = async (): Promise<boolean> => {
+    let invites = list;
+    const failed = new Set<number>();
+    for (const d of started) {
+      const sentEmail = d.email.trim();
+      const result = await submitInvite({
+        email: sentEmail,
+        role: roleToValue(d.role),
+        first_name: d.first.trim(),
+        last_name: d.last.trim(),
+      });
+      if (!result.ok) {
+        notify.error(result.error);
+        failed.add(d.key);
+        continue;
+      }
+      // If the backend couldn't actually send the email (Brevo/SMTP failure →
+      // email_sent: false), treat the invite as failed: surface an error and do
+      // NOT add it to the pending list — the invitee received nothing. The row
+      // is left filled so the user can retry without re-typing.
+      if (result.emailSent === false) {
+        notify.error(`That invite didn't reach ${sentEmail}! Want to try again?`);
+        failed.add(d.key);
+        continue;
+      }
+      const inv: Partial<{ id: string; email: string; role: string }> = result.invitation || {};
+      invites = [
+        ...invites,
+        {
+          id: inv.id,
+          first: d.first.trim(),
+          last: d.last.trim(),
+          email: inv.email || sentEmail,
+          role: inv.role || roleToValue(d.role),
+        },
+      ];
     }
-    setSending(true);
-    const sentEmail = form.email.trim();
-    const result = await submitInvite({
-      email: sentEmail,
-      role: roleToValue(form.role),
-      first_name: form.first.trim(),
-      last_name: form.last.trim(),
+    const sentCount = invites.length - list.length;
+    if (sentCount > 0) {
+      set({ invites });
+      notify.success(
+        sentCount === 1
+          ? `Invitation sent to ${invites[invites.length - 1].email}.`
+          : `${sentCount} invitations sent.`,
+      );
+    }
+    // Keep only the rows that still need sending (or one fresh row).
+    setDrafts((ds) => {
+      const left = ds.filter((d) => failed.has(d.key));
+      return left.length > 0 ? left : [blankDraft()];
     });
-    setSending(false);
-    if (!result.ok) {
-      notify.error(result.error);
-      return;
-    }
-    // If the backend couldn't actually send the email (Brevo/SMTP failure →
-    // email_sent: false), treat the invite as failed: surface an error and do
-    // NOT add it to the pending list — the invitee received nothing. The form
-    // is left filled so the user can retry without re-typing.
-    if (result.emailSent === false) {
-      notify.error(`That invite didn't reach ${sentEmail}! Want to try again?`);
-      return;
-    }
-    const inv: Partial<{ id: string; email: string; role: string }> = result.invitation || {};
-    const nextList = [
-      ...list,
-      {
-        id: inv.id,
-        first: form.first.trim(),
-        last: form.last.trim(),
-        email: inv.email || sentEmail,
-        role: inv.role || roleToValue(form.role),
-      },
-    ];
-    set({ invites: nextList });
-    setForm({ first: '', last: '', email: '', role: '' });
-    setEmailTouched(false);
-    notify.success(`Invitation sent to ${sentEmail}.`);
+    return failed.size === 0;
   };
 
-  const cancel = () => {
-    setForm({ first: '', last: '', email: '', role: '' });
-    setEmailTouched(false);
+  const primary = async () => {
+    if (sending) return;
+    if (started.length === 0) {
+      // Nothing typed: with people already invited this is "Continue"; otherwise the button
+      // is disabled and says why beside it.
+      if (list.length > 0) next();
+      return;
+    }
+    if (problems.length > 0) {
+      setShowErrors(true);
+      setAttempt((n) => n + 1);
+      if (problems.length === 1) {
+        const fieldId = problems[0].fieldId;
+        requestAnimationFrame(() => document.getElementById(fieldId)?.focus());
+      }
+      return;
+    }
+    setShowErrors(false);
+    setSending(true);
+    const allSent = await sendAll();
+    setSending(false);
+    if (allSent) next();
   };
+
   const removeRow = async (i: number) => {
     const target = list[i];
     if (target?.id) {
@@ -1905,93 +2152,41 @@ export function StepInvite({
     notify.success(`Invitation sent again to ${target.email}.`);
   };
 
+  // With people invited and nothing typed, the primary is plain "Continue" and Skip is moot.
+  const continueOnly = started.length === 0 && list.length > 0;
+  const primaryGated = started.length === 0 && list.length === 0;
+
   return (
     <>
-      <div className="page-head" style={{ textAlign: 'center', marginBottom: 18 }}>
-        <h2 style={{ fontSize: 30 }}>User Invite</h2>
-        <p style={{ marginTop: 6 }}>
-          Heads up — users can be added or removed any time from <b>Settings → Users</b>.
+      <div className="page-head invite-head">
+        <div className="invite-title-row">
+          <h2>User Invite</h2>
+          <span className="pill-status off">Optional</span>
+        </div>
+        <p>
+          Invite the people who will use Minty with you, or skip this for now. You can add or
+          remove people any time from <b>Settings → Users</b>.
         </p>
       </div>
 
+      <ErrorSummary items={summary} attempt={attempt} />
+
       <div className="invite-grid">
-        <div className="invite-card">
-          <div className="invite-card-head">
-            <div className="invite-card-title">Invite User</div>
-            <button type="button" className="invite-close" onClick={cancel} aria-label="Clear">
-              <Icon.Close />
-            </button>
-          </div>
-
-          <div className="invite-field">
-            <label>
-              First Name<span className="req" aria-hidden>*</span>
-            </label>
-            <div className="field">
-              <input
-                type="text"
-                placeholder="Enter first name"
-                  aria-required="true"
-                value={form.first}
-                onChange={(e) => setF('first', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="invite-field">
-            <label>
-              Last Name<span className="req" aria-hidden>*</span>
-            </label>
-            <div className="field">
-              <input
-                type="text"
-                placeholder="Enter last name"
-                  aria-required="true"
-                value={form.last}
-                onChange={(e) => setF('last', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="invite-field">
-            <label>
-              Email Address<span className="req" aria-hidden>*</span>
-            </label>
-            <div className={'field' + (emailInvalid ? ' field-error' : '')}>
-              <input
-                {...inviteEmail.props}
-                placeholder="Enter email address"
-                value={form.email}
-                onBlur={() => setEmailTouched(true)}
-                aria-invalid={emailInvalid}
-                aria-required="true"
-              />
-            </div>
-            {inviteEmail.rejected && (
-              <div className="field-required" role="status">
-                {EMAIL_ASCII_HINT}
-              </div>
-            )}
-          </div>
-          <div className="invite-field">
-            <label>
-              Role<span className="req" aria-hidden>*</span>
-            </label>
-            <MintySelect
-              value={form.role}
-              onChange={(v) => setF('role', v)}
-              options={ROLES}
-              placeholder="Select a role"
-              required
+        <div className="invite-drafts">
+          {drafts.map((d, i) => (
+            <InviteDraftRow
+              key={d.key}
+              draft={d}
+              index={i}
+              count={drafts.length}
+              showErrors={showErrors}
+              onChange={(patch) => updateDraft(d.key, patch)}
+              onRemove={() => removePerson(d.key)}
             />
-          </div>
-
-          <div className="invite-actions">
-            <button type="button" className="btn btn-ghost btn-cancel" onClick={cancel}>
-              Cancel
-            </button>
-            <button type="button" className="btn btn-primary" disabled={!canSend} onClick={send}>
-              {sending ? 'Sending…' : 'Send Invitation'}
-            </button>
-          </div>
+          ))}
+          <button type="button" className="btn btn-ghost invite-add" onClick={addPerson}>
+            <Icon.Plus /> Add another person
+          </button>
         </div>
 
         {list.length > 0 && (
@@ -2054,18 +2249,39 @@ export function StepInvite({
           <Icon.ArrowLeft /> Back
         </button>
         <div className="step-actions">
-          <SaveExitLink saveAndExit={saveAndExit} />
+          <SaveExitLink saveAndExit={saveAndExit} disabled={sending} />
+          {!continueOnly && (
+            <button
+              type="button"
+              className="btn btn-ghost invite-skip"
+              disabled={sending}
+              // Moves on and sends nothing: the rows, filled or not, are left behind.
+              onClick={() => next()}
+            >
+              Skip for now
+            </button>
+          )}
           <button
+            type="button"
             className="btn btn-primary"
-            onClick={() => {
-              // Both "Continue" (invites added) and "Add later" (no invites)
-              // just advance — "Add later" means "keep going", so resume never
-              // pins the user back to Invite.
-              next();
-            }}
+            disabled={sending || primaryGated}
+            aria-describedby={primaryGated ? 'invite-primary-reason' : undefined}
+            onClick={primary}
           >
-            {list.length > 0 ? 'Continue' : 'Add later'} <Icon.Arrow />
+            {sending ? (
+              'Sending…'
+            ) : (
+              <>
+                {continueOnly ? 'Continue' : 'Send invitations'} <Icon.Arrow />
+              </>
+            )}
           </button>
+          {primaryGated ? (
+            <div className="step-reminder" role="note" id="invite-primary-reason">
+              <Icon.Info />
+              Add someone&apos;s details to send an invitation, or skip this for now.
+            </div>
+          ) : null}
         </div>
       </div>
 

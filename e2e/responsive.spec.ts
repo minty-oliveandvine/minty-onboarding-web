@@ -14,9 +14,15 @@
 //     row, 30px wider than a 360px phone.
 // Both are CSS-only (`app/globals.css`), and only a real browser can catch either: jsdom
 // measures nothing, so a unit test here would be vacuous.
+//
+// STEPS 2 AND 3 (9C / 9E, 2026-10-19) DO need credentials: neither can be drawn standalone, so
+// those tests land on the disposable entity (E2E_* as for the other specs) and skip without
+// it. They toggle a module card on screen only (nothing is saved), and "Skip for now" moves
+// the saved step on, which is put back afterwards.
 
 import { expect, test, type Page } from '@playwright/test';
-import { reachable } from './helpers';
+import { reachable, requireCredentials } from './helpers';
+import * as api from './onboardingApi';
 import { BASE_URL } from './urls';
 
 /** The Accounting step, standalone. `cancelled` is the "came back with nothing" return. */
@@ -77,5 +83,71 @@ for (const width of WIDTHS) {
     // A long company name must wrap inside the card, not push it wide.
     expect(await dialog.evaluate((e) => e.scrollWidth - e.clientWidth), 'inside the card').toBeLessThanOrEqual(0);
     expect(await pageOverflow(page), 'the page behind the dialog').toBeLessThanOrEqual(0);
+  });
+}
+
+for (const width of WIDTHS) {
+  test(`Select Module's cards fit the screen at ${width}px`, async ({ page, request }) => {
+    const creds = requireCredentials();
+    await page.setViewportSize({ width, height: 900 });
+    const original = await api.stashSavedStep(request, creds);
+    try {
+      await api.land(page, request, creds, 2);
+      const cards = page.getByRole('checkbox');
+      await expect(cards).toHaveCount(2);
+      for (const name of ['Petty Cash', 'Payment Request']) {
+        const card = page.getByRole('checkbox', { name });
+        // The benefit line is on the card at rest, not behind a hover.
+        await expect(card.locator('.mp-desc')).toBeVisible();
+        const box = await card.boundingBox();
+        expect(box!.x, `${name} starts on screen`).toBeGreaterThanOrEqual(-0.5);
+        expect(box!.x + box!.width, `${name} ends on screen`).toBeLessThanOrEqual(width + 0.5);
+      }
+      // Phone: stacked, one card per row.
+      if (width === 360) {
+        const [a, b] = [await cards.nth(0).boundingBox(), await cards.nth(1).boundingBox()];
+        expect(b!.y, 'the cards stack').toBeGreaterThanOrEqual(a!.y + a!.height);
+      }
+      // Picked = a check and the word, on screen only (Save & Next is not pressed).
+      const first = cards.nth(0);
+      const was = await first.getAttribute('aria-checked');
+      await first.press('Space');
+      await expect(first).toHaveAttribute('aria-checked', was === 'true' ? 'false' : 'true');
+      await expect(first.locator('.mp-state')).toHaveText(was === 'true' ? 'Select' : 'Selected');
+      expect(await pageOverflow(page), 'step 2').toBeLessThanOrEqual(0);
+    } finally {
+      await api.restoreSavedStep(request, creds, original);
+    }
+  });
+
+  test(`User Invite says Optional and skips at ${width}px`, async ({ page, request }) => {
+    const creds = requireCredentials();
+    await page.setViewportSize({ width, height: 900 });
+    const original = await api.stashSavedStep(request, creds);
+    try {
+      await api.land(page, request, creds, 3);
+      await page.getByRole('dialog').getByRole('button', { name: 'Ok' }).click();
+      await expect(page.locator('.invite-title-row')).toContainText('Optional');
+      await page.getByRole('button', { name: /Add another person/ }).click();
+      await expect(page.getByRole('group', { name: 'Person 2' })).toBeVisible();
+      // Half-filled on purpose: it must not hold Skip for now back.
+      await page.getByLabel(/First Name/).first().fill('Half');
+      expect(await pageOverflow(page), 'step 3').toBeLessThanOrEqual(0);
+      const skip = page.getByRole('button', { name: 'Skip for now' });
+      const box = await skip.boundingBox();
+      expect(box!.height, '"Skip for now" is a 44px target').toBeGreaterThanOrEqual(44);
+      // Settled up front (true = a request went out), so the wait never rejects unobserved.
+      const invited = page
+        .waitForRequest((r) => r.url().includes('/api/onboarding/invite'), { timeout: 1500 })
+        .then(
+          () => true,
+          () => false,
+        );
+      await skip.click();
+      await expect(page.locator('.step.active')).toHaveAttribute('data-step-key', '4');
+      expect(await invited, 'Skip for now sent an invitation').toBe(false);
+    } finally {
+      await api.restoreSavedStep(request, creds, original);
+    }
   });
 }

@@ -63,6 +63,15 @@
   --mv2-neutral-bg: #e8eaea;
   --mv2-neutral-ink: #535a5a;
   --mv2-scrim: rgba(17, 19, 19, 0.48);
+  /* Module identity (Part 13 §13.4: module/pettycash, module/payment and their -wash/-ink;
+     the same values as @minty/shared's --color-module-*). Identity ONLY - module art, the
+     module cards' band - never amounts, alerts, status or buttons. */
+  --mv2-module-pettycash: #f5b945;
+  --mv2-module-pettycash-wash: #fef7e9;
+  --mv2-module-pettycash-ink: #8a5606;
+  --mv2-module-payment: #3aa6f5;
+  --mv2-module-payment-wash: #e7f4fe;
+  --mv2-module-payment-ink: #1b57b4;
   --mv2-radius-sm: 4px; /* checkboxes, tags inside tables */
   --mv2-radius-md: 8px; /* inline alerts, tooltips, small controls */
   --mv2-radius-lg: 12px; /* buttons, inputs, selects, cards, rows, modals */
@@ -2143,26 +2152,69 @@ textarea::placeholder {
   justify-items: center;
 }
 .invite-card {
+  position: relative;
   background: var(--bg);
   border: 1px solid var(--line-strong);
   border-radius: var(--mv2-radius-lg);
   padding: 24px;
   max-width: 460px;
   width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+  /* A <fieldset> per person: drop its min-content floor so a 360px phone never scrolls. */
+  min-width: 0;
+  margin: 0 auto;
+}
+/* Floated full width, the legend sits inside the card instead of on its border. */
+.invite-card legend {
+  float: left;
+  width: 100%;
+  padding: 0 52px 0 0;
+  margin-bottom: 18px;
+}
+.invite-card .invite-field {
+  clear: both;
+}
+/* Removing a person: top right, a 44px target around the 24px glyph. */
+.invite-remove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  align-items: center;
+}
+/* 9E (2026-10-19): the step says it is optional in the title row, not in copy alone. */
+.invite-head {
+  margin-bottom: 18px;
+}
+.invite-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+.invite-title-row h2 {
+  margin: 0;
+}
+/* The people being typed in, then "+ Add another person" under them. */
+.invite-drafts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+.invite-add {
+  width: 100%;
+  max-width: 460px;
 }
 .invite-list {
   width: 100%;
   max-width: 460px;
   margin-left: auto;
   margin-right: auto;
-}
-.invite-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
 }
 .invite-card-title {
   font-size: 19px;
@@ -2200,23 +2252,6 @@ textarea::placeholder {
 .req {
   color: var(--danger);
   margin-left: 2px;
-}
-.invite-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 22px;
-}
-.invite-actions .btn {
-  flex: 1;
-  justify-content: center;
-}
-.btn-cancel {
-  border: 1px solid var(--mv2-action-secondary-border);
-  color: var(--mv2-action-secondary-text);
-  background: var(--mv2-surface-card);
-}
-.btn-cancel:hover {
-  background: var(--mv2-state-selected);
 }
 
 .invite-list {
@@ -2775,22 +2810,42 @@ textarea::placeholder {
 
 /* --- the two module cards ---------------------------------------------- */
 
+/* THE 9C HYBRID (owner, 2026-10-19): the old live app's big coloured art, the revised step's
+     clear copy. A Minty v2 selection card - 1px default border, 2px selected border when
+     picked, radius 12 - with a module identity band on top: the module's Part 13 wash, a
+     4px stripe of its identity colour, and the module art at up to 208px (Part 13 §13.10's
+     ceiling for selection). Identity colour only - never on the name, the state or a button.
+     The tone class maps the module's tokens onto three local names. */
 .module-pick {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 34px;
   cursor: pointer;
   user-select: none;
+  border-radius: calc(var(--mv2-radius-lg) + 3px);
+  min-width: 0;
 }
-/* THE CARD, PORTED FROM THE OLD LIVE APP (onboarding-old, LIVE07072026): the illustration
-     filling the top, the description over the card on hover, and a selected frame when
-     picked. Minty v2 selection card: a 1px default border, 2px selected border when picked.
-     The frame is always 3px a side (border + padding trade off), so selecting a card
-     changes its colour and never its size. */
+.module-pick.is-pettycash {
+  --mod: var(--mv2-module-pettycash);
+  --mod-wash: var(--mv2-module-pettycash-wash);
+  --mod-ink: var(--mv2-module-pettycash-ink);
+}
+.module-pick.is-payment {
+  --mod: var(--mv2-module-payment);
+  --mod-wash: var(--mv2-module-payment-wash);
+  --mod-ink: var(--mv2-module-payment-ink);
+}
+.module-pick:focus-visible {
+  outline: var(--mv2-focus-ring);
+  outline-offset: 3px;
+}
+/* The frame is always 3px a side (border + padding trade off), so selecting a card changes
+     its colour and never its size. It fills the grid row, so the two cards stay one height
+     whichever benefit line wraps further. */
 .mp-frame {
   position: relative;
   z-index: 1; /* above the confetti */
+  flex: 1 1 auto;
+  display: flex;
   width: 100%;
   padding: 2px;
   border: 1px solid var(--mv2-border-default);
@@ -2798,143 +2853,92 @@ textarea::placeholder {
   background: transparent;
   transition: border-color 0.25s ease;
 }
+.module-pick:hover .mp-frame {
+  border-color: var(--mv2-border-selected);
+}
 .module-pick.selected .mp-frame {
   padding: 1px;
   border: 2px solid var(--mv2-border-selected);
 }
 .mp-card {
   position: relative;
+  flex: 1 1 auto;
   width: 100%;
-  /* 360 + the frame's 2 x 3px = the 366px the row was laid out for. */
-  height: 360px;
   border-radius: var(--mv2-radius-lg);
   overflow: hidden;
   background: var(--mv2-surface-card);
   display: flex;
   flex-direction: column;
-  align-items: center;
   transition: background 0.2s ease;
-}
-.module-pick:hover .mp-card {
-  background: var(--mv2-state-hover);
 }
 .module-pick.selected .mp-card {
   background: var(--mv2-state-selected);
 }
-/* Takes whatever height the title and the pinned status line leave. */
-.mp-art {
-  flex: 1 1 auto;
-  min-height: 0;
-  width: 100%;
+/* The identity band: the module's wash under its art, the identity colour as a stripe. */
+.mp-band {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 20px 0;
-  color: var(--art-accent);
+  padding: 20px 16px;
+  background: var(--mod-wash);
+  border-top: 4px solid var(--mod);
+  color: var(--mod-ink);
 }
 .mp-img {
-  width: 92%;
-  max-height: 100%;
-  object-fit: contain;
+  width: min(208px, 100%);
+  height: auto;
   display: block;
 }
+.mp-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px 20px 20px;
+  text-align: left;
+}
 .mp-name {
-  margin-top: 8px;
-  /* Room for .mp-trial, which is pinned to the bottom 26px and two lines tall. */
-  margin-bottom: 86px;
-  /* THE TITLE IS INSET, WHICH IS WHAT LETS IT WRAP.
-
-       With no padding the text had the card's full 296px and ran nearly edge to edge
-       before it would break. The frame insets it ~38px a side (title 224px wide in a
-       300px card), so matching that inset gives a long name somewhere to break while a
-       short one still sits on one line. */
-  padding: 0 34px;
   font-weight: 700;
-  font-size: 26px;
-  letter-spacing: -0.015em;
-  /* Two even lines rather than "Payment" over a stranded "Request". */
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
   text-wrap: balance;
   color: var(--mv2-text-primary);
-  text-align: center;
 }
-/* Pinned to the bottom of the card rather than flowing after the title: the two
-     cards must line their status lines up even though their titles differ in
-     length, and one of them wrapping would otherwise push its own line down. */
+/* The one-line benefit: always on the card, never only on hover (a phone has no hover). */
+.mp-desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--mv2-text-secondary);
+}
 .mp-trial {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 26px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 1.2;
-  color: var(--muted);
-  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--mv2-text-secondary);
 }
-.module-pick.selected .mp-trial {
+/* The picked state in words and a check, at the foot of the card - not colour alone. */
+.mp-state {
+  margin-top: auto;
+  padding-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--mv2-text-secondary);
+}
+.module-pick.selected .mp-state {
   color: var(--pick-ink);
 }
-
-/* The description, over the whole card on hover and on keyboard focus. Inert, so a
-     click lands on the card underneath and toggles it. */
-.mp-hover {
-  position: absolute;
-  inset: 0;
-  z-index: 2; /* over the pinned status line */
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  text-align: center;
-  background: var(--mv2-state-hover);
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-  pointer-events: none;
-}
-.module-pick:hover .mp-hover,
-.module-pick:focus-visible .mp-hover {
-  opacity: 1;
-  transform: none;
-}
-.mp-title {
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: -0.01em;
-  color: var(--mv2-text-primary);
-}
-.mp-desc {
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--ink-2);
-}
-@media (prefers-reduced-motion: reduce) {
-  .mp-frame,
-  .mp-hover {
-    transition: none;
-  }
-  .mp-hover {
-    transform: none;
-  }
-}
-
-.mp-circle {
-  position: relative; /* above the confetti; a flow element would sit under it */
-  z-index: 1;
-  /* A 20px visible box. The click target is the whole .module-pick card around it. */
-  width: 20px;
-  height: 20px;
+.mp-check {
+  width: 22px;
+  height: 22px;
   box-sizing: border-box;
   border-radius: var(--mv2-radius-sm);
   border: 1px solid var(--mv2-border-input);
-  background: var(--bg);
+  background: var(--mv2-surface-card);
   display: grid;
   place-items: center;
   color: var(--mv2-text-inverse);
@@ -2942,15 +2946,16 @@ textarea::placeholder {
     background 0.25s ease,
     border-color 0.25s ease;
 }
-.module-pick:hover .mp-circle {
-  border-color: var(--mv2-border-selected);
-}
-.module-pick.selected .mp-circle {
+.module-pick.selected .mp-check {
   background: var(--mv2-border-selected);
   border-color: var(--mv2-border-selected);
 }
-.mp-circle svg {
-  transform: none;
+@media (prefers-reduced-motion: reduce) {
+  .mp-frame,
+  .mp-card,
+  .mp-check {
+    transition: none;
+  }
 }
 
 /* --- the Subscription Summary ------------------------------------------ */
@@ -3356,10 +3361,11 @@ textarea::placeholder {
   }
 }
 @media (max-width: 700px) {
+  /* Phone: the cards stack, full width of the column. */
   .module-grid-2 {
-    grid-template-columns: 1fr;
-    gap: 28px;
-    max-width: 320px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    width: 100%;
   }
   /* 40px a side of a ~340px panel left 259px of content — the cat then covered half
        of it. 20px gives the text back 80px before anything else is touched. */
