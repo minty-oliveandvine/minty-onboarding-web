@@ -31,11 +31,15 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Loose = Record<string, any>;
 
+// A saved company's country and currency. initialState() leaves both empty since 2026-10-19,
+// and step 1 needs them, so the helpers that stand for "step 1 passes" carry them.
+const SAVED_PLACE = { country: 'HK', currency: 'hkd-id' };
+
 /** A wizard state as the resume path builds it, with the fields deriveResumeStep reads. */
 function payload(over: Loose = {}): WizardState {
   return {
     ...initialState(),
-    entity: { ...initialState().entity, name: 'Acme Ltd', phone: '', email: '' },
+    entity: { ...initialState().entity, ...SAVED_PLACE, name: 'Acme Ltd', phone: '', email: '' },
     modules: [],
     invites: [],
     xero: { connected: false, org: '' },
@@ -49,7 +53,7 @@ function state(over: Loose = {}): WizardState {
   return {
     ...base,
     ...over,
-    entity: { ...base.entity, name: 'Acme Ltd', ...(over.entity || {}) },
+    entity: { ...base.entity, ...SAVED_PLACE, name: 'Acme Ltd', ...(over.entity || {}) },
   } as WizardState;
 }
 
@@ -114,6 +118,14 @@ describe('deriveResumeStep -- deriving with no persisted step', () => {
         needsXero: false,
       },
     );
+  });
+
+  it('does not count a company with no country or currency as past step 1', () => {
+    const s = payload({
+      modules: ['pettyCash'],
+      entity: { name: 'Acme Ltd', country: '', currency: '', phone: '', email: '' },
+    });
+    expect(deriveResumeStep(s, NONE)).toEqual({ step: 1, needsXero: false });
   });
 
   it('lands on 1 when only basic info is saved', () => {
@@ -283,6 +295,13 @@ describe('initialState', () => {
     expect(b.modules).toEqual([]);
   });
 
+  it('starts with no country and no currency, like the phone code (owner, 2026-10-19)', () => {
+    const e = initialState().entity;
+    expect(e.country).toBe('');
+    expect(e.currency).toBe('');
+    expect(e.phoneCountry).toBe('');
+  });
+
   it('starts with no modules, no invites and no Xero', () => {
     const s = initialState();
     expect(s.modules).toEqual([]);
@@ -324,6 +343,19 @@ describe('isStepComplete', () => {
 
     it('does not accept whitespace as a name', () => {
       expect(isStepComplete(1, state({ entity: { name: '   ' } }))).toBe(false);
+    });
+
+    it('fails without a country or a currency, which are required since 2026-10-19', () => {
+      expect(isStepComplete(1, state({ entity: { country: '' } }))).toBe(false);
+      expect(isStepComplete(1, state({ entity: { currency: '' } }))).toBe(false);
+      expect(isStepComplete(1, state({ entity: { country: '', currency: '' } }))).toBe(false);
+    });
+
+    it('fails on a fresh wizard even with a name, because initialState has no country', () => {
+      const fresh = initialState();
+      expect(isStepComplete(1, { ...fresh, entity: { ...fresh.entity, name: 'Acme Ltd' } })).toBe(
+        false,
+      );
     });
 
     it('treats an empty phone and email as acceptable', () => {

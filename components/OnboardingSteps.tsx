@@ -28,6 +28,7 @@ import { useEmailInput } from '../lib/emailInput';
 import { inviteExpiryLabel } from '../lib/invites';
 import { toIsoDate } from '../lib/date';
 import { SaveExitLink, StepNav } from './steps/StepChrome';
+import { ErrorSummary, type SummaryItem } from './steps/ErrorSummary';
 import {
   MODULES,
   ModuleSubscriptionSummary,
@@ -63,8 +64,36 @@ export function StepCreateEntity({
   const emailOk = s.email.trim() === '' || isEmail(s.email);
   const [dial, setDial] = useState<DialCountry[]>([]);
   const phoneOk = phoneFieldError(s.phone, dial) === '';
-  const canNext = s.name.trim().length > 0 && phoneOk && emailOk;
+  // Name, Country and Currency never disable Save & Next: pressing it with one empty is a
+  // refused submit, which says what is missing (CLAUDE.md, "Validation while typing"). The
+  // phone and email keep gating it as they are typed.
+  const canNext = phoneOk && emailOk;
   const [saving, setSaving] = useState(false);
+  // Set by a refused Save & Next; the fields turn red and say so only from then on, and each
+  // message clears the moment its field has a value. `attempt` re-focuses the summary.
+  const [showErrors, setShowErrors] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const missing: SummaryItem[] = [
+    {
+      empty: s.name.trim() === '',
+      fieldId: 'entity-name',
+      message: 'The company name is still empty. Add the company name to continue.',
+    },
+    {
+      empty: !s.country,
+      fieldId: 'entity-country',
+      message: "The country is still empty. Choose the company's country to continue.",
+    },
+    {
+      empty: !s.currency,
+      fieldId: 'entity-currency',
+      message: "The currency is still empty. Choose the company's currency to continue.",
+    },
+  ]
+    .filter((f) => f.empty)
+    .map(({ fieldId, message }) => ({ fieldId, message }));
+  const shownMissing = showErrors ? missing : [];
+  const messageFor = (fieldId: string) => shownMissing.find((f) => f.fieldId === fieldId);
   const toast = useToast();
   // Set when the backend rejects the name as already-taken, so we can flag the
   // Entity Name field and clear the flag as soon as the user edits the name.
@@ -103,9 +132,9 @@ export function StepCreateEntity({
       cancelled = true;
     };
   }, []);
-  // Migrate legacy name values (the pre-registry defaults like 'Hong Kong' /
-  // 'Hong Kong Dollar', or an old saved session) to their registry uuids once
-  // the options are in, so submits always carry uuids.
+  // Migrate legacy name values (the old defaults 'Hong Kong' / 'Hong Kong Dollar', which a
+  // session saved before 2026-10-19 may still carry -- a new company starts empty now) to
+  // their registry uuids once the options are in, so submits always carry uuids.
   //
   // Read the entity from the LATEST state, not from `s`. This step is mounted while
   // a cold resume is still in flight, and the registries and GET /state answer at
@@ -175,6 +204,17 @@ export function StepCreateEntity({
 
   const handleNext = async () => {
     if (!canNext || saving) return;
+    if (missing.length > 0) {
+      setShowErrors(true);
+      setAttempt((n) => n + 1);
+      // One problem: focus that field. Two or more: the summary takes focus (ErrorSummary).
+      if (missing.length === 1) {
+        const fieldId = missing[0].fieldId;
+        requestAnimationFrame(() => document.getElementById(fieldId)?.focus());
+      }
+      return;
+    }
+    setShowErrors(false);
     setNameTaken(false);
     if (typeof submitEntity === 'function') {
       setSaving(true);
@@ -202,16 +242,29 @@ export function StepCreateEntity({
         <h2>Basic Information</h2>
         <p>Let&apos;s start by creating your first entity. It only takes a minute.</p>
       </div>
+      <ErrorSummary items={shownMissing} attempt={attempt} />
       <div className="form-stack">
-        <div className={'field' + (nameTaken ? ' field-error' : '')}>
-          <label>Entity Name<span className="req" aria-hidden>*</span></label>
+        <div className={'field' + (nameTaken || messageFor('entity-name') ? ' field-error' : '')}>
+          <label htmlFor="entity-name">
+            Entity Name<span className="req" aria-hidden>*</span>
+            <span className="sr-only"> (required)</span>
+          </label>
           <input
+            id="entity-name"
             type="text"
             name="organization"
             autoComplete="organization"
             placeholder="Please enter your company name"
             value={s.name}
-            aria-invalid={nameTaken}
+            aria-required
+            aria-invalid={nameTaken || !!messageFor('entity-name')}
+            aria-describedby={
+              nameTaken
+                ? 'entity-name-taken'
+                : messageFor('entity-name')
+                  ? 'entity-name-error'
+                  : undefined
+            }
             onChange={(e) => {
               // Editing the name clears the duplicate field flag so it doesn't
               // linger while the user types a new name. The toast dismisses
@@ -221,28 +274,59 @@ export function StepCreateEntity({
             }}
           />
           {nameTaken && (
-            <div className="field-required" role="alert">
+            <div className="field-required" role="alert" id="entity-name-taken">
               Oh, someone got there first! Do you have another name in mind?
             </div>
           )}
+          {!nameTaken && messageFor('entity-name') && (
+            <div className="field-required" id="entity-name-error">
+              {messageFor('entity-name')?.message}
+            </div>
+          )}
         </div>
-        <div className="field">
-          <label>Country</label>
+        <div className={'field' + (messageFor('entity-country') ? ' field-error' : '')}>
+          <label htmlFor="entity-country">
+            Country<span className="req" aria-hidden>*</span>
+            <span className="sr-only"> (required)</span>
+          </label>
           <MintySelect
+            id="entity-country"
             value={s.country}
             onChange={changeCountry}
             options={countryOptions}
+            placeholder="Select a country"
+            required
+            invalid={!!messageFor('entity-country')}
+            ariaDescribedBy={messageFor('entity-country') ? 'entity-country-error' : undefined}
             searchable
           />
+          {messageFor('entity-country') && (
+            <div className="field-required" id="entity-country-error">
+              {messageFor('entity-country')?.message}
+            </div>
+          )}
         </div>
-        <div className="field">
-          <label>Currency</label>
+        <div className={'field' + (messageFor('entity-currency') ? ' field-error' : '')}>
+          <label htmlFor="entity-currency">
+            Currency<span className="req" aria-hidden>*</span>
+            <span className="sr-only"> (required)</span>
+          </label>
           <MintySelect
+            id="entity-currency"
             value={s.currency}
             onChange={(v) => upd('currency', v)}
             options={currencyOptions}
+            placeholder="Select a currency"
+            required
+            invalid={!!messageFor('entity-currency')}
+            ariaDescribedBy={messageFor('entity-currency') ? 'entity-currency-error' : undefined}
             searchable
           />
+          {messageFor('entity-currency') && (
+            <div className="field-required" id="entity-currency-error">
+              {messageFor('entity-currency')?.message}
+            </div>
+          )}
         </div>
         <PhoneField
           id="entity-phone"

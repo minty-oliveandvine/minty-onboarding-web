@@ -10,7 +10,7 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 
 | # | Screen | Component | Writes |
 |---|---|---|---|
-| 1 | Basic Information — name, country, currency, phone, email; picking a country fills an empty currency with its own (`lib/countryCurrency.ts`), and the browser's timezone goes with the save, with nothing on screen (`lib/browserTimezone.ts`) | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
+| 1 | Basic Information — name, country, currency (all three required), phone, email (optional). A new company starts **empty**, Country and Currency included, like the phone's code (owner, 2026-10-19; *Select a country* / *Select a currency*); picking a country fills an empty currency with its own (`lib/countryCurrency.ts`) and moves the phone's code, and the browser's timezone goes with the save, with nothing on screen (`lib/browserTimezone.ts`) | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
 | 2 | Select Module — Petty Cash, Payment Request (cards in the old live app's design: accent gradient, large illustration, the description over the card on hover/focus, a teal gradient frame when picked); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
 | 3 | User Invite — invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip; *Add later* at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers *Resend* | `StepInvite` | `POST /invite`, `/invite/cancel`, `/invite/resend` |
 | 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
@@ -64,10 +64,11 @@ Phone*, an 8–11-digit box with no country code). No hint line under it (the us
   push the last one out), a paste is cut at the limit (`capNational`, punctuation kept, a
   dropped trunk 0 not counted), and deleting always works, even on a number a code change
   left too long.
-- **The default Country** is the label `'Hong Kong'` until the registry loads, then the row's
-  id. The registry holds the official name ("Hong Kong SAR China"), so the label is matched
-  exactly or by a UNIQUE prefix (the API's own fallback). Until 2026-10-12 it was exact only:
-  a new company kept the bare label, and its phone picker had no code at all.
+- **There is no default Country** since 2026-10-19 (owner): a new company starts with Country,
+  Currency and the phone's code all empty. Before that the default was the label
+  `'Hong Kong'` / `'Hong Kong Dollar'`; a session saved then may still carry them, so Step 1
+  still matches a label to its registry row - exactly or by a UNIQUE prefix (the API's own
+  fallback), since the registry holds the official name ("Hong Kong SAR China").
 
 The billing sheet's address (Stripe's AddressElement) starts on the company's Step 1 Country
 (`BillingSheet`'s `country` → `defaultValues`, since 2026-10-12). Left to itself Stripe guesses
@@ -165,10 +166,33 @@ for that, so no new state was needed).
   so the mark is rendered **once** there rather than nine times at the call sites. `PCField`'s
   `required` defaults ON, because everything PCSection draws today is a hard gate - an optional
   field is the one that has to say so.
-- Marked: Entity Name (step 1), the "Add New Method" name (step 5), the six account-code fields
+- Marked: Entity Name, Country and Currency (step 1), the "Add New Method" name (step 5), the six account-code fields
   (step 6), the three contacts (step 7), Payment Account Code (step 8), and the billing sheet's
-  Email and Billing company. Country, Currency, Phone Number and Business Email stay unmarked -
-  the first two are pre-filled and the last two are genuinely optional, and already labelled so.
+  Email and Billing company. Phone Number and Business Email stay unmarked - they are genuinely
+  optional, and already labelled so. (Country and Currency were unmarked while they came
+  pre-filled; they start empty and are required since 2026-10-19.)
+
+### Step 1's required fields (2026-10-19)
+
+Entity Name, Country and Currency are required (`isStepComplete(1)` needs all three, so a resume
+never counts a company without a country or currency as past step 1; the onboarding API refuses
+one too). Save & Next is **not** disabled for them - only while saving, or while a typed phone or
+email is malformed. Pressing it with one empty is a refused submit (`showErrors`):
+
+- each empty field turns red and says so, in Part 11 wording - *The company name is still empty.
+  Add the company name to continue.*, *The country is still empty. Choose the company's country
+  to continue.*, *The currency is still empty. Choose the company's currency to continue.* -
+  and its message clears the moment the field has a value;
+- one problem moves focus to that field; two or more show `components/steps/ErrorSummary.tsx`
+  (`.error-summary`, a copy of minty-payment-request-web's Part 15.3 summary in this app's
+  tokens) at the top of the form, which takes focus and links to each field;
+- each label carries the red `*` and a screen-reader-only *(required)* (`.sr-only`), the control
+  `aria-required` (`MintySelect` now takes `id` and `ariaDescribedBy` for the label and message);
+- Save & Exit is never blocked by them (its save is best-effort; an entity the API refuses is
+  simply not saved).
+
+Tests: `components/__tests__/StepCreateEntity.test.tsx`, `lib/__tests__/wizardSteps.test.ts`,
+and `e2e/phone.spec.ts`'s new-company case.
 
 ### The dropdowns could not turn red at all
 
