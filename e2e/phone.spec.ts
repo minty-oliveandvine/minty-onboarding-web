@@ -45,7 +45,7 @@ test('Phone Number: picker, length message, paste and resume at 360px', async ({
     const number = page.getByLabel('Phone Number');
     const save = page.getByRole('button', { name: 'Save & Next' });
 
-    // Follows the company's Country (Hong Kong), shown short.
+    // Follows the disposable company's saved Country (Hong Kong), shown short.
     await expect(picker).toHaveValue('HK +852');
     await expect(number).toHaveValue('');
 
@@ -93,16 +93,30 @@ test('Phone Number: picker, length message, paste and resume at 360px', async ({
   }
 });
 
-test('a new company starts on Hong Kong, and a short number cannot be saved', async ({ page }) => {
+test("a new company starts empty; choosing Hong Kong sets the currency and the phone's +852, and a short number cannot be saved", async ({
+  page,
+}) => {
   // fresh=1 starts a brand-new company; nothing here presses Save, so nothing is created.
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto(`/?token=${creds.token}&fresh=1`);
   const picker = page.getByLabel('Country code');
+  const country = page.locator('#entity-country');
+  const currency = page.locator('#entity-currency');
+  // Empty, like the phone's code (owner, 2026-10-19): no Country, no Currency, no code.
+  await expect(picker).toHaveValue('');
+  await expect(picker).toHaveAttribute('placeholder', 'Code');
+  await expect(country).toHaveValue('');
+  await expect(country).toHaveAttribute('placeholder', 'Select a country');
+  await expect(currency).toHaveValue('');
+  await expect(currency).toHaveAttribute('placeholder', 'Select a currency');
+
+  // Choosing the Country fills the empty Currency with its own and moves the phone's code.
+  await country.click();
+  await country.fill('Hong Kong');
+  await page.getByRole('option', { name: 'Hong Kong SAR China' }).click();
+  await expect(country).toHaveValue('Hong Kong SAR China');
+  await expect(currency).toHaveValue('Hong Kong Dollar');
   await expect(picker).toHaveValue('HK +852');
-  // The default resolved to the registry's row, not the bare 'Hong Kong' label.
-  await expect(page.locator('.field', { hasText: 'Country' }).first().locator('.mselect-input')).toHaveValue(
-    'Hong Kong SAR China',
-  );
 
   await page.getByPlaceholder('Please enter your company name').fill('Phone Gap Test');
   const save = page.getByRole('button', { name: 'Save & Next' });

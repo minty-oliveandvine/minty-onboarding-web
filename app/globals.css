@@ -1135,6 +1135,45 @@ textarea {
   line-height: 1;
   color: var(--danger);
 }
+/* Part 15.3 error summary (components/steps/ErrorSummary.tsx): two or more problems on a refused
+   submit. An inline alert in the danger tones; it takes focus, so the global ring shows on it. */
+.error-summary {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: var(--mv2-radius-md);
+  background: var(--mv2-danger-bg);
+  color: var(--mv2-danger-ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.error-summary-title {
+  margin: 0;
+  font-weight: 600;
+}
+.error-summary ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.error-summary a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* Read by screen readers, not drawn: the "(required)" beside a label's aria-hidden `*`. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 /* Invalid input (e.g. a malformed invite email) — flag the field border. */
 /* MintySelect is a div, not an <input>, so the rules below never reached it: nine mandatory
    fields in steps 6 and 7 showed their message but never turned red. */

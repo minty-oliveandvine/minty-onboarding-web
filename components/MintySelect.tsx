@@ -31,6 +31,10 @@ type MintySelectProps = {
   valueLabel?: (opt: { value: string; label: string }) => string;
   /** The field's accessible name, for a select that has no visible label of its own. */
   ariaLabel?: string;
+  /** The control's id, so a visible `<label htmlFor>` names it and an error summary can focus it. */
+  id?: string;
+  /** The id of the message that explains the field (its refused-submit message). */
+  ariaDescribedBy?: string;
 };
 
 export default function MintySelect({
@@ -47,6 +51,8 @@ export default function MintySelect({
   invalid = false,
   valueLabel,
   ariaLabel,
+  id,
+  ariaDescribedBy,
 }: MintySelectProps) {
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -221,8 +227,10 @@ export default function MintySelect({
         >
           <input
             ref={inputRef}
+            id={id}
             type="text"
             aria-label={ariaLabel}
+            aria-describedby={ariaDescribedBy}
             aria-required={required || undefined}
             aria-invalid={invalid || undefined}
             className={'mselect-input' + (selectedLabel || query !== null ? '' : ' placeholder')}
@@ -281,8 +289,10 @@ export default function MintySelect({
       ) : (
         <button
           type="button"
+          id={id}
           className="mselect-trigger"
           aria-label={ariaLabel}
+          aria-describedby={ariaDescribedBy}
           aria-required={required || undefined}
           aria-invalid={invalid || undefined}
           disabled={disabled}

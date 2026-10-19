@@ -129,8 +129,10 @@ export const initialState = (): WizardState => ({
     name: '',
     type: 'Private Limited',
     industry: 'Retail & E-commerce',
-    country: 'Hong Kong',
-    currency: 'Hong Kong Dollar',
+    // Empty, like the phone's code: the person chooses both (owner, 2026-10-19). Both are
+    // required -- step 1 refuses Save & Next without them, and so does the API.
+    country: '',
+    currency: '',
     fyStart: 'Jan',
     phone: '',
     phoneCountry: '',
@@ -177,7 +179,11 @@ export function isStepComplete(id: number, state: WizardState): boolean {
       const e = state.entity;
       // Phone and email are optional — judged only when non-empty.
       const emailOk = e.email.trim() === '' || isEmail(e.email);
-      return e.name.trim().length > 1 && phoneOk(e.phone) && emailOk;
+      // Country and currency are required (2026-10-19): a resume never counts a company
+      // without them as past step 1.
+      return (
+        e.name.trim().length > 1 && !!e.country && !!e.currency && phoneOk(e.phone) && emailOk
+      );
     }
     case 2:
       return state.modules.length > 0;
