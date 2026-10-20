@@ -15,7 +15,7 @@ never as _passed_.
 | Service                 | Port | Repo                        |
 | ----------------------- | ---- | --------------------------- |
 | Next (the wizard)       | 3030 | this one — `npm run dev`    |
-| Flask (Minty)           | 8010 (5001 locally: `E2E_PETTY_CASH_URL=http://localhost:5001`) | `C:\Github\Minty`              |
+| Flask (Minty)           | 8000 (the owner's local layout, 2026-10-16) | `C:\Github\Minty`              |
 | Onboarding API (Django) | 8030 | `C:\Github\minty-onboarding-api` |
 | Subscription API (Django) | 8000 | `C:\Github\minty-subscription-api` — finalize's trial start (2026-10-06) |
 | PostgreSQL              | 5432 | —                           |

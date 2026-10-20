@@ -178,13 +178,13 @@ describe('the properties the list alone does not show', () => {
     expect(ONBOARDING_API_BASE).toBe('http://localhost:8030');
   });
 
-  it('defaults the Petty Cash base to localhost:8010 when unset', async () => {
+  it('defaults the Petty Cash base to localhost:8000 when unset', async () => {
     vi.resetModules();
     vi.stubEnv('PETTY_CASH_URL', '');
     vi.stubEnv('ONBOARDING_API_URL', DJANGO);
     const { urlFor } = await import('../apiRoutes');
-    // Flask's own port (Minty main.py), the one the stack publishes.
-    expect(urlFor('/entity')).toBe('http://localhost:8010/entity');
+    // Flask's local port in the owner's layout (2026-10-16, Documents\dev.ps1).
+    expect(urlFor('/entity')).toBe('http://localhost:8000/entity');
   });
 
   it('inserts a slash for a path given without a leading one', async () => {
