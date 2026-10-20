@@ -1140,9 +1140,12 @@ textarea {
 .error-summary {
   margin-bottom: 16px;
   padding: 12px 16px;
-  border-radius: var(--mv2-radius-md);
-  background: var(--mv2-danger-bg);
-  color: var(--mv2-danger-ink);
+  /* This look's tokens: --danger (#d9534f) as text on its tint is below AA at 14px, so the
+     danger shows as the edge and tint while the words stay --ink. */
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: rgba(217, 83, 79, 0.1);
+  color: var(--ink);
   font-size: 14px;
   overflow-wrap: anywhere;
 }
