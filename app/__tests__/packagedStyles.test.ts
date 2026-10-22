@@ -6,33 +6,34 @@
 // It compiles the app's REAL stylesheet with the app's REAL Tailwind plugin, so it tests what the
 // browser is served, not what the file says.
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
-import postcss from 'postcss';
-import tailwind from '@tailwindcss/postcss';
-import { beforeAll, describe, expect, it } from 'vitest';
+import postcss from "postcss";
+import tailwind from "@tailwindcss/postcss";
+import { beforeAll, describe, expect, it } from "vitest";
 
-const CSS = 'app/globals.css';
+const CSS = "app/globals.css";
 
-let compiled = '';
+let compiled = "";
 
 beforeAll(async () => {
   compiled = (
-    await postcss([tailwind()]).process(readFileSync(CSS, 'utf8'), { from: resolve(CSS) })
+    await postcss([tailwind()]).process(readFileSync(CSS, "utf8"), { from: resolve(CSS) })
   ).css;
 }, 120_000);
 
 describe("@minty/shared's tokens reach the stylesheet", () => {
-  it('imports them', () => {
-    expect(readFileSync(CSS, 'utf8')).toContain("@import '@minty/shared/theme.css';");
+  it("imports them", () => {
+    // Either quote: Prettier owns the style of the stylesheet.
+    expect(readFileSync(CSS, "utf8")).toMatch(/@import ["']@minty\/shared\/theme\.css["'];/);
   });
 
-  it('has no local font tokens left to override them', () => {
-    expect(readFileSync(CSS, 'utf8')).not.toMatch(/^\s*--font-(sans|brand|mono):/m);
+  it("has no local font tokens left to override them", () => {
+    expect(readFileSync(CSS, "utf8")).not.toMatch(/^\s*--font-(sans|brand|mono):/m);
   });
 
-  it('emits the shared faces', () => {
+  it("emits the shared faces", () => {
     expect(compiled).toMatch(/--font-sans:\s*var\(--font-inter\)/);
     expect(compiled).toMatch(/--font-brand:\s*var\(--font-jakarta\)/);
   });

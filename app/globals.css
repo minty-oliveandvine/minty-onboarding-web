@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 /* The icon font, self-hosted from npm as minty-web and minty-payment-request-web do
    (2026-10-12) - this replaced a Google Fonts <link>. Deliberately NOT `layer(base)`: the
    package's CSS is unlayered, so its `font-size: 24px` outranks any size utility and every glyph
@@ -6,7 +6,7 @@
    unlayered, winning on document order), so nothing changed size - but it does mean the
    `text-[26px]` / `text-[22px]` on the spans in components/NavMenu.tsx have no effect.
    Rounded, not Outlined: Part 13 (D-20), and NavMenu's spans are `material-symbols-rounded`. */
-@import 'material-symbols/rounded.css';
+@import "material-symbols/rounded.css";
 /* The faces, shared: @minty/shared/theme.css (--font-sans, --font-brand). Plain CSS resolved by
    the bundler, exactly like the icon font above - misspell it and the build fails. This app takes
    the TOKENS and plain .ts modules only (`@minty/shared/money`, compiled through next.config's
@@ -14,7 +14,7 @@
    what makes Tailwind scan node_modules for classes).
    app/layout.tsx loads Plus Jakarta Sans (700) for --font-brand, the topbar `.brand` alone; that
    rule keeps its three hand-written values (see minty-web's components/ui/Wordmark.tsx). */
-@import '@minty/shared/theme.css';
+@import "@minty/shared/theme.css";
 
 /* Brand tokens shared with the payment-request module so Tailwind utilities
    like text-primary / bg-secondary resolve to the same colours. */
@@ -141,7 +141,7 @@ textarea::placeholder {
 /* One visible focus ring for every keyboard stop (WCAG 2.4.7). :where() keeps it at zero
      specificity, so a rule below must never set `outline: none` on a focusable control —
      that would win and hide the ring again. */
-:where(button, a, input, select, textarea, [role='button'], [tabindex]):focus-visible {
+:where(button, a, input, select, textarea, [role="button"], [tabindex]):focus-visible {
   outline: var(--mv2-focus-ring);
   outline-offset: 2px;
 }
@@ -287,7 +287,7 @@ textarea::placeholder {
 }
 /* The indicator pill (todo look by default). */
 .step::before {
-  content: '';
+  content: "";
   grid-area: 1 / 1;
   width: 100%;
   height: 100%;
@@ -654,7 +654,7 @@ textarea::placeholder {
   grid-template-columns: 132px minmax(0, 1fr);
   gap: 8px;
 }
-.phone-row input[type='tel'] {
+.phone-row input[type="tel"] {
   min-width: 0;
   width: 100%;
 }
@@ -1266,7 +1266,7 @@ textarea::placeholder {
   gap: 6px;
 }
 .field-required::before {
-  content: '*';
+  content: "*";
   font-size: 15px;
   line-height: 1;
   color: var(--danger);
@@ -1606,7 +1606,7 @@ textarea::placeholder {
 }
 /* Flat selected-state fill that scales in from the centre on hover/active */
 .autofill-btn::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -1913,12 +1913,12 @@ textarea::placeholder {
 }
 
 /* Petty Cash opening balance fields — pick up themed date picker */
-.pc-card .field input[type='date']::-webkit-calendar-picker-indicator {
+.pc-card .field input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.55;
   cursor: pointer;
   filter: invert(40%) sepia(30%) saturate(560%) hue-rotate(135deg);
 }
-.pc-card .field input[type='date']::-webkit-calendar-picker-indicator:hover {
+.pc-card .field input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
@@ -2418,7 +2418,7 @@ textarea::placeholder {
 /* Bridges the 10px gap above the icon so the pointer can travel into the
    popup without passing over dead space and closing it. */
 .info-tip-pop::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   left: 0;
@@ -3407,7 +3407,7 @@ textarea::placeholder {
 }
 .check-circle::before,
 .check-circle::after {
-  content: '';
+  content: "";
   position: absolute;
   border-radius: 50%;
   border: 1.5px solid var(--accent-soft);

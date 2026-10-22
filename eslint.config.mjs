@@ -4,7 +4,7 @@
 // app/, components/ and lib/ is TypeScript now and `tsc --noEmit` catches an undefined
 // identifier at the compiler. The stanza that used to live here existed only because
 // .jsx was unchecked -- the `toIsoDate is not defined` defect is what created it.
-import { defineConfig } from 'eslint/config';
-import minty from '@minty/shared/eslint';
+import { defineConfig } from "eslint/config";
+import minty from "@minty/shared/eslint";
 
 export default defineConfig([...minty]);

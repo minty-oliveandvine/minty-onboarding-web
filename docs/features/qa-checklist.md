@@ -29,9 +29,9 @@ release. Tick each box against a disposable test entity — never one you care a
 - [ ] The field is `type="text"`, not `type="email"` — confirm no browser email-validation
       UI appears (the English-only rule depends on this).
 - [ ] Editing step 1 after the first advance uses `PUT /entity/{id}`, not another `POST
-      /create` (re-opening the same company, not duplicating it).
+/create` (re-opening the same company, not duplicating it).
 - [ ] **DB:** `SELECT status, business_email, country_code, currency_id FROM
-      pettycashv3.entities WHERE id = '<id>';` — one row, `status = 'onboarding'`, the
+pettycashv3.entities WHERE id = '<id>';` — one row, `status = 'onboarding'`, the
       fields just entered; re-saving unchanged fields does not bump `updated_at`.
 
 ## Step 2 — Select Module
@@ -59,34 +59,34 @@ release. Tick each box against a disposable test entity — never one you care a
 
 - [ ] On arrival, the "invite your accountant" prompt appears once, in minty-web's modal
       design, with Minty and Ollie under the title.
-- [ ] The modal has one button, *Ok* — there is no *Skip* on the modal itself.
-- [ ] *Add later* at the foot of the page moves on without sending an invite.
+- [ ] The modal has one button, _Ok_ — there is no _Skip_ on the modal itself.
+- [ ] _Add later_ at the foot of the page moves on without sending an invite.
 - [ ] Sending an invite with a non-ASCII email surfaces Flask's 400 through the wizard
       unchanged (this call proxies to Flask).
 - [ ] Cancelling a pending invite removes it from the visible list (the row is revoked, not
       deleted, on the backend — only the UI effect is checkable here).
 - [ ] **DB:** `SELECT status FROM pettycashv3.invitation WHERE entity_id = '<id>' ORDER BY
-      created_at DESC;` — a cancelled row reads `revoked`, still present (never deleted); a
+created_at DESC;` — a cancelled row reads `revoked`, still present (never deleted); a
       failed send (toast shown) leaves no new row at all.
 
 ## Step 4 — Connect to Accounting System (Xero) ([xero-step.md](xero-step.md))
 
-- [ ] *Connect to Xero* leaves the tab entirely (navigates to Minty's `/xero_connect`) —
+- [ ] _Connect to Xero_ leaves the tab entirely (navigates to Minty's `/xero_connect`) —
       confirm the wizard's in-memory state survives the round trip via `sessionStorage`.
 - [ ] A successful connection lands back on `/?xero=connected&step=3&org=<tenant>`, shows
-      *Connected to \<org\>*, and unlocks Save & Next.
+      _Connected to \<org\>_, and unlocks Save & Next.
 - [ ] A mismatch return (`?xero=mismatch&expected=<email>`) shows the mismatch notice with
       the expected email, and leaves the connection unmade.
-- [ ] A conflict return (`?xero=conflict&conflict_entity=<name>`) raises the *That Xero
-      organisation is taken* dialog naming the other company, and the connection is not made.
-      Without `conflict_can_move=1` there is no *Move it here*, only who to ask.
-- [ ] *Move it here* disconnects the other company and comes back connected; *Go back* and
+- [ ] A conflict return (`?xero=conflict&conflict_entity=<name>`) raises the _That Xero
+      organisation is taken_ dialog naming the other company, and the connection is not made.
+      Without `conflict_can_move=1` there is no _Move it here_, only who to ask.
+- [ ] _Move it here_ disconnects the other company and comes back connected; _Go back_ and
       Escape change nothing on either company. A refused release stays in the dialog.
 - [ ] At 360px the step scrolls only downwards — the heading's info tooltip stays on screen
       (it hangs from the icon's right below 760px) and the footer row wraps, the reminder on
       its own line. `e2e/responsive.spec.ts` measures this and needs no credentials; run it
       after any change to the step's chrome.
-- [ ] *Disconnect* clears the connection but leaves the company in `onboarding`, still
+- [ ] _Disconnect_ clears the connection but leaves the company in `onboarding`, still
       resumable — reload and confirm step 4 shows disconnected (state is re-read from
       `GET /state`, not cached).
 - [ ] Resuming past step 4 on an entity with no Xero connection sends the wizard back to
@@ -94,15 +94,15 @@ release. Tick each box against a disposable test entity — never one you care a
 - [ ] Attempting steps 6, 7 or 8 without a connected organisation surfaces the backend's
       409, not a generic error (account-codes / contacts / bill-codes all require Xero).
 - [ ] **DB:** `SELECT status, xero_org_id, xero_tenant_name, connected_by_user_id,
-      last_connected_at FROM pettycashv3.entities WHERE id = '<id>';` — connect sets all
+last_connected_at FROM pettycashv3.entities WHERE id = '<id>';` — connect sets all
       four non-null; disconnect clears `xero_org_id`/`xero_tenant_name` but leaves `status
-      = 'onboarding'` (disconnect never touches `status` outside the step-9 reset flow).
+= 'onboarding'` (disconnect never touches `status` outside the step-9 reset flow).
 
 ## Steps 5–7 — Petty Cash Settings
 
 - [ ] A new company's electronic and delivery sales methods start empty (only Cash is
-      seeded) until *Auto Fill* is used.
-- [ ] *Auto Fill* populates Flask's default set; *Revert* empties electronic/delivery back
+      seeded) until _Auto Fill_ is used.
+- [ ] _Auto Fill_ populates Flask's default set; _Revert_ empties electronic/delivery back
       out again (Cash stays).
 - [ ] The opening balance (cash in the drawer on day one) saves and is reflected if you
       step back to this screen.
@@ -112,14 +112,14 @@ release. Tick each box against a disposable test entity — never one you care a
 - [ ] On step 7's open contact list, typing a name that doesn't match any existing contact
       offers to create one in Xero (the list's own "type a name to add one" hint).
 - [ ] **DB:** `SELECT sale_id, is_active, display_order FROM pettycashv3.entity_sale_setting
-      WHERE entity_id = '<id>';` — save twice with overlapping method names and confirm
+WHERE entity_id = '<id>';` — save twice with overlapping method names and confirm
       `sale_id` values are unchanged across the two saves (reconciled, not deleted and
       reinserted).
 - [ ] **DB:** `SELECT opening_balance, start_date, pettycash_account_id, bank_account_id,
-      cash_sale_account_id, discrepancy_bank_account_id, discrepancy_account_id,
-      director_account_id, cash_sale_contact_id, director_contact_id,
-      discrepancy_contact_id FROM pettycashv3.entity_pettycash_settings WHERE entity_id =
-      '<id>';` — one row per entity; step 5 fills `opening_balance`/`start_date`, step 6
+cash_sale_account_id, discrepancy_bank_account_id, discrepancy_account_id,
+director_account_id, cash_sale_contact_id, director_contact_id,
+discrepancy_contact_id FROM pettycashv3.entity_pettycash_settings WHERE entity_id =
+'<id>';` — one row per entity; step 5 fills `opening_balance`/`start_date`, step 6
       the four account columns, step 7 the three contact columns.
 - [ ] Step 1: picking a country fills an EMPTY Currency with that country's currency and
       never replaces one already chosen; `entities.timezone` holds the browser's zone.
@@ -136,7 +136,7 @@ release. Tick each box against a disposable test entity — never one you care a
       the wizard writes no report. The first report, opened in Petty Cash after step 9,
       starts at step 5's opening balance on its start date.
 - [ ] **DB:** `SELECT cash_id, is_active, display_order FROM
-      pettycashv3.entity_cash_setting WHERE entity_id = '<id>';` — one row per active
+pettycashv3.entity_cash_setting WHERE entity_id = '<id>';` — one row per active
       denomination of the step 1 currency; changing the currency on step 1 swaps them.
 
 ## Step 8 — Payment Request Settings (only when that module is chosen)
@@ -151,7 +151,7 @@ release. Tick each box against a disposable test entity — never one you care a
 
 ## Resume, Save & Exit, and the stepper
 
-- [ ] *Save & Exit* (and every advance) posts `saved_step`; leaving and re-entering via the
+- [ ] _Save & Exit_ (and every advance) posts `saved_step`; leaving and re-entering via the
       launch link lands on exactly that step.
 - [ ] The database wins on conflict: if `saved_step` and the backend's derived
       `current_step` disagree, the wizard lands on the **saved** step, not the derived one
@@ -161,7 +161,7 @@ release. Tick each box against a disposable test entity — never one you care a
 - [ ] **DB:** `SELECT onboarding_saved_step FROM pettycashv3.entities WHERE id = '<id>';`
       matches the frontend step id (1–9) exactly, verbatim — never the backend's derived
       `current_step` ordering.
-- [ ] The rail groups steps 5–7 under one *Petty Cash Settings* label and shows step 8 only
+- [ ] The rail groups steps 5–7 under one _Petty Cash Settings_ label and shows step 8 only
       when Payment Request is enabled; ticks on the rail match `isStepComplete`, not just
       "visited".
 - [ ] A company left unfinished does not block resuming later, no matter how long it sits
@@ -171,29 +171,29 @@ release. Tick each box against a disposable test entity — never one you care a
 ## All Set (step 9) and finalize
 
 - [ ] On a **successful** finalize, the saved session (`localStorage`/`sessionStorage`) is
-      cleared and *Go to entity list* leaves cleanly.
+      cleared and _Go to entity list_ leaves cleanly.
 - [ ] On a **failed** finalize (e.g. a 502) or a network error, the session is **not**
       cleared — reloading lands back on All Set, not back at step 1.
 - [ ] The failure message reads "Your N-day \<module\> trial hasn't started yet.", shows the
       server's own sentence inline via `role="alert"` (no toast), and the primary button
-      becomes *Try again*.
-- [ ] *Try again* re-runs the same commit (opening balance + `/finalize`) rather than
+      becomes _Try again_.
+- [ ] _Try again_ re-runs the same commit (opening balance + `/finalize`) rather than
       restarting the wizard.
-- [ ] *Add Payment Now* and the payment nudge stay hidden until a trial actually exists.
-- [ ] *Go to entity list* is disabled while a retry is in flight, not clickable mid-request.
+- [ ] _Add Payment Now_ and the payment nudge stay hidden until a trial actually exists.
+- [ ] _Go to entity list_ is disabled while a retry is in flight, not clickable mid-request.
 - [ ] **DB:** `SELECT status FROM pettycashv3.entities WHERE id = '<id>';` flips to
       `connected`/`disconnected` only on a successful finalize — stays `onboarding` after a
       failed one (reload-and-retry depends on this).
 - [ ] **DB:** `SELECT function_code, phase, trial_end, payer_user_id FROM
-      pettycashv3.entity_module_subscription WHERE entity_id = '<id>';` — exactly one row
-      per enabled module (unique on `entity_id, function_code`); clicking *Try again* after
+pettycashv3.entity_module_subscription WHERE entity_id = '<id>';` — exactly one row
+      per enabled module (unique on `entity_id, function_code`); clicking _Try again_ after
       a failure must not add a second row for the same module. Since 2026-10-08
       `payer_user_id` must be **NULL**: finalize establishes no subscriber, and the person
       who finished the wizard is not liable for the company.
 - [ ] Skip the billing sheet on step 2 entirely, then finish: the company still goes live
       with its trials, there is no `pettycashv3.entity_billing_group` row and no
-      `entity_billing_consent` row for it, and minty-web's module page offers *Activate
-      Subscription* — to ANY admin of it, not only the one who ran the wizard.
+      `entity_billing_consent` row for it, and minty-web's module page offers _Activate
+      Subscription_ — to ANY admin of it, not only the one who ran the wizard.
 - [ ] Complete the billing sheet instead: `entity_billing_group` and consent exist for the
       person who completed it, and after finalize every module row is stamped with them.
 
@@ -212,9 +212,9 @@ For a manual session:
 
 - Never paste a launch link, type a `saved_step`, or otherwise jump a browser session
   straight to step 9 against any entity other than the disposable one.
-- Only ever click through to *Complete* on step 8 — the one way a real user reaches All
+- Only ever click through to _Complete_ on step 8 — the one way a real user reaches All
   Set — against the dedicated E2E/QA test entity (`e2e/README.md`'s
-  `ee72f706-49f2-4690-83d6-e5f8d284ba2c`, *"E2E Test Entity (do not use)"*), never a
+  `ee72f706-49f2-4690-83d6-e5f8d284ba2c`, _"E2E Test Entity (do not use)"_), never a
   company a person is actually setting up.
 - After testing All Set, reset the entity the same way the automated suite does
   (`resetEntity()` in `e2e/onboardingApi.ts`):
@@ -257,7 +257,7 @@ For a manual session:
       in it finds Singapore. Change Country to Singapore and the code follows (+65); pick a code
       yourself and changing Country no longer moves it. Paste `+44 07700 900123` into the number:
       the picker moves to +44 and the save stores `+447700900123`. Type 7 digits under +852 and
-      leave the box: *A +852 number has 8 digits.* and Save & Next is off. Reload: the
+      leave the box: _A +852 number has 8 digits._ and Save & Next is off. Reload: the
       code and number come back as saved. No line of hint text under the field.
 - [ ] Country, Currency, Phone Number and Business Email are **not** marked - the first two
       are pre-filled, the last two are optional and say so.

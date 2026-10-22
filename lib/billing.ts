@@ -1,6 +1,6 @@
-import type { ApiErrorBody } from './api';
-import { urlFor } from './apiRoutes';
-import { errorCopy, HOUSE_FALLBACK } from '@minty/shared/errorCopy';
+import type { ApiErrorBody } from "./api";
+import { urlFor } from "./apiRoutes";
+import { errorCopy, HOUSE_FALLBACK } from "@minty/shared/errorCopy";
 
 /**
  * The payer's saved cards, and consent to bill an entity — the wire half of the billing sheet.
@@ -97,7 +97,7 @@ export class BillingError extends Error {
 
   constructor(message: string, status: number) {
     super(message);
-    this.name = 'BillingError';
+    this.name = "BillingError";
     this.status = status;
   }
 }
@@ -107,9 +107,9 @@ type CallOptions = { method?: string; body?: Record<string, unknown> };
 async function call<T>(
   token: string | null | undefined,
   path: string,
-  { method = 'GET', body }: CallOptions = {},
+  { method = "GET", body }: CallOptions = {},
 ): Promise<T> {
-  if (!token) throw new BillingError('Your session expired. Sign in again to keep going.', 401);
+  if (!token) throw new BillingError("Your session expired. Sign in again to keep going.", 401);
 
   let res: Response;
   try {
@@ -117,7 +117,7 @@ async function call<T>(
       method,
       headers: {
         Authorization: `Bearer ${token}`,
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(body ? { "Content-Type": "application/json" } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
@@ -129,7 +129,7 @@ async function call<T>(
   if (!res.ok) {
     // The status used to be shown so a CORS/proxy failure could be told apart
     // from a real server reason. That distinction is for the log, not the payer.
-    console.warn('billing call failed', path, res.status);
+    console.warn("billing call failed", path, res.status);
     throw new BillingError(errorCopy(data.error, HOUSE_FALLBACK), res.status);
   }
   return data;
@@ -159,8 +159,8 @@ export function fetchBillingStatus(
 
 /** `{client_secret, publishable_key, setup_intent}` for mounting Stripe Elements. */
 export function startCardSetup(token: string | null | undefined): Promise<CardSetup> {
-  return call<CardSetup>(token, '/api/onboarding/billing/payment-methods/setup-intent', {
-    method: 'POST',
+  return call<CardSetup>(token, "/api/onboarding/billing/payment-methods/setup-intent", {
+    method: "POST",
   });
 }
 
@@ -176,8 +176,8 @@ export function confirmCardSetup(
   makeDefault: boolean,
   account?: BillingAccountChoice | null,
 ): Promise<BillingAccountsResponse> {
-  return call<BillingAccountsResponse>(token, '/api/onboarding/billing/payment-methods/confirm', {
-    method: 'POST',
+  return call<BillingAccountsResponse>(token, "/api/onboarding/billing/payment-methods/confirm", {
+    method: "POST",
     body: {
       setup_intent: setupIntent,
       make_default: !!makeDefault,
@@ -207,7 +207,7 @@ export function confirmCardSetup(
 export function fetchBillingAccounts(
   token: string | null | undefined,
 ): Promise<BillingAccountsResponse> {
-  return call<BillingAccountsResponse>(token, '/api/onboarding/billing/accounts');
+  return call<BillingAccountsResponse>(token, "/api/onboarding/billing/accounts");
 }
 
 /**
@@ -226,8 +226,8 @@ export function authorizeBilling(
   entityId: string,
   paymentMethod?: string | null,
 ): Promise<Record<string, unknown>> {
-  return call<Record<string, unknown>>(token, '/api/onboarding/billing/authorize', {
-    method: 'POST',
+  return call<Record<string, unknown>>(token, "/api/onboarding/billing/authorize", {
+    method: "POST",
     body: paymentMethod
       ? { entity_id: entityId, payment_method: paymentMethod }
       : { entity_id: entityId },

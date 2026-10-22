@@ -28,13 +28,13 @@
  * to you in both directions. And the dev server serves UNMINIFIED css, so grep for
  * `.some-class` with following lines, never for the minified `.some-class{...}` form.
  */
-import { watch } from 'node:fs';
-import { readdir } from 'node:fs/promises';
-import path from 'node:path';
+import { watch } from "node:fs";
+import { readdir } from "node:fs/promises";
+import path from "node:path";
 
-const PORT = process.env.PORT ?? '3030';
+const PORT = process.env.PORT ?? "3030";
 const ORIGIN = `http://localhost:${PORT}`;
-const ROOTS = ['app', 'components', 'lib'];
+const ROOTS = ["app", "components", "lib"];
 const WATCHED = /\.(css|jsx?|tsx?|mjs)$/;
 
 // Coalesce: an editor save can emit several events for one write, and a scripted edit
@@ -48,7 +48,7 @@ async function poke() {
   pending = new Set();
   const started = Date.now();
   try {
-    const res = await fetch(ORIGIN + '/', { cache: 'no-store' });
+    const res = await fetch(ORIGIN + "/", { cache: "no-store" });
     const ms = Date.now() - started;
     const what = files.length === 1 ? files[0] : `${files.length} files`;
     console.log(
@@ -77,7 +77,7 @@ for (const dir of ROOTS) {
     watch(dir, { recursive: true }, (_event, filename) => {
       if (!filename) return;
       const rel = path.join(dir, filename.toString());
-      if (WATCHED.test(rel)) schedule(rel.replace(/\\/g, '/'));
+      if (WATCHED.test(rel)) schedule(rel.replace(/\\/g, "/"));
     });
     present.push(dir);
   } catch {
@@ -85,5 +85,5 @@ for (const dir of ROOTS) {
   }
 }
 
-console.log(`dev-poke: watching ${present.join(', ')} -> ${ORIGIN}`);
-console.log('every save now forces a recompile; leave this running beside `npm run dev`.');
+console.log(`dev-poke: watching ${present.join(", ")} -> ${ORIGIN}`);
+console.log("every save now forces a recompile; leave this running beside `npm run dev`.");

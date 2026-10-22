@@ -8,7 +8,7 @@ services:
     ports:
       # host:container — dev server runs on 3030 (minty-web is 3000,
       # minty-payment-request-web 3020).
-      - '3030:3030'
+      - "3030:3030"
     environment:
       # Backend URLs the frontend calls. These MUST come from the environment
       # (never hardcoded) so the orchestrator can inject shared values later.

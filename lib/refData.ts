@@ -1,4 +1,4 @@
-import { urlFor } from './apiRoutes';
+import { urlFor } from "./apiRoutes";
 
 // Country / currency reference data from the Module 1 backend registries
 // (pettycashv3.country_info / currency_info). Rows carry the uuid PKs the
@@ -51,7 +51,7 @@ function cachedListFetch<Row>(key: string): () => Promise<Row[]> {
 }
 
 // -> [{ country_id, country_name_en, country_code }] ordered by name
-export const fetchCountries = cachedListFetch<CountryRow>('countries');
+export const fetchCountries = cachedListFetch<CountryRow>("countries");
 
 // -> [{ currency_id, currency_name, iso_code }] ordered by name
-export const fetchCurrencies = cachedListFetch<CurrencyRow>('currencies');
+export const fetchCurrencies = cachedListFetch<CurrencyRow>("currencies");

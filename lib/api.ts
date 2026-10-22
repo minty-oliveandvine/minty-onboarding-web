@@ -20,10 +20,10 @@
 //  ── Modules ─────────────────────────────────────────────────────────
 
 /** Backend spelling: `entity_function.function_code`. See lib/modules. */
-export type ModuleCode = 'PETTY_CASH' | 'PAYMENT_REQUEST';
+export type ModuleCode = "PETTY_CASH" | "PAYMENT_REQUEST";
 
 /** Frontend spelling: what the module picker and the step grouping key on. */
-export type ModuleId = 'pettyCash' | 'bills';
+export type ModuleId = "pettyCash" | "bills";
 
 //  ── GET /state ──────────────────────────────────────────────────────
 
@@ -62,7 +62,7 @@ export type OpeningBalance = {
   adjusted_opening_balance: number;
 };
 
-export type InviteStatus = 'pending' | 'accepted' | 'expired' | 'cancelled';
+export type InviteStatus = "pending" | "accepted" | "expired" | "cancelled";
 
 /** One pending invitation, the shape the invite cards render. */
 export type Invitation = {
@@ -90,7 +90,7 @@ export type Invitation = {
  */
 export type OnboardingState = {
   entity_id: string;
-  status: 'onboarding' | 'active' | string;
+  status: "onboarding" | "active" | string;
   current_step: number;
   max_reached: number;
   /** null if the user never saved. */
@@ -152,10 +152,10 @@ export type AccountCodesResponse = {
   contacts?: AccountOption[];
   /** Saved mapping, by role -> account id. */
   mapping_defaults?: Partial<
-    Record<'pettycash' | 'deposit' | 'director' | 'cash_sale' | 'discrepancy', string>
+    Record<"pettycash" | "deposit" | "director" | "cash_sale" | "discrepancy", string>
   >;
   /** Saved contacts, by role -> contact id. */
-  contact_defaults?: Partial<Record<'director' | 'cash_sale' | 'discrepancy', string>>;
+  contact_defaults?: Partial<Record<"director" | "cash_sale" | "discrepancy", string>>;
   default_all?: boolean;
   selected_codes?: string[];
 };
@@ -243,5 +243,4 @@ export type SetupGap = { step: number; message: string };
 
 /** Finalize refuses (409) a company whose chosen modules are not set up, naming each gap. */
 export type FinalizeResult =
-  | Result<{ trialEnd: string | null }>
-  | { ok: false; error: string; missing: SetupGap[] };
+  Result<{ trialEnd: string | null }> | { ok: false; error: string; missing: SetupGap[] };

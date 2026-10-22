@@ -11,7 +11,7 @@ export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 
 /** True when `value` is a uuid. */
 export function isUuid(value: unknown): boolean {
-  return UUID_RE.test(String(value ?? ''));
+  return UUID_RE.test(String(value ?? ""));
 }
 
 // ---- Phone numbers ------------------------------------------------------------------------
@@ -27,28 +27,28 @@ export type DialCountry = { iso: string; name: string; code: string };
  *  sells in (the user, 2026-10-12) - add a code when its market opens, not before. Every other
  *  code gets E.164's own bounds: at least 4 national digits, at most 15 digits in all. The
  *  API's PHONE_LENGTHS is the same table -- change them together. */
-export const PHONE_LENGTHS: Record<string, number> = { '852': 8 };
+export const PHONE_LENGTHS: Record<string, number> = { "852": 8 };
 
 /** Where a leading 0 is part of the number (Italy and the Vatican, San Marino). Everywhere
  *  else it is the domestic trunk prefix, which E.164 drops. */
-const KEEPS_LEADING_ZERO = new Set(['39', '378']);
+const KEEPS_LEADING_ZERO = new Set(["39", "378"]);
 
 /** For a code several countries share, the one a bare "+44" means (ITU's main country). */
 const MAIN_COUNTRY: Record<string, string> = {
-  '1': 'US',
-  '7': 'RU',
-  '39': 'IT',
-  '44': 'GB',
-  '47': 'NO',
-  '61': 'AU',
-  '64': 'NZ',
-  '212': 'MA',
-  '262': 'RE',
-  '358': 'FI',
-  '500': 'FK',
-  '590': 'GP',
-  '599': 'CW',
-  '672': 'NF',
+  "1": "US",
+  "7": "RU",
+  "39": "IT",
+  "44": "GB",
+  "47": "NO",
+  "61": "AU",
+  "64": "NZ",
+  "212": "MA",
+  "262": "RE",
+  "358": "FI",
+  "500": "FK",
+  "590": "GP",
+  "599": "CW",
+  "672": "NF",
 };
 
 const WIZARD_PHONE = /^\+(\d{1,3}) (.*)$/;
@@ -56,15 +56,15 @@ const WIZARD_PHONE = /^\+(\d{1,3}) (.*)$/;
 /** What a phone box keeps: digits and the punctuation people type, plus a leading "+" so a
  *  pasted international number can be recognised. */
 export function sanitizePhoneInput(value: string): string {
-  const v = value.replace(/^\s+/, '');
-  const plus = v.startsWith('+') ? '+' : '';
-  return plus + v.slice(plus.length).replace(/[^0-9 ()\-.]/g, '');
+  const v = value.replace(/^\s+/, "");
+  const plus = v.startsWith("+") ? "+" : "";
+  return plus + v.slice(plus.length).replace(/[^0-9 ()\-.]/g, "");
 }
 
 /** The national number's digits as E.164 stores them: the domestic trunk 0 dropped. */
 export function nationalDigits(code: string, national: string): string {
-  const digits = national.replace(/\D/g, '');
-  return digits.startsWith('0') && !KEEPS_LEADING_ZERO.has(code) ? digits.slice(1) : digits;
+  const digits = national.replace(/\D/g, "");
+  return digits.startsWith("0") && !KEEPS_LEADING_ZERO.has(code) ? digits.slice(1) : digits;
 }
 
 /** The most national digits a code takes: its exact length where it has one (8 for +852),
@@ -80,13 +80,13 @@ export function capNational(code: string, national: string): string {
   const trunk = !KEEPS_LEADING_ZERO.has(code);
   let kept = 0;
   let seenDigit = false;
-  let out = '';
+  let out = "";
   for (const ch of national) {
     if (!/\d/.test(ch)) {
       out += ch;
       continue;
     }
-    const isTrunkZero = trunk && !seenDigit && ch === '0';
+    const isTrunkZero = trunk && !seenDigit && ch === "0";
     seenDigit = true;
     if (isTrunkZero) {
       out += ch;
@@ -105,9 +105,9 @@ export function phoneError(code: string, national: string): string {
   const n = nationalDigits(code, national);
   const expected = PHONE_LENGTHS[code];
   if (expected !== undefined) {
-    return n.length === expected ? '' : `A +${code} number has ${expected} digits.`;
+    return n.length === expected ? "" : `A +${code} number has ${expected} digits.`;
   }
-  return n.length >= 4 && code.length + n.length <= 15 ? '' : 'Please check the phone number.';
+  return n.length >= 4 && code.length + n.length <= 15 ? "" : "Please check the phone number.";
 }
 
 /** `"+852 9123 4567"` -> `{ code: "852", national: "9123 4567" }`. Null for any other shape:
@@ -120,17 +120,17 @@ export function parseWizardPhone(phone: string): { code: string; national: strin
 
 /** The wizard's form, or "" when there is no number to keep. */
 export function composeWizardPhone(code: string, national: string): string {
-  const n = national.replace(/^\s+/, '');
-  return /\d/.test(n) ? `+${code} ${n}` : '';
+  const n = national.replace(/^\s+/, "");
+  return /\d/.test(n) ? `+${code} ${n}` : "";
 }
 
 /** What the API is sent: compact E.164 ("+85291234567"), or "" for no number. */
 export function phoneForApi(phone: string): string {
   const p = parseWizardPhone(phone);
   if (p) return `+${p.code}${nationalDigits(p.code, p.national)}`;
-  const digits = phone.replace(/\D/g, '');
-  if (!digits) return '';
-  return phone.trim().startsWith('+') ? `+${digits}` : digits;
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "";
+  return phone.trim().startsWith("+") ? `+${digits}` : digits;
 }
 
 /** Step 1's rule for the phone: empty, or acceptable. A number in another shape came from
@@ -138,7 +138,7 @@ export function phoneForApi(phone: string): string {
  *  splits it with `splitStoredPhone` once the country list is in. */
 export function phoneOk(phone: string): boolean {
   const p = parseWizardPhone(phone);
-  return p ? phoneError(p.code, p.national) === '' : true;
+  return p ? phoneError(p.code, p.national) === "" : true;
 }
 
 /**
@@ -157,9 +157,9 @@ export function splitStoredPhone(
   preferIso: string,
 ): { phone: string; iso: string } | null {
   if (parseWizardPhone(phone)) return null;
-  const digits = phone.replace(/\D/g, '');
+  const digits = phone.replace(/\D/g, "");
   if (!digits) return null;
-  if (phone.trim().startsWith('+')) {
+  if (phone.trim().startsWith("+")) {
     for (const n of [3, 2, 1]) {
       const code = digits.slice(0, n);
       const matches = dial.filter((d) => d.code === code);

@@ -10,12 +10,12 @@
 // HTML5 drag protocol, so the dataTransfer object is supplied by hand. That means
 // these tests check the component's REORDER LOGIC, not that a real mouse drag works.
 
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-import { MethodList } from '../steps/pettyCashFields';
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { MethodList } from "../steps/pettyCashFields";
 
-const METHODS = ['Cash', 'Octopus', 'FPS'];
+const METHODS = ["Cash", "Octopus", "FPS"];
 
 function setup(props = {}) {
   const onAdd = vi.fn();
@@ -29,30 +29,30 @@ function setup(props = {}) {
       {...props}
     />,
   );
-  const rows = () => Array.from(utils.container.querySelectorAll('.method-row'));
+  const rows = () => Array.from(utils.container.querySelectorAll(".method-row"));
   const names = () =>
     rows().map(
-      (r) => within(r as HTMLElement).getByText(/.+/, { selector: '.method-name' }).textContent,
+      (r) => within(r as HTMLElement).getByText(/.+/, { selector: ".method-name" }).textContent,
     );
   return { onAdd, onChange, rows, names, ...utils };
 }
 
-describe('rendering', () => {
-  it('renders the title and one row per method, in order', () => {
+describe("rendering", () => {
+  it("renders the title and one row per method, in order", () => {
     const { names } = setup();
-    expect(screen.getByText('Electronic')).toBeInTheDocument();
+    expect(screen.getByText("Electronic")).toBeInTheDocument();
     expect(names()).toEqual(METHODS);
   });
 
-  it('renders an empty list without an add form open', () => {
+  it("renders an empty list without an add form open", () => {
     const { rows } = setup({ methods: [] });
     expect(rows()).toHaveLength(0);
-    expect(screen.getByRole('button', { name: /Add New Method/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add New Method/ })).toBeInTheDocument();
   });
 
-  it('shows the sparkle only when the list was auto-filled', () => {
+  it("shows the sparkle only when the list was auto-filled", () => {
     const { container, rerender } = setup();
-    expect(container.querySelector('.method-sparkle')).toBeNull();
+    expect(container.querySelector(".method-sparkle")).toBeNull();
     rerender(
       <MethodList
         title="Electronic"
@@ -62,122 +62,122 @@ describe('rendering', () => {
         autoFilled
       />,
     );
-    expect(container.querySelector('.method-sparkle')).toBeTruthy();
+    expect(container.querySelector(".method-sparkle")).toBeTruthy();
   });
 
-  it('gives each row an accessible delete and drag control', () => {
+  it("gives each row an accessible delete and drag control", () => {
     setup();
-    expect(screen.getByRole('button', { name: 'Delete Octopus' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Drag to reorder Octopus' })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete Octopus" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Drag to reorder Octopus" })).toBeInTheDocument();
   });
 });
 
-describe('adding', () => {
-  it('opens a focused input', async () => {
+describe("adding", () => {
+  it("opens a focused input", async () => {
     setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    const input = screen.getByPlaceholderText('Enter method name');
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    const input = screen.getByPlaceholderText("Enter method name");
     expect(input).toHaveFocus();
   });
 
-  it('uses a caller-supplied placeholder', async () => {
-    setup({ placeholder: 'Enter delivery method' });
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    expect(screen.getByPlaceholderText('Enter delivery method')).toBeInTheDocument();
+  it("uses a caller-supplied placeholder", async () => {
+    setup({ placeholder: "Enter delivery method" });
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    expect(screen.getByPlaceholderText("Enter delivery method")).toBeInTheDocument();
   });
 
-  it('keeps Add disabled until something is typed', async () => {
+  it("keeps Add disabled until something is typed", async () => {
     setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    const add = screen.getByRole('button', { name: 'Add' });
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    const add = screen.getByRole("button", { name: "Add" });
     expect(add).toBeDisabled();
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), 'PayMe');
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "PayMe");
     expect(add).toBeEnabled();
   });
 
-  it('treats whitespace as empty', async () => {
+  it("treats whitespace as empty", async () => {
     setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), '   ');
-    expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "   ");
+    expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
   });
 
-  it('emits the trimmed name and closes the form', async () => {
+  it("emits the trimmed name and closes the form", async () => {
     const { onAdd } = setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), '  PayMe  ');
-    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
-    expect(onAdd).toHaveBeenCalledExactlyOnceWith('PayMe');
-    expect(screen.queryByPlaceholderText('Enter method name')).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "  PayMe  ");
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith("PayMe");
+    expect(screen.queryByPlaceholderText("Enter method name")).toBeNull();
   });
 
-  it('adds on Enter', async () => {
+  it("adds on Enter", async () => {
     const { onAdd } = setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), 'PayMe{Enter}');
-    expect(onAdd).toHaveBeenCalledExactlyOnceWith('PayMe');
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "PayMe{Enter}");
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith("PayMe");
   });
 
-  it('does not add an empty name on Enter', async () => {
+  it("does not add an empty name on Enter", async () => {
     const { onAdd } = setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), '{Enter}');
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "{Enter}");
     expect(onAdd).not.toHaveBeenCalled();
     // ...and the form stays open, rather than silently closing on a no-op.
-    expect(screen.getByPlaceholderText('Enter method name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter method name")).toBeInTheDocument();
   });
 
-  it('closes and forgets the draft on Escape', async () => {
+  it("closes and forgets the draft on Escape", async () => {
     const { onAdd } = setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), 'PayMe{Escape}');
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "PayMe{Escape}");
     expect(onAdd).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    expect(screen.getByPlaceholderText('Enter method name')).toHaveValue('');
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    expect(screen.getByPlaceholderText("Enter method name")).toHaveValue("");
   });
 
-  it('closes and forgets the draft on Cancel', async () => {
+  it("closes and forgets the draft on Cancel", async () => {
     const { onAdd } = setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), 'PayMe');
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "PayMe");
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onAdd).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    expect(screen.getByPlaceholderText('Enter method name')).toHaveValue('');
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    expect(screen.getByPlaceholderText("Enter method name")).toHaveValue("");
   });
 
-  it('does not add to the list itself -- the parent owns the data', async () => {
+  it("does not add to the list itself -- the parent owns the data", async () => {
     const { onChange, names } = setup();
-    await userEvent.click(screen.getByRole('button', { name: /Add New Method/ }));
-    await userEvent.type(screen.getByPlaceholderText('Enter method name'), 'PayMe{Enter}');
+    await userEvent.click(screen.getByRole("button", { name: /Add New Method/ }));
+    await userEvent.type(screen.getByPlaceholderText("Enter method name"), "PayMe{Enter}");
     expect(onChange).not.toHaveBeenCalled();
     expect(names()).toEqual(METHODS);
   });
 });
 
-describe('removing', () => {
-  it('emits the list without the removed entry', async () => {
+describe("removing", () => {
+  it("emits the list without the removed entry", async () => {
     const { onChange } = setup();
-    await userEvent.click(screen.getByRole('button', { name: 'Delete Octopus' }));
-    expect(onChange).toHaveBeenCalledExactlyOnceWith(['Cash', 'FPS']);
+    await userEvent.click(screen.getByRole("button", { name: "Delete Octopus" }));
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(["Cash", "FPS"]);
   });
 
-  it('removes the first and the last correctly', async () => {
+  it("removes the first and the last correctly", async () => {
     const a = setup();
-    await userEvent.click(screen.getByRole('button', { name: 'Delete Cash' }));
-    expect(a.onChange).toHaveBeenCalledWith(['Octopus', 'FPS']);
+    await userEvent.click(screen.getByRole("button", { name: "Delete Cash" }));
+    expect(a.onChange).toHaveBeenCalledWith(["Octopus", "FPS"]);
     a.unmount();
 
     const b = setup();
-    await userEvent.click(screen.getByRole('button', { name: 'Delete FPS' }));
-    expect(b.onChange).toHaveBeenCalledWith(['Cash', 'Octopus']);
+    await userEvent.click(screen.getByRole("button", { name: "Delete FPS" }));
+    expect(b.onChange).toHaveBeenCalledWith(["Cash", "Octopus"]);
   });
 
-  it('does not mutate the array it was given', async () => {
+  it("does not mutate the array it was given", async () => {
     const methods = [...METHODS];
     const onChange = vi.fn();
     render(<MethodList title="t" methods={methods} onAdd={vi.fn()} onChange={onChange} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Delete Octopus' }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete Octopus" }));
     // An in-place splice would pass the assertion above and still fail to re-render,
     // because React would see the same array reference.
     expect(methods).toEqual(METHODS);
@@ -185,17 +185,17 @@ describe('removing', () => {
   });
 });
 
-describe('reordering by drag', () => {
+describe("reordering by drag", () => {
   /** jsdom has no DragEvent, so the transfer object is supplied by hand. */
   const transfer = () => ({
-    effectAllowed: '',
-    dropEffect: '',
+    effectAllowed: "",
+    dropEffect: "",
     setData: vi.fn(),
     getData: vi.fn(),
   });
 
   function drag(rows: Element[], from: number, to: number) {
-    const handle = within(rows[from] as HTMLElement).getByRole('button', {
+    const handle = within(rows[from] as HTMLElement).getByRole("button", {
       name: /Drag to reorder/,
     });
     fireEvent.dragStart(handle, { dataTransfer: transfer() });
@@ -203,71 +203,71 @@ describe('reordering by drag', () => {
     fireEvent.drop(rows[to], { dataTransfer: transfer() });
   }
 
-  it('moves an item down the list', () => {
+  it("moves an item down the list", () => {
     const { rows, onChange } = setup();
     drag(rows(), 0, 2);
-    expect(onChange).toHaveBeenCalledExactlyOnceWith(['Octopus', 'FPS', 'Cash']);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(["Octopus", "FPS", "Cash"]);
   });
 
-  it('moves an item up the list', () => {
+  it("moves an item up the list", () => {
     const { rows, onChange } = setup();
     drag(rows(), 2, 0);
-    expect(onChange).toHaveBeenCalledExactlyOnceWith(['FPS', 'Cash', 'Octopus']);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(["FPS", "Cash", "Octopus"]);
   });
 
-  it('does nothing when dropped on itself', () => {
+  it("does nothing when dropped on itself", () => {
     const { rows, onChange } = setup();
     drag(rows(), 1, 1);
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('does nothing when a drop arrives with no drag in progress', () => {
+  it("does nothing when a drop arrives with no drag in progress", () => {
     const { rows, onChange } = setup();
     fireEvent.drop(rows()[1], { dataTransfer: transfer() });
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('marks the dragged row and the row under the cursor', () => {
+  it("marks the dragged row and the row under the cursor", () => {
     const { rows } = setup();
-    const handle = within(rows()[0] as HTMLElement).getByRole('button', {
+    const handle = within(rows()[0] as HTMLElement).getByRole("button", {
       name: /Drag to reorder/,
     });
     fireEvent.dragStart(handle, { dataTransfer: transfer() });
     fireEvent.dragOver(rows()[2], { dataTransfer: transfer() });
-    expect(rows()[0].className).toContain('is-dragging');
-    expect(rows()[2].className).toContain('is-drag-over');
+    expect(rows()[0].className).toContain("is-dragging");
+    expect(rows()[2].className).toContain("is-drag-over");
     // Never both on the same row.
     fireEvent.dragOver(rows()[0], { dataTransfer: transfer() });
-    expect(rows()[0].className).not.toContain('is-drag-over');
+    expect(rows()[0].className).not.toContain("is-drag-over");
   });
 
-  it('clears the markers when the drag ends without a drop', () => {
+  it("clears the markers when the drag ends without a drop", () => {
     const { rows, container } = setup();
-    const handle = within(rows()[0] as HTMLElement).getByRole('button', {
+    const handle = within(rows()[0] as HTMLElement).getByRole("button", {
       name: /Drag to reorder/,
     });
     fireEvent.dragStart(handle, { dataTransfer: transfer() });
     fireEvent.dragOver(rows()[1], { dataTransfer: transfer() });
     fireEvent.dragEnd(handle);
-    expect(container.querySelector('.is-dragging')).toBeNull();
-    expect(container.querySelector('.is-drag-over')).toBeNull();
+    expect(container.querySelector(".is-dragging")).toBeNull();
+    expect(container.querySelector(".is-drag-over")).toBeNull();
   });
 
-  it('clears the hover marker on drag leave', () => {
+  it("clears the hover marker on drag leave", () => {
     const { rows, container } = setup();
-    const handle = within(rows()[0] as HTMLElement).getByRole('button', {
+    const handle = within(rows()[0] as HTMLElement).getByRole("button", {
       name: /Drag to reorder/,
     });
     fireEvent.dragStart(handle, { dataTransfer: transfer() });
     fireEvent.dragOver(rows()[1], { dataTransfer: transfer() });
     fireEvent.dragLeave(rows()[1]);
-    expect(container.querySelector('.is-drag-over')).toBeNull();
+    expect(container.querySelector(".is-drag-over")).toBeNull();
   });
 
-  it('survives a drag event with no dataTransfer at all', () => {
+  it("survives a drag event with no dataTransfer at all", () => {
     // Some browsers and some synthetic events omit it; the guards exist for that.
     const { rows, onChange } = setup();
-    const handle = within(rows()[0] as HTMLElement).getByRole('button', {
+    const handle = within(rows()[0] as HTMLElement).getByRole("button", {
       name: /Drag to reorder/,
     });
     expect(() => {
@@ -275,16 +275,16 @@ describe('reordering by drag', () => {
       fireEvent.dragOver(rows()[1]);
       fireEvent.drop(rows()[1]);
     }).not.toThrow();
-    expect(onChange).toHaveBeenCalledWith(['Octopus', 'Cash', 'FPS']);
+    expect(onChange).toHaveBeenCalledWith(["Octopus", "Cash", "FPS"]);
   });
 
-  it('does not mutate the array it was given', () => {
+  it("does not mutate the array it was given", () => {
     const methods = [...METHODS];
     const onChange = vi.fn();
     const { container } = render(
       <MethodList title="t" methods={methods} onAdd={vi.fn()} onChange={onChange} />,
     );
-    const rows = Array.from(container.querySelectorAll('.method-row'));
+    const rows = Array.from(container.querySelectorAll(".method-row"));
     drag(rows, 0, 2);
     expect(methods).toEqual(METHODS);
   });

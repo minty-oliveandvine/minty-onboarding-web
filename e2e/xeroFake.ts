@@ -26,14 +26,19 @@
 //
 // Everything not listed here reaches the real stack.
 
-import type { Page, Request, Route } from '@playwright/test';
-import { accountCodes, billCodes, FAKE_ORG } from './fixtures/xero';
-import { BASE_URL } from './urls';
+import type { Page, Request, Route } from "@playwright/test";
+import { accountCodes, billCodes, FAKE_ORG } from "./fixtures/xero";
+import { BASE_URL } from "./urls";
 
 export type XeroOutcome =
-  | { kind: 'connected' }
-  | { kind: 'mismatch'; expected: string }
-  | { kind: 'conflict'; conflictEntity: string; conflictEntityId?: string; conflictCanMove?: boolean };
+  | { kind: "connected" }
+  | { kind: "mismatch"; expected: string }
+  | {
+      kind: "conflict";
+      conflictEntity: string;
+      conflictEntityId?: string;
+      conflictCanMove?: boolean;
+    };
 
 export type XeroFake = {
   /** What the fake currently tells the wizard the backend believes. */
@@ -47,7 +52,7 @@ export type XeroFake = {
   readonly posted: Record<string, unknown[]>;
 };
 
-const API = '/api/onboarding/';
+const API = "/api/onboarding/";
 
 /**
  * A JSON reply the wizard's cross-origin fetch will accept.
@@ -62,8 +67,8 @@ async function fulfillJson(route: Route, body: unknown, status = 200): Promise<v
 
 function cors(request: Request): Record<string, string> {
   return {
-    'access-control-allow-origin': request.headers()['origin'] || BASE_URL,
-    vary: 'Origin',
+    "access-control-allow-origin": request.headers()["origin"] || BASE_URL,
+    vary: "Origin",
   };
 }
 
@@ -73,10 +78,10 @@ async function preflight(route: Route): Promise<void> {
     status: 204,
     headers: {
       ...cors(req),
-      'access-control-allow-methods': 'GET,POST,OPTIONS',
-      'access-control-allow-headers':
-        req.headers()['access-control-request-headers'] || 'authorization, content-type',
-      'access-control-max-age': '600',
+      "access-control-allow-methods": "GET,POST,OPTIONS",
+      "access-control-allow-headers":
+        req.headers()["access-control-request-headers"] || "authorization, content-type",
+      "access-control-max-age": "600",
     },
   });
 }
@@ -95,7 +100,7 @@ export async function installXeroFake(
 ): Promise<XeroFake> {
   let connected = false;
   let releaseFails = false;
-  let outcome: XeroOutcome = { kind: 'connected' };
+  let outcome: XeroOutcome = { kind: "connected" };
   const posted: Record<string, unknown[]> = {};
   let createdContacts = 0;
 
@@ -108,7 +113,7 @@ export async function installXeroFake(
     page.route(
       (url) => url.pathname === `${API}${name}`,
       async (route, request) => {
-        if (request.method() === 'OPTIONS') return preflight(route);
+        if (request.method() === "OPTIONS") return preflight(route);
         try {
           await handler(route, request);
         } catch (err) {
@@ -127,29 +132,29 @@ export async function installXeroFake(
 
   // 1. The OAuth round-trip, collapsed to its final redirect.
   await page.route(
-    (url) => url.pathname === '/xero_connect',
+    (url) => url.pathname === "/xero_connect",
     async (route) => {
-      const back = new URL('/', BASE_URL);
-      back.searchParams.set('xero', outcome.kind);
-      back.searchParams.set('step', '3');
-      if (outcome.kind === 'connected') {
+      const back = new URL("/", BASE_URL);
+      back.searchParams.set("xero", outcome.kind);
+      back.searchParams.set("step", "3");
+      if (outcome.kind === "connected") {
         connected = true;
-        back.searchParams.set('org', org);
-      } else if (outcome.kind === 'mismatch') {
-        back.searchParams.set('expected', outcome.expected);
+        back.searchParams.set("org", org);
+      } else if (outcome.kind === "mismatch") {
+        back.searchParams.set("expected", outcome.expected);
       } else {
-        back.searchParams.set('conflict_entity', outcome.conflictEntity);
+        back.searchParams.set("conflict_entity", outcome.conflictEntity);
         // What the dialog needs to OFFER the move, not only name the company.
         if (outcome.conflictEntityId)
-          back.searchParams.set('conflict_entity_id', outcome.conflictEntityId);
-        if (outcome.conflictCanMove) back.searchParams.set('conflict_can_move', '1');
+          back.searchParams.set("conflict_entity_id", outcome.conflictEntityId);
+        if (outcome.conflictCanMove) back.searchParams.set("conflict_can_move", "1");
       }
       await route.fulfill({ status: 302, headers: { location: back.toString() } });
     },
   );
 
   // 2. The real state, with only the Xero-owned fields replaced.
-  await api('state', async (route) => {
+  await api("state", async (route) => {
     const response = await route.fetch();
     if (!response.ok()) return route.fulfill({ response });
     const real = await response.json();
@@ -158,22 +163,22 @@ export async function installXeroFake(
     // which the wizard reads as "no state", falls back to standalone mode, and then
     // fakes the Xero connection locally without ever leaving the page.
     const headers = { ...response.headers() };
-    delete headers['content-length'];
-    delete headers['content-encoding'];
-    delete headers['transfer-encoding'];
+    delete headers["content-length"];
+    delete headers["content-encoding"];
+    delete headers["transfer-encoding"];
     await route.fulfill({
       status: response.status(),
       headers,
       json: {
         ...real,
-        xero: { connected, org: connected ? org : '' },
-        modules: ['PETTY_CASH', 'PAYMENT_REQUEST'],
+        xero: { connected, org: connected ? org : "" },
+        modules: ["PETTY_CASH", "PAYMENT_REQUEST"],
       },
     });
   });
 
-  await api('xero/disconnect', async (route, request) => {
-    record('xero/disconnect', await jsonBody(request));
+  await api("xero/disconnect", async (route, request) => {
+    record("xero/disconnect", await jsonBody(request));
     connected = false;
     await fulfillJson(route, { ok: true, connected: false });
   });
@@ -181,39 +186,44 @@ export async function installXeroFake(
   // Freeing the OTHER company's organisation - the first half of the move the conflict
   // dialog offers. The wizard then navigates to /xero_connect again, which the route above
   // answers with whatever outcome is set, so a test can let the retry succeed.
-  await api('xero/release', async (route, request) => {
-    record('xero/release', await jsonBody(request));
-    if (releaseFails) return fulfillJson(route, { error: 'Xero would not let go of that one.' }, 502);
-    await fulfillJson(route, { ok: true, released: true, entity_name: 'Another Entity Ltd' });
+  await api("xero/release", async (route, request) => {
+    record("xero/release", await jsonBody(request));
+    if (releaseFails)
+      return fulfillJson(route, { error: "Xero would not let go of that one." }, 502);
+    await fulfillJson(route, { ok: true, released: true, entity_name: "Another Entity Ltd" });
   });
 
   // 3. Xero-backed data for steps 5-8.
-  await api('account-codes', async (route, request) => {
-    if (request.method() === 'GET') return fulfillJson(route, accountCodes);
-    record('account-codes', await jsonBody(request));
+  await api("account-codes", async (route, request) => {
+    if (request.method() === "GET") return fulfillJson(route, accountCodes);
+    record("account-codes", await jsonBody(request));
     await fulfillJson(route, { ok: true });
   });
 
-  await api('contacts', async (route, request) => {
-    record('contacts', await jsonBody(request));
+  await api("contacts", async (route, request) => {
+    record("contacts", await jsonBody(request));
     await fulfillJson(route, { ok: true });
   });
 
-  await api('contacts/create', async (route, request) => {
+  await api("contacts/create", async (route, request) => {
     const body = (await jsonBody(request)) as { name?: string } | null;
-    record('contacts/create', body);
+    record("contacts/create", body);
     createdContacts += 1;
-    await fulfillJson(route, { id: `contact-new-${createdContacts}`, label: body?.name || '' }, 201);
+    await fulfillJson(
+      route,
+      { id: `contact-new-${createdContacts}`, label: body?.name || "" },
+      201,
+    );
   });
 
-  await api('bill-codes', async (route, request) => {
-    if (request.method() === 'GET') return fulfillJson(route, billCodes);
-    record('bill-codes', await jsonBody(request));
+  await api("bill-codes", async (route, request) => {
+    if (request.method() === "GET") return fulfillJson(route, billCodes);
+    record("bill-codes", await jsonBody(request));
     await fulfillJson(route, { ok: true });
   });
 
   // 4. Keep All Set off Stripe.
-  await api('payment-method', async (route) => {
+  await api("payment-method", async (route) => {
     await fulfillJson(route, { has_payment_method: false, has_billing_consent: false, card: null });
   });
 

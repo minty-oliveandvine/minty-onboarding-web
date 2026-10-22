@@ -8,19 +8,19 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 
 ## The steps (`lib/wizardSteps.STEPS`)
 
-| # | Screen | Component | Writes |
-|---|---|---|---|
-| 1 | Basic Information — name, country, currency (all three required), phone, email (optional). A new company starts **empty**, Country and Currency included, like the phone's code (owner, 2026-10-19; *Select a country* / *Select a currency*); picking a country fills an empty currency with its own (`lib/countryCurrency.ts`) and moves the phone's code, and the browser's timezone goes with the save, with nothing on screen (`lib/browserTimezone.ts`) | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after |
-| 2 | Select Module — Petty Cash, Payment Request (the 9C hybrid, 2026-10-19 - see *Step 2's module cards* below); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds | `StepSelectModule` | `POST /modules`, the `billing/*` routes |
-| 3 | User Invite — **optional** (the 9E choices, 2026-10-19 - see *Step 3's choices* below): invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button *Ok* closes it (no Skip in it; *Skip for now* at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers *Resend* | `StepInvite` | `POST /invite`, `/invite/cancel`, `/invite/resend` |
-| 4 | Connect to Accounting System — Xero | `StepConnectXero` | Minty's `/xero_connect` ([xero-step.md](xero-step.md)) |
-| 5 | Sales Setting — electronic and delivery methods (both start empty; *Auto Fill* fills Flask's default set, *Revert* empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one), typed in the currency's decimal places (`currencyDecimals`; JPY is whole amounts) | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance` |
-| 6 | Account Code Setting — the expense accounts and the petty-cash account mapping | `StepAccountCode` | `POST /account-codes` |
-| 7 | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero; the open list says to type a name to add one) | `StepOthers` | `POST /contacts`, `/contacts/create` |
-| 8 | Payment Request Settings — the bills' account codes, and an optional default code from the ticked ones | `StepBills` | `POST /bill-codes` (`default_code`) |
-| 9 | All Set | `StepAllSet` | **`POST /finalize` on arrival**; *Try again* re-posts it after a failure; a 409 for unfinished setup lists each gap with *Go to <step>* (`returnToStep`, the one way out of the locked stepper), titles the screen *Almost there* and holds the confetti (it flies only once finalize succeeds); the needs-Xero dialog never opens over All Set |
+| #   | Screen                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Component          | Writes                                                                                                                                                                                                                                                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Basic Information — name, country, currency (all three required), phone, email (optional). A new company starts **empty**, Country and Currency included, like the phone's code (owner, 2026-10-19; _Select a country_ / _Select a currency_); picking a country fills an empty currency with its own (`lib/countryCurrency.ts`) and moves the phone's code, and the browser's timezone goes with the save, with nothing on screen (`lib/browserTimezone.ts`)  | `StepCreateEntity` | `POST /create` on the first advance, `PUT /entity/{id}` after                                                                                                                                                                                                                                                                                   |
+| 2   | Select Module — Petty Cash, Payment Request (the 9C hybrid, 2026-10-19 - see _Step 2's module cards_ below); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds                                     | `StepSelectModule` | `POST /modules`, the `billing/*` routes                                                                                                                                                                                                                                                                                                         |
+| 3   | User Invite — **optional** (the 9E choices, 2026-10-19 - see _Step 3's choices_ below): invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button _Ok_ closes it (no Skip in it; _Skip for now_ at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers _Resend_ | `StepInvite`       | `POST /invite`, `/invite/cancel`, `/invite/resend`                                                                                                                                                                                                                                                                                              |
+| 4   | Connect to Accounting System — Xero                                                                                                                                                                                                                                                                                                                                                                                                                            | `StepConnectXero`  | Minty's `/xero_connect` ([xero-step.md](xero-step.md))                                                                                                                                                                                                                                                                                          |
+| 5   | Sales Setting — electronic and delivery methods (both start empty; _Auto Fill_ fills Flask's default set, _Revert_ empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one), typed in the currency's decimal places (`currencyDecimals`; JPY is whole amounts)                                                                                                                                | `StepSalesSetting` | `POST /sales-methods`, `POST /opening-balance`                                                                                                                                                                                                                                                                                                  |
+| 6   | Account Code Setting — the expense accounts and the petty-cash account mapping                                                                                                                                                                                                                                                                                                                                                                                 | `StepAccountCode`  | `POST /account-codes`                                                                                                                                                                                                                                                                                                                           |
+| 7   | Others — the three petty-cash contacts (director, cash sale, discrepancy; a new one can be created in Xero; the open list says to type a name to add one)                                                                                                                                                                                                                                                                                                      | `StepOthers`       | `POST /contacts`, `/contacts/create`                                                                                                                                                                                                                                                                                                            |
+| 8   | Payment Request Settings — the bills' account codes, and an optional default code from the ticked ones                                                                                                                                                                                                                                                                                                                                                         | `StepBills`        | `POST /bill-codes` (`default_code`)                                                                                                                                                                                                                                                                                                             |
+| 9   | All Set                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `StepAllSet`       | **`POST /finalize` on arrival**; _Try again_ re-posts it after a failure; a 409 for unfinished setup lists each gap with _Go to <step>_ (`returnToStep`, the one way out of the locked stepper), titles the screen _Almost there_ and holds the confetti (it flies only once finalize succeeds); the needs-Xero dialog never opens over All Set |
 
-The rail groups 5–7 as *Petty Cash Settings* and shows 8 only when that module was
+The rail groups 5–7 as _Petty Cash Settings_ and shows 8 only when that module was
 chosen (`getDisplaySteps`); `isStepComplete` decides the ticks. Its tiles are buttons (Round
 2.1, 2026-10-16): a reachable tile takes Tab and Enter, the active one is `aria-current="step"`,
 and one that leads nowhere (locked, or every tile once on All Set) is `aria-disabled` and out of
@@ -48,7 +48,7 @@ progress, with the old live app's bigger, coloured module art. Each card (`StepS
 - **always shows its benefit line** (`MODULES[].desc`). It used to appear only over the card on
   hover/focus, which a touch screen never shows.
 - **shows the picked state three ways**: the selected (teal) border, a filled check box, and the
-  word *Selected* (*Select* when not) - never colour alone.
+  word _Selected_ (_Select_ when not) - never colour alone.
 - On a phone (≤ 700px) the cards stack full width; from 701px they sit side by side at 300px.
 
 Unchanged: multi-select, Save & Next held until one is picked (with its reason), the save-then-
@@ -76,24 +76,24 @@ The struck subtotal carries no code, because it sits directly above one. Tests:
 
 The step is optional and says so with three explicit choices, not copy alone:
 
-- **An *Optional* pill** (neutral `pill-status off`) beside the *User Invite* title, and one line
+- **An _Optional_ pill** (neutral `pill-status off`) beside the _User Invite_ title, and one line
   under it.
-- **The people to invite**: one row (a `<fieldset>`, *Invite a person*) to start;
-  **+ Add another person** (secondary button) adds *Person 2*, *Person 3*… each with a 44px
+- **The people to invite**: one row (a `<fieldset>`, _Invite a person_) to start;
+  **+ Add another person** (secondary button) adds _Person 2_, _Person 3_… each with a 44px
   remove button. Rows live in the component only, never in `WizardState`.
 - **Footer**: Back · Save & Exit · **Skip for now** (a secondary button, same row/stack, never a
   link) · **Send invitations** (primary).
-  - *Send invitations* sends every complete row (one `POST /invite` each), ignores empty rows,
+  - _Send invitations_ sends every complete row (one `POST /invite` each), ignores empty rows,
     and moves on once all went out. A row that fails (or whose email did not go out) stays
     filled and the step stays. A started-but-unfinished row refuses the send: each field gives
-    its Part 11 message (*The role is still empty. Choose their role to send this invitation.*),
-    one problem takes focus, two or more raise the error summary (with *Person N:* once there
+    its Part 11 message (_The role is still empty. Choose their role to send this invitation._),
+    one problem takes focus, two or more raise the error summary (with _Person N:_ once there
     are several rows). Empty fields turn red only after that refused send; the email's format
     message waits for the field to be left once, then follows each keystroke. With nothing typed
     and nobody invited it is disabled with its reason beside it.
-  - *Skip for now* moves on and **sends nothing**, whatever the rows hold - a half-filled row
+  - _Skip for now_ moves on and **sends nothing**, whatever the rows hold - a half-filled row
     never blocks it. Once somebody has been invited and the rows are empty, the primary reads
-    *Continue* and Skip is not shown (they would be the same move).
+    _Continue_ and Skip is not shown (they would be the same move).
 - `isStepComplete(3)` is still always true and `deriveResumeStep` still counts step 3 as saved
   only when an invitation was sent, so skipping leaves nothing to resume to.
 
@@ -102,8 +102,9 @@ Tests: `StepInvite.flow.test.tsx` (the choices), `StepInvite.test.tsx` (the arri
 
 ### Phone Number (Step 1, `components/PhoneField.tsx`, since 2026-10-12)
 
-A dial-code picker beside the number, labelled *Phone Number (optional)* (it was *Contact
-Phone*, an 8–11-digit box with no country code). No hint line under it (the user's call).
+A dial-code picker beside the number, labelled _Phone Number (optional)_ (it was _Contact
+Phone_, an 8–11-digit box with no country code). No hint line under it (the user's call).
+
 - **The picker** is a searchable `MintySelect`: the menu rows read `Hong Kong +852`, the closed
   field `HK +852` (`valueLabel`). No flag emoji: Windows draws them as letters. Its list is
   `GET /countries`' `phone_code`, so a country without one is not offered. Those codes live in
@@ -124,10 +125,10 @@ Phone*, an 8–11-digit box with no country code). No hint line under it (the us
 - **The rule** (`lib/validation.ts` `phoneError`, mirrored in the API's `resolve.PHONE_LENGTHS`,
   change both together): exactly 8 digits for +852, the one market Minty sells in (the user,
   2026-10-12: strict on Hong Kong only for now - add a code when its market opens); otherwise
-  E.164's bounds (4+ national digits, 15 in all). The message (*A +852 number has 8 digits.*,
+  E.164's bounds (4+ national digits, 15 in all). The message (_A +852 number has 8 digits._,
   worded by code because the registry's names are the official ones, "Hong Kong SAR China")
   waits for the first blur; Save & Next stays off while it stands. A number with no code to
-  judge it by is blocked the same way (*Please choose a country code.*), so a bare number can
+  judge it by is blocked the same way (_Please choose a country code._), so a bare number can
   never reach the API, which refuses it.
 - **No digit past the maximum** (`maxNationalDigits`: 8 for +852, else what 15 leaves after the
   code). A keystroke on a full number is refused outright (so a digit typed mid-number cannot
@@ -153,15 +154,15 @@ summaries; change the two together.
 
 ## Saving and resuming
 
-- Every advance and *Save & Exit* post `saved_step` (`POST /saved-step`), so a resume
+- Every advance and _Save & Exit_ post `saved_step` (`POST /saved-step`), so a resume
   lands where the person left off; the app also mirrors state and the furthest step
   reached into `sessionStorage`.
 - On launch with an `entity_id` (or after a reload) the app reads `GET /state` and
   **trusts the database**: the saved step is where it lands; the backend's
   `current_step` / `max_reached` only raise the ceiling of unlocked steps — the backend
   derives its number from a different ordering (modules → Xero → petty cash → bills)
-  and using it as the landing step once jumped people straight to *Connect to
-  Accounting*. Never make the two orderings one.
+  and using it as the landing step once jumped people straight to _Connect to
+  Accounting_. Never make the two orderings one.
 - `fresh=1` starts a brand-new company even when an unfinished one exists.
 - **Left unfinished, it is mailed about (2026-10-01).** minty-subscription-api's daily pass sends
   whoever started a company still in setup a "Finish setting up {Company} on Minty" email 1, 3
@@ -175,7 +176,7 @@ summaries; change the two together.
 Reaching step 9 runs `completeOnboarding()`: it submits the opening balance and posts
 `/finalize`, which flips the company from `onboarding` to `connected`/`disconnected` and
 starts the trials (minty-onboarding-api → minty-subscription-api `trials/start`, 2026-10-06);
-the screen itself commits nothing, and *Go to entity list* leaves.
+the screen itself commits nothing, and _Go to entity list_ leaves.
 
 **The trials have no subscriber** (the user, 2026-10-08). Starting a trial is free and
 commits nobody, so finalize establishes no payer for the company. The wizard's one door onto
@@ -183,8 +184,8 @@ the billing relationship is **step 2's billing sheet** (`authorizeBilling`, `lib
 -> `POST /billing/authorize`), and it is skippable: a person who skips it finishes with
 card-free trials nobody is liable for. Those trials expire at term end rather than
 converting, every admin of the company may act on its subscription, and any of them can
-confirm billing later with *Activate Subscription* on minty-web's module settings page.
-Nothing in the wizard changes - this is what *Add Payment Now* on All Set is for.
+confirm billing later with _Activate Subscription_ on minty-web's module settings page.
+Nothing in the wizard changes - this is what _Add Payment Now_ on All Set is for.
 
 Complete the sheet and the company DOES get its subscriber: the confirm is made on step 2,
 before the module rows exist, so the engine lands the stamp at finalize
@@ -196,14 +197,14 @@ a wizard completed by a different member still credits the person who agreed to 
 saved session (`localStorage`/`sessionStorage`) is cleared only after a successful one, so a
 reload after a failure lands back on All Set and finishes. On failure `StepAllSet` says
 "Your N-day <module> trial hasn't started yet.", shows the server's sentence inline
-(`role="alert"`, `.billing-error`; no toast), and its primary button is *Try again* (it
+(`role="alert"`, `.billing-error`; no toast), and its primary button is _Try again_ (it
 re-runs the commit and replaces `commit.current`, so the billing sheet's `onDone` still
-awaits it). *Add Payment Now* and the payment nudge stay hidden until the trial exists;
-*Go to entity list* stays available (disabled while a retry is in flight).
+awaits it). _Add Payment Now_ and the payment nudge stay hidden until the trial exists;
+_Go to entity list_ stays available (disabled while a retry is in flight).
 
 **Never navigate a test straight to step 9**
 (`e2e/README.md`, `land()` in `e2e/onboardingApi.ts` refuses it); `walk.spec.ts` reaches it
-by clicking *Complete* on step 8 against the disposable entity.
+by clicking _Complete_ on step 8 against the disposable entity.
 
 ## Copy and errors
 
@@ -215,7 +216,7 @@ does not know.
 ### Dates
 
 Every date the wizard shows is `@minty/shared/dates`' format, "12 Sep 2026" (owner,
-2026-10-21; it was "12 SEP 2026"): Xero's *Last connected* is `formatDay(todayIso())` - today
+2026-10-21; it was "12 SEP 2026"): Xero's _Last connected_ is `formatDay(todayIso())` - today
 in Hong Kong, not the browser's zone - and All Set's trial end is `formatInstantDay`, the day
 the trial ends in Hong Kong. Step 5's opening-date cap falls back to `todayIso()` when the
 server's time cannot be read. Tests: `lib/__tests__/date.test.ts`.
@@ -228,7 +229,7 @@ Unit (`npm test`): `lib/__tests__/wizardSteps.test.ts`, `validation.test.ts`, `i
 answer), `resume.spec.ts` (the database decides the landing step; `saved_step` and
 `current_step` may disagree; an out-of-range step is refused), `xero.spec.ts`,
 `walk.spec.ts` (the whole wizard to All Set, Xero faked; the first finalize is forced to a
-502, the failure UI asserted, then *Try again* runs the real one) — 23 on 2026-09-18 against the
+502, the failure UI asserted, then _Try again_ runs the real one) — 23 on 2026-09-18 against the
 deployed hosts; 23 passed on 2026-10-06.
 
 ## Required fields
@@ -237,7 +238,7 @@ deployed hosts; 23 passed on 2026-10-06.
 only once Next has actually been refused (every gated step already keeps a `showErrors` flag
 for that, so no new state was needed).
 
-- The mark is `.req` in `app/globals.css`, commented *"shared by every form"* since it was
+- The mark is `.req` in `app/globals.css`, commented _"shared by every form"_ since it was
   added. As of 2026-10-09 it finally is: it had been applied to 5 fields out of ~19.
 - It is **`aria-hidden`**, because an asterisk read aloud is "star". Requiredness is announced
   on the CONTROL instead - `aria-required` on the inputs, and `MintySelect` takes `required`
@@ -259,14 +260,14 @@ never counts a company without a country or currency as past step 1; the onboard
 one too). Save & Next is **not** disabled for them - only while saving, or while a typed phone or
 email is malformed. Pressing it with one empty is a refused submit (`showErrors`):
 
-- each empty field turns red and says so, in Part 11 wording - *The company name is still empty.
-  Add the company name to continue.*, *The country is still empty. Choose the company's country
-  to continue.*, *The currency is still empty. Choose the company's currency to continue.* -
+- each empty field turns red and says so, in Part 11 wording - _The company name is still empty.
+  Add the company name to continue._, _The country is still empty. Choose the company's country
+  to continue._, _The currency is still empty. Choose the company's currency to continue._ -
   and its message clears the moment the field has a value;
 - one problem moves focus to that field; two or more show `components/steps/ErrorSummary.tsx`
   (`.error-summary`, a copy of minty-payment-request-web's Part 15.3 summary in this app's
   tokens) at the top of the form, which takes focus and links to each field;
-- each label carries the red `*` and a screen-reader-only *(required)* (`.sr-only`), the control
+- each label carries the red `*` and a screen-reader-only _(required)_ (`.sr-only`), the control
   `aria-required` (`MintySelect` now takes `id` and `ariaDescribedBy` for the label and message);
 - Save & Exit is never blocked by them (its save is best-effort; an entity the API refuses is
   simply not saved).

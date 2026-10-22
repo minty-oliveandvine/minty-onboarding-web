@@ -1,7 +1,7 @@
-import { withMintyDefaults } from '@minty/shared/next';
-import path from 'node:path';
+import { withMintyDefaults } from "@minty/shared/next";
+import path from "node:path";
 
-import { FLASK_BASE } from './lib/apiRoutes';
+import { FLASK_BASE } from "./lib/apiRoutes";
 
 /**
  * Sign-in is minty-web's since phase 2 (2026-10-05): log in, sign up and invitations were this
@@ -18,13 +18,13 @@ export default withMintyDefaults({
   async redirects() {
     return [
       {
-        source: '/auth',
-        has: [{ type: 'query', key: 'mode', value: 'signup' }],
+        source: "/auth",
+        has: [{ type: "query", key: "mode", value: "signup" }],
         destination: `${FLASK_BASE}/register`,
         permanent: false,
       },
-      { source: '/auth', destination: `${FLASK_BASE}/`, permanent: false },
-      { source: '/auth/confirm', destination: `${FLASK_BASE}/`, permanent: false },
+      { source: "/auth", destination: `${FLASK_BASE}/`, permanent: false },
+      { source: "/auth/confirm", destination: `${FLASK_BASE}/`, permanent: false },
     ];
   },
   turbopack: {
@@ -38,7 +38,7 @@ export default withMintyDefaults({
   // and the production throw live where both are read: lib/apiRoutes.ts, through
   // @minty/shared/env's envUrl.
   env: {
-    PETTY_CASH_URL: process.env.PETTY_CASH_URL ?? '',
-    ONBOARDING_API_URL: process.env.ONBOARDING_API_URL ?? '',
+    PETTY_CASH_URL: process.env.PETTY_CASH_URL ?? "",
+    ONBOARDING_API_URL: process.env.ONBOARDING_API_URL ?? "",
   },
 });

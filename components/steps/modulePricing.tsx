@@ -11,12 +11,12 @@
 // `app/globals.css` holds as `--mv2-module-*` tokens: the card's identity band is drawn
 // on the wash, never from a hex here (9C, 2026-10-19).
 
-import CardBrand from '../CardBrand';
-import Icon from '../Icon';
-import { formatPrice } from '@minty/shared/money';
-import { MODULE_ID_BY_CODE } from '../../lib/modules';
-import type { ModuleId, Plan, PlanCatalog } from '../../lib/api';
-import type { PaymentMethod } from '../../lib/billing';
+import CardBrand from "../CardBrand";
+import Icon from "../Icon";
+import { formatPrice } from "@minty/shared/money";
+import { MODULE_ID_BY_CODE } from "../../lib/modules";
+import type { ModuleId, Plan, PlanCatalog } from "../../lib/api";
+import type { PaymentMethod } from "../../lib/billing";
 
 /** One module card in the picker. `price` is the static fallback copy. */
 export type ModuleCard = {
@@ -25,7 +25,7 @@ export type ModuleCard = {
   desc: string;
   img: string;
   /** Part 13 module identity: `.module-pick.is-<tone>` picks the module's colour tokens. */
-  tone: 'pettycash' | 'payment';
+  tone: "pettycash" | "payment";
   price: string;
   /** An Icon member to draw instead of `img` (in the module's ink). No card sets it today. */
   icon?: keyof typeof Icon;
@@ -35,20 +35,20 @@ export type ModuleCard = {
 export type PricedRow = { module: ModuleCard; plan: Plan; on: boolean };
 export const MODULES: ModuleCard[] = [
   {
-    id: 'pettyCash',
-    title: 'Petty Cash',
-    desc: 'Track and reimburse small office expenses with receipt capture and instant approvals.',
-    img: '/pettycash-icon.png',
-    tone: 'pettycash',
-    price: 'HKD 280 per Month',
+    id: "pettyCash",
+    title: "Petty Cash",
+    desc: "Track and reimburse small office expenses with receipt capture and instant approvals.",
+    img: "/pettycash-icon.png",
+    tone: "pettycash",
+    price: "HKD 280 per Month",
   },
   {
-    id: 'bills',
-    title: 'Payment Request',
-    desc: 'Capture vendor payments, schedule payments, and reconcile with your accounting ledger.',
-    img: '/payment-icon.png',
-    tone: 'payment',
-    price: 'HKD 280 per Month',
+    id: "bills",
+    title: "Payment Request",
+    desc: "Capture vendor payments, schedule payments, and reconcile with your accounting ledger.",
+    img: "/payment-icon.png",
+    tone: "payment",
+    price: "HKD 280 per Month",
   },
 ];
 
@@ -79,8 +79,8 @@ export function plansByModuleId(
 export function priceSelection(catalog: PlanCatalog | null | undefined, picked: PricedRow[]) {
   // The ISO code, never `currency_symbol`: every amount is "HKD 400", never "HK$ 400" (owner,
   // 2026-10-21, @minty/shared/money). No code -> '' and the figure stands alone.
-  const currencyCode = picked[0].plan.currency_code || '';
-  const interval = picked[0].plan.billing_interval || 'month';
+  const currencyCode = picked[0].plan.currency_code || "";
+  const interval = picked[0].plan.billing_interval || "month";
   const subtotal = picked.reduce((sum, r) => sum + r.plan.amount, 0);
 
   // The bundle is a price in its own right, not a per-line discount, so it applies
@@ -186,7 +186,7 @@ export function ModuleSubscriptionSummary({
     <aside className="sub-summary" aria-live="polite">
       <h3 className="sub-summary-title">Subscription Summary</h3>
 
-      <div className={'sub-plan ' + (isBundle ? 'is-bundle' : 'is-single')}>
+      <div className={"sub-plan " + (isBundle ? "is-bundle" : "is-single")}>
         <span className="sub-row-label">Selected plan</span>
         <div className="sub-plan-value">
           {isBundle ? (

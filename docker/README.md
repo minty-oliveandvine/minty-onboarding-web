@@ -28,10 +28,10 @@ Then open http://localhost:3030.
 Backend URLs are read from the environment (never hardcoded). Edit `.env` to
 point the frontend at a different backend:
 
-| Variable             | Default                 | Purpose                                                                          |
-| -------------------- | ----------------------- | -------------------------------------------------------------------------------- |
-| `PETTY_CASH_URL`     | `http://localhost:8000` | Petty Cash (the Minty Flask app), read by `lib/apiRoutes.ts`.                    |
-| `ONBOARDING_API_URL` | `http://localhost:8030` | minty-onboarding-api (Django). Routing lives in `lib/apiRoutes.ts`.              |
+| Variable             | Default                 | Purpose                                                             |
+| -------------------- | ----------------------- | ------------------------------------------------------------------- |
+| `PETTY_CASH_URL`     | `http://localhost:8000` | Petty Cash (the Minty Flask app), read by `lib/apiRoutes.ts`.       |
+| `ONBOARDING_API_URL` | `http://localhost:8030` | minty-onboarding-api (Django). Routing lives in `lib/apiRoutes.ts`. |
 
 `.env.example` ships with safe local defaults — a new dev just copies it.
 

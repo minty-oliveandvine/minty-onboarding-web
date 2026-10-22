@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * PORT of minty-web/components/ui/ModalFrame.tsx (Figma 04-G / section 06):
@@ -12,16 +12,16 @@
  * (Minty static/js/minty_dialog.js) follow it. Change them together.
  */
 
-import { useEffect, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
-import { useMounted } from '@minty/shared/clientValue';
+import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useMounted } from "@minty/shared/clientValue";
 
 export function ModalFrame({
   labelledBy,
   busy = false,
   onDismiss,
-  dismissLabel = 'Close',
-  className = '',
+  dismissLabel = "Close",
+  className = "",
   children,
 }: {
   /** The id of the heading that names the dialog. */
@@ -38,10 +38,10 @@ export function ModalFrame({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !busy) onDismiss();
+      if (e.key === "Escape" && !busy) onDismiss();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [busy, onDismiss]);
 
   if (!mounted) return null;
@@ -58,7 +58,7 @@ export function ModalFrame({
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
-        className={'mw-modal-card ' + className}
+        className={"mw-modal-card " + className}
       >
         {children}
       </div>

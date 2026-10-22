@@ -12,6 +12,6 @@
 //   npm test          once, no browser -- the per-commit gate
 //   npm run test:watch
 //   npm run test:e2e  Playwright, needs the whole stack up (see e2e/README.md)
-import { mintyVitest } from '@minty/shared/vitest';
+import { mintyVitest } from "@minty/shared/vitest";
 
 export default mintyVitest(import.meta.url);

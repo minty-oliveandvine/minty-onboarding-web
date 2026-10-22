@@ -20,16 +20,16 @@
 // it. They toggle a module card on screen only (nothing is saved), and "Skip for now" moves
 // the saved step on, which is put back afterwards.
 
-import { expect, test, type Page } from '@playwright/test';
-import { reachable, requireCredentials } from './helpers';
-import * as api from './onboardingApi';
-import { BASE_URL } from './urls';
+import { expect, test, type Page } from "@playwright/test";
+import { reachable, requireCredentials } from "./helpers";
+import * as api from "./onboardingApi";
+import { BASE_URL } from "./urls";
 
 /** The Accounting step, standalone. `cancelled` is the "came back with nothing" return. */
-const STEP_4 = '/?xero=cancelled&step=3';
+const STEP_4 = "/?xero=cancelled&step=3";
 /** The same step with the refused-connect dialog up, and a company it may offer to free. */
 const REFUSED =
-  '/?xero=conflict&conflict_entity=A%20Company%20With%20A%20Fairly%20Long%20Name&conflict_entity_id=e-x&conflict_can_move=1&step=3';
+  "/?xero=conflict&conflict_entity=A%20Company%20With%20A%20Fairly%20Long%20Name&conflict_entity_id=e-x&conflict_can_move=1&step=3";
 
 const WIDTHS = [360, 768, 1440] as const;
 
@@ -45,44 +45,47 @@ for (const width of WIDTHS) {
   test(`the Accounting step fits the screen at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(STEP_4);
-    await expect(page.locator('.status-card .pill-status')).toBeVisible();
+    await expect(page.locator(".status-card .pill-status")).toBeVisible();
 
-    expect(await pageOverflow(page), 'step 4 at rest').toBeLessThanOrEqual(0);
+    expect(await pageOverflow(page), "step 4 at rest").toBeLessThanOrEqual(0);
 
     // The tooltip is in the layout whether or not it is shown, so check it both ways - and
     // opened, because that is when its box is the one a person can actually run into.
-    const tip = page.locator('.info-tip').first();
+    const tip = page.locator(".info-tip").first();
     await tip.hover();
-    const pop = page.locator('.info-tip-pop').first();
-    await expect(pop).toHaveCSS('opacity', '1');
+    const pop = page.locator(".info-tip-pop").first();
+    await expect(pop).toHaveCSS("opacity", "1");
 
     const box = await pop.boundingBox();
-    expect(box, 'the tooltip has a box').not.toBeNull();
-    expect(box!.x, 'tooltip left edge is on screen').toBeGreaterThanOrEqual(-0.5);
-    expect(box!.x + box!.width, 'tooltip right edge is on screen').toBeLessThanOrEqual(width + 0.5);
+    expect(box, "the tooltip has a box").not.toBeNull();
+    expect(box!.x, "tooltip left edge is on screen").toBeGreaterThanOrEqual(-0.5);
+    expect(box!.x + box!.width, "tooltip right edge is on screen").toBeLessThanOrEqual(width + 0.5);
     // Clamping it must not shrink it to a column of single words.
-    expect(box!.width, 'the tooltip is still readable').toBeGreaterThan(120);
-    expect(await pageOverflow(page), 'step 4 with the tooltip open').toBeLessThanOrEqual(0);
+    expect(box!.width, "the tooltip is still readable").toBeGreaterThan(120);
+    expect(await pageOverflow(page), "step 4 with the tooltip open").toBeLessThanOrEqual(0);
   });
 
   test(`the refused-connect dialog fits the screen at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(REFUSED);
 
-    const dialog = page.getByRole('dialog');
+    const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     // Minty sits beside the title, as minty-web's ConfirmDialog draws her.
-    await expect(dialog.locator('img.mw-dialog-figure')).toBeVisible();
+    await expect(dialog.locator("img.mw-dialog-figure")).toBeVisible();
     // Both answers are reachable, and big enough to hit on a phone.
-    for (const name of ['Go back', 'Move it here']) {
-      const button = dialog.getByRole('button', { name });
+    for (const name of ["Go back", "Move it here"]) {
+      const button = dialog.getByRole("button", { name });
       await expect(button).toBeVisible();
       const box = await button.boundingBox();
       expect(box!.height, `"${name}" is a 44px target`).toBeGreaterThanOrEqual(44);
     }
     // A long company name must wrap inside the card, not push it wide.
-    expect(await dialog.evaluate((e) => e.scrollWidth - e.clientWidth), 'inside the card').toBeLessThanOrEqual(0);
-    expect(await pageOverflow(page), 'the page behind the dialog').toBeLessThanOrEqual(0);
+    expect(
+      await dialog.evaluate((e) => e.scrollWidth - e.clientWidth),
+      "inside the card",
+    ).toBeLessThanOrEqual(0);
+    expect(await pageOverflow(page), "the page behind the dialog").toBeLessThanOrEqual(0);
   });
 }
 
@@ -93,12 +96,12 @@ for (const width of WIDTHS) {
     const original = await api.stashSavedStep(request, creds);
     try {
       await api.land(page, request, creds, 2);
-      const cards = page.getByRole('checkbox');
+      const cards = page.getByRole("checkbox");
       await expect(cards).toHaveCount(2);
-      for (const name of ['Petty Cash', 'Payment Request']) {
-        const card = page.getByRole('checkbox', { name });
+      for (const name of ["Petty Cash", "Payment Request"]) {
+        const card = page.getByRole("checkbox", { name });
         // The benefit line is on the card at rest, not behind a hover.
-        await expect(card.locator('.mp-desc')).toBeVisible();
+        await expect(card.locator(".mp-desc")).toBeVisible();
         const box = await card.boundingBox();
         expect(box!.x, `${name} starts on screen`).toBeGreaterThanOrEqual(-0.5);
         expect(box!.x + box!.width, `${name} ends on screen`).toBeLessThanOrEqual(width + 0.5);
@@ -106,15 +109,15 @@ for (const width of WIDTHS) {
       // Phone: stacked, one card per row.
       if (width === 360) {
         const [a, b] = [await cards.nth(0).boundingBox(), await cards.nth(1).boundingBox()];
-        expect(b!.y, 'the cards stack').toBeGreaterThanOrEqual(a!.y + a!.height);
+        expect(b!.y, "the cards stack").toBeGreaterThanOrEqual(a!.y + a!.height);
       }
       // Picked = a check and the word, on screen only (Save & Next is not pressed).
       const first = cards.nth(0);
-      const was = await first.getAttribute('aria-checked');
-      await first.press('Space');
-      await expect(first).toHaveAttribute('aria-checked', was === 'true' ? 'false' : 'true');
-      await expect(first.locator('.mp-state')).toHaveText(was === 'true' ? 'Select' : 'Selected');
-      expect(await pageOverflow(page), 'step 2').toBeLessThanOrEqual(0);
+      const was = await first.getAttribute("aria-checked");
+      await first.press("Space");
+      await expect(first).toHaveAttribute("aria-checked", was === "true" ? "false" : "true");
+      await expect(first.locator(".mp-state")).toHaveText(was === "true" ? "Select" : "Selected");
+      expect(await pageOverflow(page), "step 2").toBeLessThanOrEqual(0);
     } finally {
       await api.restoreSavedStep(request, creds, original);
     }
@@ -126,26 +129,29 @@ for (const width of WIDTHS) {
     const original = await api.stashSavedStep(request, creds);
     try {
       await api.land(page, request, creds, 3);
-      await page.getByRole('dialog').getByRole('button', { name: 'Ok' }).click();
-      await expect(page.locator('.invite-title-row')).toContainText('Optional');
-      await page.getByRole('button', { name: /Add another person/ }).click();
-      await expect(page.getByRole('group', { name: 'Person 2' })).toBeVisible();
+      await page.getByRole("dialog").getByRole("button", { name: "Ok" }).click();
+      await expect(page.locator(".invite-title-row")).toContainText("Optional");
+      await page.getByRole("button", { name: /Add another person/ }).click();
+      await expect(page.getByRole("group", { name: "Person 2" })).toBeVisible();
       // Half-filled on purpose: it must not hold Skip for now back.
-      await page.getByLabel(/First Name/).first().fill('Half');
-      expect(await pageOverflow(page), 'step 3').toBeLessThanOrEqual(0);
-      const skip = page.getByRole('button', { name: 'Skip for now' });
+      await page
+        .getByLabel(/First Name/)
+        .first()
+        .fill("Half");
+      expect(await pageOverflow(page), "step 3").toBeLessThanOrEqual(0);
+      const skip = page.getByRole("button", { name: "Skip for now" });
       const box = await skip.boundingBox();
       expect(box!.height, '"Skip for now" is a 44px target').toBeGreaterThanOrEqual(44);
       // Settled up front (true = a request went out), so the wait never rejects unobserved.
       const invited = page
-        .waitForRequest((r) => r.url().includes('/api/onboarding/invite'), { timeout: 1500 })
+        .waitForRequest((r) => r.url().includes("/api/onboarding/invite"), { timeout: 1500 })
         .then(
           () => true,
           () => false,
         );
       await skip.click();
-      await expect(page.locator('.step.active')).toHaveAttribute('data-step-key', '4');
-      expect(await invited, 'Skip for now sent an invitation').toBe(false);
+      await expect(page.locator(".step.active")).toHaveAttribute("data-step-key", "4");
+      expect(await invited, "Skip for now sent an invitation").toBe(false);
     } finally {
       await api.restoreSavedStep(request, creds, original);
     }

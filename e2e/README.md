@@ -12,13 +12,13 @@ never as _passed_.
 
 ## What has to be up
 
-| Service                 | Port | Repo                        |
-| ----------------------- | ---- | --------------------------- |
-| Next (the wizard)       | 3030 | this one — `npm run dev`    |
-| Flask (Minty)           | 8000 (the owner's local layout, 2026-10-16) | `C:\Github\Minty`              |
-| Onboarding API (Django) | 8030 | `C:\Github\minty-onboarding-api` |
-| Subscription API (Django) | 8000 | `C:\Github\minty-subscription-api` — finalize's trial start (2026-10-06) |
-| PostgreSQL              | 5432 | —                           |
+| Service                   | Port                                        | Repo                                                                     |
+| ------------------------- | ------------------------------------------- | ------------------------------------------------------------------------ |
+| Next (the wizard)         | 3030                                        | this one — `npm run dev`                                                 |
+| Flask (Minty)             | 8000 (the owner's local layout, 2026-10-16) | `C:\Github\Minty`                                                        |
+| Onboarding API (Django)   | 8030                                        | `C:\Github\minty-onboarding-api`                                         |
+| Subscription API (Django) | 8000                                        | `C:\Github\minty-subscription-api` — finalize's trial start (2026-10-06) |
+| PostgreSQL                | 5432                                        | —                                                                        |
 
 Override any of them with `E2E_BASE_URL`, `E2E_PETTY_CASH_URL`, `E2E_ONBOARDING_API_URL`.
 
@@ -27,10 +27,10 @@ Override any of them with `E2E_BASE_URL`, `E2E_PETTY_CASH_URL`, `E2E_ONBOARDING_
 `stack.spec.ts` needs no login. `resume.spec.ts`, `xero.spec.ts` and `walk.spec.ts` do,
 and they skip entirely unless all three of these are set:
 
-| Variable         | What                                                        |
-| ---------------- | ----------------------------------------------------------- |
-| `E2E_JWT_SECRET` | the `SECRET_KEY` shared by Minty and the onboarding service |
-| `E2E_USER_ID`    | a user who is an approved member of the entity below        |
+| Variable         | What                                                                             |
+| ---------------- | -------------------------------------------------------------------------------- |
+| `E2E_JWT_SECRET` | the `SECRET_KEY` shared by Minty and the onboarding service                      |
+| `E2E_USER_ID`    | a user who is an approved member of the entity below                             |
 | `E2E_ENTITY_ID`  | **a disposable entity — the specs WRITE to it, and `walk.spec.ts` FINALIZES it** |
 
 Never commit these. Export them for the run:
@@ -98,15 +98,15 @@ changed or flagged; the fake sits in the browser's network layer.
 What the wizard depends on is small, which is what makes the fake trustworthy — the
 contract is one redirect out, three query parameters back, and one boolean:
 
-| Request | Real or faked | What the fake does |
-|---|---|---|
-| navigation to Flask `/xero_connect` | **faked** | 302 straight back to `/?xero=connected&step=3&org=…` (or `mismatch` / `conflict`), exactly what Flask sends after Xero's callback |
-| `GET /api/onboarding/state` | real, **patched** | the real response with only `xero` and `modules` overwritten, so `saved_step`, the entity fields and the CORS headers are the service's own |
-| `GET/POST account-codes`, `POST contacts`, `contacts/create`, `GET/POST bill-codes` | **faked** | fixtures from `fixtures/xero.ts`; POST bodies are recorded so specs assert what the wizard sent |
-| `POST xero/disconnect` (from the page) | **faked** | flips the fake to disconnected |
-| `GET payment-method` | **faked** | "no card, no consent" — keeps All Set off Stripe |
-| `POST finalize` (`walk.spec.ts`, the first call only) | **faked** | a 502, so the spec asserts All Set's failure UI and clicks *Try again* (2026-10-06) |
-| everything else: token auth, `saved-step`, `sales-methods`, `opening-balance`, `invite`, the second `finalize` | **real** | — |
+| Request                                                                                                        | Real or faked     | What the fake does                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| navigation to Flask `/xero_connect`                                                                            | **faked**         | 302 straight back to `/?xero=connected&step=3&org=…` (or `mismatch` / `conflict`), exactly what Flask sends after Xero's callback           |
+| `GET /api/onboarding/state`                                                                                    | real, **patched** | the real response with only `xero` and `modules` overwritten, so `saved_step`, the entity fields and the CORS headers are the service's own |
+| `GET/POST account-codes`, `POST contacts`, `contacts/create`, `GET/POST bill-codes`                            | **faked**         | fixtures from `fixtures/xero.ts`; POST bodies are recorded so specs assert what the wizard sent                                             |
+| `POST xero/disconnect` (from the page)                                                                         | **faked**         | flips the fake to disconnected                                                                                                              |
+| `GET payment-method`                                                                                           | **faked**         | "no card, no consent" — keeps All Set off Stripe                                                                                            |
+| `POST finalize` (`walk.spec.ts`, the first call only)                                                          | **faked**         | a 502, so the spec asserts All Set's failure UI and clicks _Try again_ (2026-10-06)                                                         |
+| everything else: token auth, `saved-step`, `sales-methods`, `opening-balance`, `invite`, the second `finalize` | **real**          | —                                                                                                                                           |
 
 `modules` is forced to both, so steps 5–8 render regardless of what `entity_function_map`
 holds for the test entity.

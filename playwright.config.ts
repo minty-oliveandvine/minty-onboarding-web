@@ -15,7 +15,7 @@
 // See e2e/README.md for the environment variables the authenticated specs need and for
 // what this layer deliberately does NOT cover.
 
-import { mintyPlaywright } from '@minty/shared/playwright';
-import { BASE_URL } from './e2e/urls';
+import { mintyPlaywright } from "@minty/shared/playwright";
+import { BASE_URL } from "./e2e/urls";
 
 export default mintyPlaywright({ port: 3030, baseURL: BASE_URL, timeout: 30_000 });

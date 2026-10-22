@@ -6,12 +6,12 @@
 // browser, incognito, or on another device. Everything here is an optimisation on top of
 // that, and losing all of it costs a round trip, not the user's progress.
 
-import type { WizardState, WizardUser } from './types';
+import type { WizardState, WizardUser } from "./types";
 
 // Scoped only to the Xero OAuth round-trip: we stash progress here right
 // before leaving for Xero and restore it on return. Cleared immediately after,
 // so it does NOT persist across an ordinary refresh.
-export const XERO_RESUME_KEY = 'minty_onboarding_xero_resume';
+export const XERO_RESUME_KEY = "minty_onboarding_xero_resume";
 
 /** What OnboardingApp writes under a session key. `savedAt` orders competing blobs.
  * `token` is only ever READ here, from blobs written before 2026-10-05: the token now lives
@@ -27,13 +27,13 @@ export type SavedSession = {
 
 // The launch token is a bearer credential for the onboarding API. localStorage kept it for
 // every tab and after the browser closed; sessionStorage keeps it to this tab only.
-export const TAB_TOKEN_KEY = 'minty_onboarding_token';
+export const TAB_TOKEN_KEY = "minty_onboarding_token";
 
 export function readTabToken(): string {
   try {
-    return window.sessionStorage.getItem(TAB_TOKEN_KEY) || '';
+    return window.sessionStorage.getItem(TAB_TOKEN_KEY) || "";
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -51,23 +51,23 @@ export function writeTabToken(token: string): void {
 
 // Everything a launch, resume or Xero return can put in the address bar.
 const LAUNCH_PARAMS = [
-  'token',
-  'entity_id',
-  'entity_name',
-  'entity',
-  'first',
-  'last',
-  'name',
-  'fresh',
-  'profile_url',
-  'xero',
-  'step',
-  'org',
-  'expected',
-  'conflict',
-  'conflict_entity',
-  'conflict_entity_id',
-  'conflict_can_move',
+  "token",
+  "entity_id",
+  "entity_name",
+  "entity",
+  "first",
+  "last",
+  "name",
+  "fresh",
+  "profile_url",
+  "xero",
+  "step",
+  "org",
+  "expected",
+  "conflict",
+  "conflict_entity",
+  "conflict_entity_id",
+  "conflict_can_move",
 ];
 
 let launchParams: URLSearchParams | null = null;
@@ -86,12 +86,12 @@ export function takeLaunchParams(): URLSearchParams {
   if (LAUNCH_PARAMS.some((key) => params.has(key))) {
     const url = new URL(window.location.href);
     LAUNCH_PARAMS.forEach((key) => url.searchParams.delete(key));
-    window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
   }
   return params;
 }
 
-export const STORAGE_KEY = 'minty_onboarding_session';
+export const STORAGE_KEY = "minty_onboarding_session";
 
 // Session storage is keyed per entity so multiple in-progress entities don't
 // clobber each other. Before an entity is created it has no id yet, so its
@@ -106,7 +106,7 @@ export const sessionKey = (entityId?: string | null): string =>
 // (by `savedAt`). This is what makes an ordinary refresh restore progress
 // instead of resetting to the empty initial state.
 export const findLatestSession = (): SavedSession | null => {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   let best: SavedSession | null = null;
   try {
     for (let i = 0; i < window.localStorage.length; i++) {
@@ -114,12 +114,12 @@ export const findLatestSession = (): SavedSession | null => {
       if (!key || !key.startsWith(`${STORAGE_KEY}:`)) continue;
       let blob: Partial<SavedSession> | null = null;
       try {
-        blob = JSON.parse(window.localStorage.getItem(key) || 'null');
+        blob = JSON.parse(window.localStorage.getItem(key) || "null");
       } catch {
         continue;
       }
       if (!blob || !blob.state) continue;
-      const ts = typeof blob.savedAt === 'number' ? blob.savedAt : 0;
+      const ts = typeof blob.savedAt === "number" ? blob.savedAt : 0;
       if (!best || ts > best.savedAt) best = { ...blob, state: blob.state, savedAt: ts };
     }
   } catch {
@@ -134,10 +134,10 @@ export function readJwtClaims(
 ): { user_id: string | null; exp: number } | null {
   if (!token) return null;
   try {
-    const part = token.split('.')[1];
+    const part = token.split(".")[1];
     if (!part) return null;
-    const padded = part.replace(/-/g, '+').replace(/_/g, '/');
-    const padding = '='.repeat((4 - (padded.length % 4)) % 4);
+    const padded = part.replace(/-/g, "+").replace(/_/g, "/");
+    const padding = "=".repeat((4 - (padded.length % 4)) % 4);
     const payload = JSON.parse(atob(padded + padding));
     return { user_id: payload.user_id || null, exp: payload.exp || 0 };
   } catch {

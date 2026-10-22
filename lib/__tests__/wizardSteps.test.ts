@@ -8,11 +8,11 @@
 // to "Connect to Accounting" past an incomplete step. Until now none of that had a
 // single test.
 
-import { describe, expect, it } from 'vitest';
-import type { ModuleId } from '../api';
-import type { WizardState } from '../types';
+import { describe, expect, it } from "vitest";
+import type { ModuleId } from "../api";
+import type { WizardState } from "../types";
 
-const MODULE_SETS: ModuleId[][] = [[], ['pettyCash'], ['bills'], ['pettyCash', 'bills']];
+const MODULE_SETS: ModuleId[][] = [[], ["pettyCash"], ["bills"], ["pettyCash", "bills"]];
 import {
   STEPS,
   deriveResumeStep,
@@ -20,7 +20,7 @@ import {
   getDisplaySteps,
   initialState,
   isStepComplete,
-} from '../wizardSteps';
+} from "../wizardSteps";
 
 // The override parameter is loose ON PURPOSE. Several cases below hand the functions
 // shapes the type forbids -- `invites: null`, a missing `xero`, `pettyCash: undefined`
@@ -33,16 +33,16 @@ type Loose = Record<string, any>;
 
 // A saved company's country and currency. initialState() leaves both empty since 2026-10-19,
 // and step 1 needs them, so the helpers that stand for "step 1 passes" carry them.
-const SAVED_PLACE = { country: 'HK', currency: 'hkd-id' };
+const SAVED_PLACE = { country: "HK", currency: "hkd-id" };
 
 /** A wizard state as the resume path builds it, with the fields deriveResumeStep reads. */
 function payload(over: Loose = {}): WizardState {
   return {
     ...initialState(),
-    entity: { ...initialState().entity, ...SAVED_PLACE, name: 'Acme Ltd', phone: '', email: '' },
+    entity: { ...initialState().entity, ...SAVED_PLACE, name: "Acme Ltd", phone: "", email: "" },
     modules: [],
     invites: [],
-    xero: { connected: false, org: '' },
+    xero: { connected: false, org: "" },
     ...over,
   } as WizardState;
 }
@@ -53,17 +53,17 @@ function state(over: Loose = {}): WizardState {
   return {
     ...base,
     ...over,
-    entity: { ...base.entity, ...SAVED_PLACE, name: 'Acme Ltd', ...(over.entity || {}) },
+    entity: { ...base.entity, ...SAVED_PLACE, name: "Acme Ltd", ...(over.entity || {}) },
   } as WizardState;
 }
 
-describe('deriveResumeStep -- with a persisted savedStep', () => {
-  it.each([1, 2, 3, 4])('honours a saved step of %i without needing Xero', (saved) => {
+describe("deriveResumeStep -- with a persisted savedStep", () => {
+  it.each([1, 2, 3, 4])("honours a saved step of %i without needing Xero", (saved) => {
     expect(deriveResumeStep(payload(), saved)).toEqual({ step: saved, needsXero: false });
   });
 
   it.each([5, 6, 7, 8, 9])(
-    'lands on saved step %i but flags needsXero when Xero is not connected',
+    "lands on saved step %i but flags needsXero when Xero is not connected",
     (saved) => {
       // The user KEEPS their place and is told why they must reconnect. An earlier
       // version silently forced them back to step 4, which lost their position with
@@ -73,18 +73,18 @@ describe('deriveResumeStep -- with a persisted savedStep', () => {
   );
 
   it.each([5, 6, 7, 8, 9])(
-    'does not flag needsXero for step %i when Xero IS connected',
+    "does not flag needsXero for step %i when Xero IS connected",
     (saved) => {
-      const s = payload({ xero: { connected: true, org: 'Acme' } });
+      const s = payload({ xero: { connected: true, org: "Acme" } });
       expect(deriveResumeStep(s, saved)).toEqual({ step: saved, needsXero: false });
     },
   );
 
-  it('accepts a numeric string, because the column round-trips through JSON', () => {
-    expect(deriveResumeStep(payload(), '3')).toEqual({ step: 3, needsXero: false });
+  it("accepts a numeric string, because the column round-trips through JSON", () => {
+    expect(deriveResumeStep(payload(), "3")).toEqual({ step: 3, needsXero: false });
   });
 
-  it('treats a missing xero key as not connected', () => {
+  it("treats a missing xero key as not connected", () => {
     const { xero, ...withoutXero } = payload();
     expect(xero).toBeDefined(); // the key really was there to begin with
     // A payload with no `xero` at all -- the type forbids it, the function tolerates it.
@@ -92,27 +92,27 @@ describe('deriveResumeStep -- with a persisted savedStep', () => {
   });
 
   it.each([
-    { saved: 0, why: 'below the range' },
-    { saved: 10, why: 'above the range' },
-    { saved: -1, why: 'negative' },
-    { saved: null, why: 'never persisted' },
-    { saved: undefined, why: 'absent' },
-    { saved: '', why: 'empty string' },
-    { saved: 'abc', why: 'not a number' },
-    { saved: Number.NaN, why: 'NaN' },
-    { saved: Number.POSITIVE_INFINITY, why: 'not finite' },
-  ])('falls back to deriving when savedStep is $why', ({ saved }) => {
+    { saved: 0, why: "below the range" },
+    { saved: 10, why: "above the range" },
+    { saved: -1, why: "negative" },
+    { saved: null, why: "never persisted" },
+    { saved: undefined, why: "absent" },
+    { saved: "", why: "empty string" },
+    { saved: "abc", why: "not a number" },
+    { saved: Number.NaN, why: "NaN" },
+    { saved: Number.POSITIVE_INFINITY, why: "not finite" },
+  ])("falls back to deriving when savedStep is $why", ({ saved }) => {
     // A session that predates the column, or one that never reached a Save.
-    const s = payload({ entity: { name: 'Acme Ltd', phone: '', email: '' } });
+    const s = payload({ entity: { name: "Acme Ltd", phone: "", email: "" } });
     expect(deriveResumeStep(s, saved)).toEqual({ step: 1, needsXero: false });
   });
 });
 
-describe('deriveResumeStep -- deriving with no persisted step', () => {
+describe("deriveResumeStep -- deriving with no persisted step", () => {
   const NONE = null;
 
-  it('lands on 1 when nothing is saved', () => {
-    expect(deriveResumeStep(payload({ entity: { name: '', phone: '', email: '' } }), NONE)).toEqual(
+  it("lands on 1 when nothing is saved", () => {
+    expect(deriveResumeStep(payload({ entity: { name: "", phone: "", email: "" } }), NONE)).toEqual(
       {
         step: 1,
         needsXero: false,
@@ -120,58 +120,58 @@ describe('deriveResumeStep -- deriving with no persisted step', () => {
     );
   });
 
-  it('does not count a company with no country or currency as past step 1', () => {
+  it("does not count a company with no country or currency as past step 1", () => {
     const s = payload({
-      modules: ['pettyCash'],
-      entity: { name: 'Acme Ltd', country: '', currency: '', phone: '', email: '' },
+      modules: ["pettyCash"],
+      entity: { name: "Acme Ltd", country: "", currency: "", phone: "", email: "" },
     });
     expect(deriveResumeStep(s, NONE)).toEqual({ step: 1, needsXero: false });
   });
 
-  it('lands on 1 when only basic info is saved', () => {
+  it("lands on 1 when only basic info is saved", () => {
     expect(deriveResumeStep(payload(), NONE)).toEqual({ step: 1, needsXero: false });
   });
 
-  it('lands on 2 when modules are chosen but nothing further', () => {
-    const s = payload({ modules: ['pettyCash'] });
+  it("lands on 2 when modules are chosen but nothing further", () => {
+    const s = payload({ modules: ["pettyCash"] });
     expect(deriveResumeStep(s, NONE)).toEqual({ step: 2, needsXero: false });
   });
 
-  it('lands on 3 when invites were actually added', () => {
-    const s = payload({ modules: ['pettyCash'], invites: [{ email: 'a@b.co' }] });
+  it("lands on 3 when invites were actually added", () => {
+    const s = payload({ modules: ["pettyCash"], invites: [{ email: "a@b.co" }] });
     expect(deriveResumeStep(s, NONE)).toEqual({ step: 3, needsXero: false });
   });
 
-  it('does NOT count an empty invite list as a saved step 3', () => {
+  it("does NOT count an empty invite list as a saved step 3", () => {
     // isStepComplete always passes step 3 because inviting is optional. If the
     // derive used that, saving at Module Selection would skip the user onto Invite.
-    const s = payload({ modules: ['pettyCash'], invites: [] });
+    const s = payload({ modules: ["pettyCash"], invites: [] });
     expect(deriveResumeStep(s, NONE).step).toBe(2);
   });
 
-  it('skips past an empty invite to a connected Xero', () => {
+  it("skips past an empty invite to a connected Xero", () => {
     // The `continue` for id === 3. An optional step left empty must not end the
     // scan, or a user who connected Xero but invited nobody would resume on 2.
     const s = payload({
-      modules: ['pettyCash'],
+      modules: ["pettyCash"],
       invites: [],
-      xero: { connected: true, org: 'Acme' },
+      xero: { connected: true, org: "Acme" },
     });
     expect(deriveResumeStep(s, NONE)).toEqual({ step: 4, needsXero: false });
   });
 
-  it('stops at a required step that is not saved', () => {
+  it("stops at a required step that is not saved", () => {
     // Xero connected but no modules chosen: step 2 is required, so the scan breaks
     // there and the later connection does not pull the user forward.
-    const s = payload({ modules: [], xero: { connected: true, org: 'Acme' } });
+    const s = payload({ modules: [], xero: { connected: true, org: "Acme" } });
     expect(deriveResumeStep(s, NONE)).toEqual({ step: 1, needsXero: false });
   });
 
-  it('never derives past 4, so it can never land past the Xero gate', () => {
+  it("never derives past 4, so it can never land past the Xero gate", () => {
     const s = payload({
-      modules: ['pettyCash', 'bills'],
-      invites: [{ email: 'a@b.co' }],
-      xero: { connected: true, org: 'Acme' },
+      modules: ["pettyCash", "bills"],
+      invites: [{ email: "a@b.co" }],
+      xero: { connected: true, org: "Acme" },
     });
     const { step, needsXero } = deriveResumeStep(s, NONE);
     expect(step).toBeLessThanOrEqual(4);
@@ -179,130 +179,130 @@ describe('deriveResumeStep -- deriving with no persisted step', () => {
     expect(needsXero).toBe(false);
   });
 
-  it('treats a non-array invites value as no invites', () => {
-    const s = payload({ modules: ['pettyCash'], invites: null });
+  it("treats a non-array invites value as no invites", () => {
+    const s = payload({ modules: ["pettyCash"], invites: null });
     expect(deriveResumeStep(s, NONE).step).toBe(2);
   });
 });
 
-describe('STEPS', () => {
-  it('is 1..9 in order with no gaps', () => {
+describe("STEPS", () => {
+  it("is 1..9 in order with no gaps", () => {
     expect(STEPS.map((s) => s.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 
-  it('gives every step a label', () => {
-    for (const s of STEPS) expect(s.label.trim()).not.toBe('');
+  it("gives every step a label", () => {
+    for (const s of STEPS) expect(s.label.trim()).not.toBe("");
   });
 });
 
-describe('getDisplaySteps', () => {
-  it('shows only the four common steps and All Set when no module is chosen', () => {
+describe("getDisplaySteps", () => {
+  it("shows only the four common steps and All Set when no module is chosen", () => {
     expect(getDisplaySteps([]).map((d) => d.tiny)).toEqual([
-      'Basic',
-      'Module',
-      'Invite',
-      'Accounting',
-      'All Set',
+      "Basic",
+      "Module",
+      "Invite",
+      "Accounting",
+      "All Set",
     ]);
   });
 
-  it('collapses Sales, Account Code and Others into one Petty Cash segment', () => {
-    const petty = getDisplaySteps(['pettyCash']).find((d) => d.tiny === 'Petty Cash');
+  it("collapses Sales, Account Code and Others into one Petty Cash segment", () => {
+    const petty = getDisplaySteps(["pettyCash"]).find((d) => d.tiny === "Petty Cash");
     expect(petty).toBeDefined();
     expect(petty?.ids).toEqual([5, 6, 7]);
-    expect(petty?.label).toBe('Petty Cash Settings');
+    expect(petty?.label).toBe("Petty Cash Settings");
   });
 
-  it('adds the Payment segment only for bills', () => {
-    expect(getDisplaySteps(['bills']).map((d) => d.tiny)).toEqual([
-      'Basic',
-      'Module',
-      'Invite',
-      'Accounting',
-      'Payment',
-      'All Set',
+  it("adds the Payment segment only for bills", () => {
+    expect(getDisplaySteps(["bills"]).map((d) => d.tiny)).toEqual([
+      "Basic",
+      "Module",
+      "Invite",
+      "Accounting",
+      "Payment",
+      "All Set",
     ]);
   });
 
-  it('orders Petty Cash before Payment when both are chosen', () => {
-    const tiny = getDisplaySteps(['bills', 'pettyCash']).map((d) => d.tiny);
+  it("orders Petty Cash before Payment when both are chosen", () => {
+    const tiny = getDisplaySteps(["bills", "pettyCash"]).map((d) => d.tiny);
     expect(tiny).toEqual([
-      'Basic',
-      'Module',
-      'Invite',
-      'Accounting',
-      'Petty Cash',
-      'Payment',
-      'All Set',
+      "Basic",
+      "Module",
+      "Invite",
+      "Accounting",
+      "Petty Cash",
+      "Payment",
+      "All Set",
     ]);
   });
 
-  it('ignores the order the modules were selected in', () => {
-    expect(getDisplaySteps(['pettyCash', 'bills'])).toEqual(
-      getDisplaySteps(['bills', 'pettyCash']),
+  it("ignores the order the modules were selected in", () => {
+    expect(getDisplaySteps(["pettyCash", "bills"])).toEqual(
+      getDisplaySteps(["bills", "pettyCash"]),
     );
   });
 
-  it('always ends on All Set', () => {
+  it("always ends on All Set", () => {
     for (const mods of MODULE_SETS) {
       const out = getDisplaySteps(mods);
       expect(out[out.length - 1].ids).toEqual([9]);
     }
   });
 
-  it('covers every id exactly once, with no id repeated across segments', () => {
-    const ids = getDisplaySteps(['pettyCash', 'bills']).flatMap((d) => d.ids);
+  it("covers every id exactly once, with no id repeated across segments", () => {
+    const ids = getDisplaySteps(["pettyCash", "bills"]).flatMap((d) => d.ids);
     expect(ids).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(new Set(ids).size).toBe(ids.length);
   });
 });
 
-describe('getActiveStepIds', () => {
+describe("getActiveStepIds", () => {
   it.each<[ModuleId[], number[]]>([
     [[], [1, 2, 3, 4, 9]],
-    [['pettyCash'], [1, 2, 3, 4, 5, 6, 7, 9]],
-    [['bills'], [1, 2, 3, 4, 8, 9]],
+    [["pettyCash"], [1, 2, 3, 4, 5, 6, 7, 9]],
+    [["bills"], [1, 2, 3, 4, 8, 9]],
     [
-      ['pettyCash', 'bills'],
+      ["pettyCash", "bills"],
       [1, 2, 3, 4, 5, 6, 7, 8, 9],
     ],
-  ])('for modules %j gives %j', (modules, expected) => {
+  ])("for modules %j gives %j", (modules, expected) => {
     expect(getActiveStepIds(modules)).toEqual(expected);
   });
 
-  it('agrees with getDisplaySteps for the same modules', () => {
+  it("agrees with getDisplaySteps for the same modules", () => {
     // The two are separate functions over the same rule, so they can drift apart.
     for (const mods of MODULE_SETS) {
       expect(getActiveStepIds(mods)).toEqual(getDisplaySteps(mods).flatMap((d) => d.ids));
     }
   });
 
-  it('returns ascending ids', () => {
-    const ids = getActiveStepIds(['pettyCash', 'bills']);
+  it("returns ascending ids", () => {
+    const ids = getActiveStepIds(["pettyCash", "bills"]);
     expect([...ids].sort((a, b) => a - b)).toEqual(ids);
   });
 });
 
-describe('initialState', () => {
-  it('returns a fresh object each call, not a shared one', () => {
+describe("initialState", () => {
+  it("returns a fresh object each call, not a shared one", () => {
     // It is spread into React state, and a shared nested object would leak one
     // wizard's edits into the next.
     const a = initialState();
     const b = initialState();
     expect(a).not.toBe(b);
     expect(a.pettyCash).not.toBe(b.pettyCash);
-    a.modules.push('pettyCash');
+    a.modules.push("pettyCash");
     expect(b.modules).toEqual([]);
   });
 
-  it('starts with no country and no currency, like the phone code (owner, 2026-10-19)', () => {
+  it("starts with no country and no currency, like the phone code (owner, 2026-10-19)", () => {
     const e = initialState().entity;
-    expect(e.country).toBe('');
-    expect(e.currency).toBe('');
-    expect(e.phoneCountry).toBe('');
+    expect(e.country).toBe("");
+    expect(e.currency).toBe("");
+    expect(e.phoneCountry).toBe("");
   });
 
-  it('starts with no modules, no invites and no Xero', () => {
+  it("starts with no modules, no invites and no Xero", () => {
     const s = initialState();
     expect(s.modules).toEqual([]);
     expect(s.invites).toEqual([]);
@@ -313,13 +313,13 @@ describe('initialState', () => {
     const d = new Date();
     const expected = [
       d.getFullYear(),
-      String(d.getMonth() + 1).padStart(2, '0'),
-      String(d.getDate()).padStart(2, '0'),
-    ].join('-');
+      String(d.getMonth() + 1).padStart(2, "0"),
+      String(d.getDate()).padStart(2, "0"),
+    ].join("-");
     expect(initialState().pettyCash.openingDate).toBe(expected);
   });
 
-  it('does NOT define entity.id or pettyCash.openingBalance', () => {
+  it("does NOT define entity.id or pettyCash.openingBalance", () => {
     // Both are read across OnboardingApp but are absent here -- they are filled in
     // later by the create call and by the Sales step. Pinned because the TypeScript
     // conversion has to type them as optional, and a future edit that "helpfully"
@@ -328,115 +328,115 @@ describe('initialState', () => {
     const s = initialState();
     expect(s.entity.id).toBeUndefined();
     expect(s.pettyCash.openingBalance).toBeUndefined();
-    expect(Object.keys(s.entity)).not.toContain('id');
-    expect(Object.keys(s.pettyCash)).not.toContain('openingBalance');
+    expect(Object.keys(s.entity)).not.toContain("id");
+    expect(Object.keys(s.pettyCash)).not.toContain("openingBalance");
   });
 });
 
-describe('isStepComplete', () => {
-  describe('step 1 -- basic information', () => {
-    it('needs a name - any non-empty one, as the page and the API take', () => {
+describe("isStepComplete", () => {
+  describe("step 1 -- basic information", () => {
+    it("needs a name - any non-empty one, as the page and the API take", () => {
       // The owner, 2026-10-19: a one-character name ("A") is a valid company name. The old
       // two-character rule lived only here, so "A" saved and then Save & Next silently stalled.
-      expect(isStepComplete(1, state({ entity: { name: '' } }))).toBe(false);
-      expect(isStepComplete(1, state({ entity: { name: 'A' } }))).toBe(true);
-      expect(isStepComplete(1, state({ entity: { name: 'AB' } }))).toBe(true);
+      expect(isStepComplete(1, state({ entity: { name: "" } }))).toBe(false);
+      expect(isStepComplete(1, state({ entity: { name: "A" } }))).toBe(true);
+      expect(isStepComplete(1, state({ entity: { name: "AB" } }))).toBe(true);
     });
 
-    it('does not accept whitespace as a name', () => {
-      expect(isStepComplete(1, state({ entity: { name: '   ' } }))).toBe(false);
+    it("does not accept whitespace as a name", () => {
+      expect(isStepComplete(1, state({ entity: { name: "   " } }))).toBe(false);
     });
 
-    it('fails without a country or a currency, which are required since 2026-10-19', () => {
-      expect(isStepComplete(1, state({ entity: { country: '' } }))).toBe(false);
-      expect(isStepComplete(1, state({ entity: { currency: '' } }))).toBe(false);
-      expect(isStepComplete(1, state({ entity: { country: '', currency: '' } }))).toBe(false);
+    it("fails without a country or a currency, which are required since 2026-10-19", () => {
+      expect(isStepComplete(1, state({ entity: { country: "" } }))).toBe(false);
+      expect(isStepComplete(1, state({ entity: { currency: "" } }))).toBe(false);
+      expect(isStepComplete(1, state({ entity: { country: "", currency: "" } }))).toBe(false);
     });
 
-    it('fails on a fresh wizard even with a name, because initialState has no country', () => {
+    it("fails on a fresh wizard even with a name, because initialState has no country", () => {
       const fresh = initialState();
-      expect(isStepComplete(1, { ...fresh, entity: { ...fresh.entity, name: 'Acme Ltd' } })).toBe(
+      expect(isStepComplete(1, { ...fresh, entity: { ...fresh.entity, name: "Acme Ltd" } })).toBe(
         false,
       );
     });
 
-    it('treats an empty phone and email as acceptable', () => {
-      expect(isStepComplete(1, state({ entity: { phone: '', email: '' } }))).toBe(true);
+    it("treats an empty phone and email as acceptable", () => {
+      expect(isStepComplete(1, state({ entity: { phone: "", email: "" } }))).toBe(true);
     });
 
-    it('rejects a malformed email but accepts a valid one', () => {
-      expect(isStepComplete(1, state({ entity: { email: 'nope' } }))).toBe(false);
-      expect(isStepComplete(1, state({ entity: { email: 'a@b.co' } }))).toBe(true);
+    it("rejects a malformed email but accepts a valid one", () => {
+      expect(isStepComplete(1, state({ entity: { email: "nope" } }))).toBe(false);
+      expect(isStepComplete(1, state({ entity: { email: "a@b.co" } }))).toBe(true);
     });
 
-    it('accepts an email padded with spaces', () => {
-      expect(isStepComplete(1, state({ entity: { email: '  a@b.co  ' } }))).toBe(true);
+    it("accepts an email padded with spaces", () => {
+      expect(isStepComplete(1, state({ entity: { email: "  a@b.co  " } }))).toBe(true);
     });
 
     it.each([
-      ['+852 9123 456', false, 'Hong Kong, 7 digits'],
-      ['+852 9123 4567', true, 'Hong Kong, 8 digits'],
-      ['+852 9123 45678', false, 'Hong Kong, 9 digits'],
-      ['+65 6123-4567', true, 'Singapore, punctuation ignored'],
-      ['+44 07700 900123', true, 'UK, the trunk 0 is not counted'],
-      ['+44 770', false, 'under E.164 4-digit floor'],
-    ])('phone %s -> %s (%s)', (phone, expected) => {
+      ["+852 9123 456", false, "Hong Kong, 7 digits"],
+      ["+852 9123 4567", true, "Hong Kong, 8 digits"],
+      ["+852 9123 45678", false, "Hong Kong, 9 digits"],
+      ["+65 6123-4567", true, "Singapore, punctuation ignored"],
+      ["+44 07700 900123", true, "UK, the trunk 0 is not counted"],
+      ["+44 770", false, "under E.164 4-digit floor"],
+    ])("phone %s -> %s (%s)", (phone, expected) => {
       expect(isStepComplete(1, state({ entity: { phone } }))).toBe(expected);
     });
 
-    it('does not re-judge a number the server stored in another shape', () => {
+    it("does not re-judge a number the server stored in another shape", () => {
       // Step 1 splits these once the country list is in; until then they stand.
-      expect(isStepComplete(1, state({ entity: { phone: '+85291234567' } }))).toBe(true);
-      expect(isStepComplete(1, state({ entity: { phone: '12345678' } }))).toBe(true);
+      expect(isStepComplete(1, state({ entity: { phone: "+85291234567" } }))).toBe(true);
+      expect(isStepComplete(1, state({ entity: { phone: "12345678" } }))).toBe(true);
     });
   });
 
-  it('step 2 needs at least one module', () => {
+  it("step 2 needs at least one module", () => {
     expect(isStepComplete(2, state({ modules: [] }))).toBe(false);
-    expect(isStepComplete(2, state({ modules: ['pettyCash'] }))).toBe(true);
+    expect(isStepComplete(2, state({ modules: ["pettyCash"] }))).toBe(true);
   });
 
-  it('step 3 always passes, because inviting is optional', () => {
+  it("step 3 always passes, because inviting is optional", () => {
     expect(isStepComplete(3, state({ invites: [] }))).toBe(true);
   });
 
-  it('step 4 needs a live Xero connection', () => {
+  it("step 4 needs a live Xero connection", () => {
     expect(isStepComplete(4, state({ xero: { connected: false } }))).toBe(false);
     expect(isStepComplete(4, state({ xero: { connected: true } }))).toBe(true);
     expect(isStepComplete(4, state({ xero: undefined }))).toBe(false);
   });
 
-  describe('step 5 -- the opening balance', () => {
+  describe("step 5 -- the opening balance", () => {
     const withBalance = (openingBalance: unknown) =>
       state({ pettyCash: { ...initialState().pettyCash, openingBalance } });
 
-    it('fails on a fresh wizard, because initialState has no openingBalance', () => {
+    it("fails on a fresh wizard, because initialState has no openingBalance", () => {
       expect(isStepComplete(5, state())).toBe(false);
     });
 
     it.each([
-      { value: undefined, expected: false, why: 'unset' },
-      { value: null, expected: false, why: 'null' },
-      { value: '', expected: false, why: 'an empty string' },
-      { value: '   ', expected: false, why: 'whitespace' },
-      { value: 0, expected: true, why: 'zero -- a real answer, not a missing one' },
-      { value: '0', expected: true, why: 'zero as a string' },
-      { value: 1500, expected: true, why: 'a number' },
-      { value: '1500.50', expected: true, why: 'a decimal string' },
-    ])('$why -> $expected', ({ value, expected }) => {
+      { value: undefined, expected: false, why: "unset" },
+      { value: null, expected: false, why: "null" },
+      { value: "", expected: false, why: "an empty string" },
+      { value: "   ", expected: false, why: "whitespace" },
+      { value: 0, expected: true, why: "zero -- a real answer, not a missing one" },
+      { value: "0", expected: true, why: "zero as a string" },
+      { value: 1500, expected: true, why: "a number" },
+      { value: "1500.50", expected: true, why: "a decimal string" },
+    ])("$why -> $expected", ({ value, expected }) => {
       expect(isStepComplete(5, withBalance(value))).toBe(expected);
     });
 
-    it('is not fooled by a missing pettyCash object', () => {
+    it("is not fooled by a missing pettyCash object", () => {
       expect(isStepComplete(5, state({ pettyCash: undefined }))).toBe(false);
     });
   });
 
-  it.each([6, 7, 8])('step %i always passes -- it has defaults for everything', (id) => {
+  it.each([6, 7, 8])("step %i always passes -- it has defaults for everything", (id) => {
     expect(isStepComplete(id, state())).toBe(true);
   });
 
-  it.each([0, 9, 10, -1])('returns false for the out-of-flow id %i', (id) => {
+  it.each([0, 9, 10, -1])("returns false for the out-of-flow id %i", (id) => {
     // 9 is "All Set", which is a destination rather than a step with a gate.
     expect(isStepComplete(id, state())).toBe(false);
   });

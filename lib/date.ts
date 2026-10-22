@@ -13,8 +13,8 @@
  */
 export function toIsoDate(date: Date | string | number): string {
   const d = date instanceof Date ? date : new Date(date);
-  if (Number.isNaN(d.getTime())) return '';
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  if (Number.isNaN(d.getTime())) return "";
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${m}-${day}`;
 }

@@ -10,31 +10,31 @@
 // one field it must fill by hand -- which is what exercises the select and the
 // step's required-field error. Everything else pre-filled keeps the walk short.
 
-import type { AccountCodesResponse, BillCodesResponse } from '../../lib/api';
+import type { AccountCodesResponse, BillCodesResponse } from "../../lib/api";
 
-export const FAKE_ORG = 'E2E Fake Org';
+export const FAKE_ORG = "E2E Fake Org";
 
 /** Ids the walk asserts the wizard sends back on step 6 and 7. */
 export const IDS = {
-  pettyCashBank: 'bank-petty',
-  depositBank: 'bank-deposit',
-  director: 'acc-director',
-  cashSale: 'acc-cash-sale',
-  discrepancy: 'acc-discrepancy',
-  directorContact: 'contact-director',
-  cashSaleContact: 'contact-cash-sale',
-  discrepancyContact: 'contact-discrepancy',
+  pettyCashBank: "bank-petty",
+  depositBank: "bank-deposit",
+  director: "acc-director",
+  cashSale: "acc-cash-sale",
+  discrepancy: "acc-discrepancy",
+  directorContact: "contact-director",
+  cashSaleContact: "contact-cash-sale",
+  discrepancyContact: "contact-discrepancy",
 } as const;
 
 export const LABELS = {
-  pettyCashBank: 'Petty Cash Bank',
-  depositBank: 'Deposit Bank',
-  director: '880 · Director Loan',
-  cashSale: '200 · Cash Sales',
-  discrepancy: '499 · Cash Discrepancy',
-  directorContact: 'Director (E2E)',
-  cashSaleContact: 'Cash Sales (E2E)',
-  discrepancyContact: 'Discrepancy (E2E)',
+  pettyCashBank: "Petty Cash Bank",
+  depositBank: "Deposit Bank",
+  director: "880 · Director Loan",
+  cashSale: "200 · Cash Sales",
+  discrepancy: "499 · Cash Discrepancy",
+  directorContact: "Director (E2E)",
+  cashSaleContact: "Cash Sales (E2E)",
+  discrepancyContact: "Discrepancy (E2E)",
 } as const;
 
 export const accountCodes: AccountCodesResponse = {
@@ -47,9 +47,9 @@ export const accountCodes: AccountCodesResponse = {
   cash_sale_accounts: [{ id: IDS.cashSale, label: LABELS.cashSale }],
   discrepancy_accounts: [{ id: IDS.discrepancy, label: LABELS.discrepancy }],
   expense_codes: [
-    { code: '400', name: 'Advertising' },
-    { code: '404', name: 'Bank Fees' },
-    { code: '420', name: 'Entertainment' },
+    { code: "400", name: "Advertising" },
+    { code: "404", name: "Bank Fees" },
+    { code: "420", name: "Entertainment" },
   ],
   contacts: [
     { id: IDS.directorContact, label: LABELS.directorContact },
@@ -75,9 +75,9 @@ export const accountCodes: AccountCodesResponse = {
 export const billCodes: BillCodesResponse = {
   connected: true,
   bill_codes: [
-    { code: '300', name: 'Purchases' },
-    { code: '310', name: 'Cost of Goods Sold' },
-    { code: '469', name: 'Rent' },
+    { code: "300", name: "Purchases" },
+    { code: "310", name: "Cost of Goods Sold" },
+    { code: "469", name: "Rent" },
   ],
   default_all: true,
   selected_codes: [],

@@ -5,12 +5,12 @@
 // logic and an extra hint node, so sharing would parameterise more than it saves. That was a
 // considered decision in the first cleanse; do not "finish the job" by folding it in.
 
-import { useState, type CSSProperties } from 'react';
-import Icon from '../Icon';
-import type { StepProps, SubmitFn } from '../../lib/types';
+import { useState, type CSSProperties } from "react";
+import Icon from "../Icon";
+import type { StepProps, SubmitFn } from "../../lib/types";
 
 type SaveExitLinkProps = {
-  saveAndExit: StepProps['saveAndExit'];
+  saveAndExit: StepProps["saveAndExit"];
   /** The step's own save. Optional: two steps have nothing of their own to persist. */
   submitFn?: SubmitFn;
   disabled?: boolean;
@@ -22,7 +22,7 @@ export function SaveExitLink({
   saveAndExit,
   submitFn,
   disabled = false,
-  className = 'btn-link-center',
+  className = "btn-link-center",
   style,
 }: SaveExitLinkProps) {
   const [exiting, setExiting] = useState(false);
@@ -43,7 +43,7 @@ export function SaveExitLink({
       disabled={disabled || exiting}
       onClick={onClick}
     >
-      {exiting ? 'Saving…' : 'Save & Exit'}
+      {exiting ? "Saving…" : "Save & Exit"}
     </button>
   );
 }
@@ -58,7 +58,7 @@ export function SaveExitLink({
 // parameterizing more than it saves.
 type StepNavProps = {
   back: () => void;
-  saveAndExit: StepProps['saveAndExit'];
+  saveAndExit: StepProps["saveAndExit"];
   stepSubmit?: SubmitFn;
   tryNext: () => void;
   saving: boolean;
@@ -83,9 +83,9 @@ export function StepNav({
         <SaveExitLink saveAndExit={saveAndExit} submitFn={stepSubmit} disabled={saving} />
         <button className="btn btn-primary" onClick={tryNext} disabled={saving}>
           {saving ? (
-            'Saving…'
+            "Saving…"
           ) : isLastContentStep ? (
-            'Complete'
+            "Complete"
           ) : (
             <>
               Save &amp; Next <Icon.Arrow />
