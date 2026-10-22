@@ -111,9 +111,11 @@ export type Plan = {
   name: string;
   /** Major units, e.g. 560 or 560.5. */
   amount: number;
+  /** The server's price text. Not shown: the wizard formats `amount` with formatPrice. */
   formatted_amount: string;
+  /** ISO code ("HKD") - the ONLY currency label the wizard shows (owner, 2026-10-21). */
   currency_code: string;
-  /** In practice the bare code ("HKD") -- `currency_info` carries no symbols. */
+  /** Carries the code too since 2026-10-21, but is never read: a symbol must never show. */
   currency_symbol: string;
   billing_interval: string;
 };

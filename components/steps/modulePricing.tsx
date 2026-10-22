@@ -13,7 +13,7 @@
 
 import CardBrand from '../CardBrand';
 import Icon from '../Icon';
-import { formatAmount } from '@/lib/amount';
+import { formatPrice } from '@minty/shared/money';
 import { MODULE_ID_BY_CODE } from '../../lib/modules';
 import type { ModuleId, Plan, PlanCatalog } from '../../lib/api';
 import type { PaymentMethod } from '../../lib/billing';
@@ -40,7 +40,7 @@ export const MODULES: ModuleCard[] = [
     desc: 'Track and reimburse small office expenses with receipt capture and instant approvals.',
     img: '/pettycash-icon.png',
     tone: 'pettycash',
-    price: '280 HKD per Month',
+    price: 'HKD 280 per Month',
   },
   {
     id: 'bills',
@@ -48,7 +48,7 @@ export const MODULES: ModuleCard[] = [
     desc: 'Capture vendor payments, schedule payments, and reconcile with your accounting ledger.',
     img: '/payment-icon.png',
     tone: 'payment',
-    price: '280 HKD per Month',
+    price: 'HKD 280 per Month',
   },
 ];
 
@@ -68,34 +68,6 @@ export function plansByModuleId(
 }
 
 /**
- * "HKD 560", but "HKD 560.50" when a price genuinely carries cents.
- *
- * Spaced, because the leading token is whatever /api/onboarding/plans sends as
- * `currency_symbol` — and `currency_info` is empty, so in practice that is the bare
- * code "HKD" rather than a symbol. "HKD560" runs together; "HKD 560" reads. The same
- * space is what lib/amount.js formatMoney() already puts there.
- */
-export function money(
-  symbol: string | null | undefined,
-  value: string | number | null | undefined,
-): string {
-  const text = trimZeroCents(formatAmount(value));
-  if (!text) return '';
-  return symbol ? `${symbol} ${text}` : text;
-}
-
-/**
- * "280.00" -> "280", but "280.50" stays. The rule money() has always applied, pulled
- * out because the module cards and the beta footnote print the SERVER's
- * `formatted_amount` rather than formatting the number themselves — and that string
- * arrives with the cents on, because it is the same formatter the invoice memo and the
- * charge-confirmation dialog use, where the cents belong.
- */
-export function trimZeroCents(text: string | null | undefined): string {
-  return String(text ?? '').replace(/\.00$/, '');
-}
-
-/**
  * What the picked modules cost, and when the first charge falls.
  *
  * Lifted out of the summary panel because the billing sheet has to quote the SAME figures: the
@@ -105,7 +77,9 @@ export function trimZeroCents(text: string | null | undefined): string {
  * `picked` is the priced rows (module + plan), already filtered to the selection.
  */
 export function priceSelection(catalog: PlanCatalog | null | undefined, picked: PricedRow[]) {
-  const symbol = picked[0].plan.currency_symbol || picked[0].plan.currency_code || '';
+  // The ISO code, never `currency_symbol`: every amount is "HKD 400", never "HK$ 400" (owner,
+  // 2026-10-21, @minty/shared/money). No code -> '' and the figure stands alone.
+  const currencyCode = picked[0].plan.currency_code || '';
   const interval = picked[0].plan.billing_interval || 'month';
   const subtotal = picked.reduce((sum, r) => sum + r.plan.amount, 0);
 
@@ -122,7 +96,7 @@ export function priceSelection(catalog: PlanCatalog | null | undefined, picked: 
     bundleCodes.every((c) => pickedCodes.includes(c));
 
   return {
-    symbol,
+    currencyCode,
     interval,
     subtotal,
     isBundle,
@@ -201,10 +175,12 @@ export function ModuleSubscriptionSummary({
   // on the page until there's actually something to show beside them.
   if (picked.length === 0) return null;
 
-  const { symbol, interval, isBundle, subtotal, total } = priceSelection(catalog, picked);
+  const { currencyCode, interval, isBundle, subtotal, total } = priceSelection(catalog, picked);
   // Only when the bundle actually saves something. A struck price equal to the one
   // beside it is not a discount, it is a typo the payer has to work out.
-  const struck = isBundle && subtotal > total ? trimZeroCents(formatAmount(subtotal)) : null;
+  // Prices drop a trailing ".00" (formatPrice: "HKD 560", "HKD 560.50"). The struck figure
+  // passes no code - see the note on the tile below.
+  const struck = isBundle && subtotal > total ? formatPrice(subtotal, null) : null;
 
   return (
     <aside className="sub-summary" aria-live="polite">
@@ -308,7 +284,7 @@ export function ModuleSubscriptionSummary({
               currency; the figure that will actually be charged is the one named in full. */}
           <span className="sub-tile-figure">
             {struck ? <span className="sub-tile-was">{struck}</span> : null}
-            <span className="sub-tile-now">{money(symbol, total)}</span>
+            <span className="sub-tile-now">{formatPrice(total, currencyCode)}</span>
           </span>
           <span className="sub-tile-per">/{interval}</span>
         </span>

@@ -2,6 +2,7 @@
   "name": "minty-onboarding-web",
   "version": "0.1.0",
   "private": true,
+  "prettier": "@minty/shared/prettier",
   "scripts": {
     "dev": "next dev -p 3030",
     "dev:poke": "node scripts/dev-poke.mjs",

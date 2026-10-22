@@ -12,19 +12,17 @@ import { ModalFrame } from './ModalFrame';
 import { useToast } from './Toast';
 import { fetchCountries, fetchCurrencies } from '@/lib/refData';
 import { currencyForCountry } from '@/lib/countryCurrency';
-import { acceptAmountInput, formatAmount, toAmountEditString } from '@/lib/amount';
-import { formatDate } from '@/lib/date';
+import { acceptAmountInput, formatAmount, toAmountEditString } from '@minty/shared/money';
+import { formatInstantDay, todayIso as todayInHongKong } from '@minty/shared/dates';
 import { fetchBillingStatus } from '@/lib/billing';
 import { urlFor } from '../lib/apiRoutes';
 import {
-  EMAIL_ASCII_HINT,
   composeWizardPhone,
-  isEmail,
   parseWizardPhone,
   splitStoredPhone,
   type DialCountry,
 } from '../lib/validation';
-import { useEmailInput } from '../lib/emailInput';
+import { EMAIL_ASCII_HINT, isEmail, useEmailInput } from '@minty/shared/emailInput';
 import { inviteExpiryLabel } from '../lib/invites';
 import { toIsoDate } from '../lib/date';
 import { SaveExitLink, StepNav } from './steps/StepChrome';
@@ -1030,20 +1028,13 @@ export function StepSalesSetting({
     String(p.openingBalance).trim() === '';
 
   // Server-authoritative "today" in Hong Kong time — caps the opening date so a
-  // future date can't be selected. Falls back to an HK date derived in the
-  // browser if the server call fails (the raw browser timezone isn't trusted).
+  // future date can't be selected. Falls back to Hong Kong's day read in the browser
+  // (@minty/shared/dates' todayIso) if the server call fails (the raw browser timezone
+  // isn't trusted).
   const dateRef = useRef<HTMLDivElement>(null);
   const [serverToday, setServerToday] = useState('');
   const [showDateError, setShowDateError] = useState(false);
-  const hkTodayFallback = (() => {
-    try {
-      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Hong_Kong' }).format(new Date());
-    } catch {
-      // Intl without the HK zone: fall back to the browser's own local date.
-      return toIsoDate(new Date());
-    }
-  })();
-  const openingMaxDate = serverToday || hkTodayFallback;
+  const openingMaxDate = serverToday || todayInHongKong();
   const dateIsFuture = !!p.openingDate && p.openingDate > openingMaxDate;
   useEffect(() => {
     let cancelled = false;
@@ -2440,14 +2431,8 @@ export function StepAllSet({
      of what is about to be shown is still unknown. */
   const ready = !committing && hasConsent !== null;
 
-  const trialEndLabel = trialEnd
-    ? formatDate(new Date(trialEnd), {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        upper: false,
-      })
-    : null;
+  // "12 Sep 2026", the day the trial ends in Hong Kong (@minty/shared/dates).
+  const trialEndLabel = trialEnd ? formatInstantDay(new Date(trialEnd)) : null;
 
   return (
     <>

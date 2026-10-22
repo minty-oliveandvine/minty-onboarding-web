@@ -14,9 +14,32 @@ sign-in, legal text and the Xero connection — and never verifies anything itse
 | User-facing error copy | [../ERROR_COPY.md](../ERROR_COPY.md) |
 | Manual QA checklist for the wizard, grounded in the docs above and the e2e suite's traps, plus the `pettycashv3` rows each step writes | [qa-checklist.md](qa-checklist.md) |
 
+Shared code (the shared-code refactor, 2026-10-21): this app's non-UI helpers come from
+`@minty/shared` - `money` (amounts), `dates` (`formatDay` / `formatInstantDay` / `todayIso`:
+"12 Sep 2026", days reckoned in Hong Kong), `env` (`envUrl`, the two base URLs in
+`lib/apiRoutes.ts`), `errorCopy` (`errorCopy`, `friendlyError`, `HOUSE_FALLBACK`), `emailInput`
+(the email rules and `useEmailInput`) and `clientValue` (`useMounted`). Kept local because only
+this app has them: `lib/date.ts`'s `toIsoDate` (a picked day in the browser's zone) and the
+uuid and phone rules in `lib/validation.ts`.
+
+Config files on the package's presets (2026-10-22), the same in every Next.js app:
+`tsconfig.json` extends `@minty/shared/tsconfig.base.json` (only `paths`, `include` and `exclude`
+stay here); `eslint.config.mjs` is `@minty/shared/eslint` with nothing added; `package.json`'s
+`"prettier"` key names `@minty/shared/prettier` - double quotes, so the code still in single quotes
+is reformatted in a separate commit (`.prettierignore` stays local); `vitest.config.mts` is
+`mintyVitest(import.meta.url)`; `playwright.config.ts` is `mintyPlaywright({ port: 3030, baseURL:
+BASE_URL, timeout: 30_000 })` with `BASE_URL` from `e2e/urls.ts`; and `next.config.ts` wraps its
+`/auth*` redirects, `turbopack.root` and `env` block in `withMintyDefaults`, which adds the security
+headers and `transpilePackages` and, new here, `poweredByHeader: false` and `allowedDevOrigins:
+["127.0.0.1"]`. `e2e/phone.spec.ts` takes `expectNoSideScroll` from `@minty/shared/e2e`; the rest of
+`e2e/helpers.ts` stays local - its launch token is `scope: "onboarding"`, its credentials read
+`E2E_USER_ID` / `E2E_ENTITY_ID`, and its `reachable` counts any answer, a 5xx included.
+`.editorconfig` is the same file in every app. A shared setting changes in the package and a pin
+bump, never here.
+
 Email fields take English only (2026-10-01): the sign-in email, the business email (step 1),
-the invite (step 8) and the billing email spread `useEmailInput` (`lib/emailInput.ts`; the
-rules, `EMAIL_RE`, `sanitizeEmailInput` and `EMAIL_ASCII_HINT`, are in `lib/validation.ts`).
+the invite (step 8) and the billing email spread `useEmailInput` (`@minty/shared/emailInput`,
+with the rules, `EMAIL_RE`, `isEmail`, `sanitizeEmailInput` and `EMAIL_ASCII_HINT`).
 The inputs are `type="text" inputMode="email"`, because the browser's `type="email"` let Hangul
 through after the "@". Anything outside printable ASCII is dropped once an IME composition
 ends, and the field says why. minty-onboarding-api and Flask refuse it again with a 400.

@@ -1,11 +1,13 @@
-// lib/date -- the month-abbreviation rule and the local-vs-UTC calendar day.
+// lib/date's toIsoDate (the local-vs-UTC calendar day) and the shared day format the flow
+// shows.
 //
 // `toIsoDate` was written out four separate times across three components before it
 // was consolidated here (twice inside the same function, 71 lines apart), so the
 // point of these tests is to pin the behaviour that consolidation settled on.
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { formatDate, formatToday, toIsoDate } from '../date';
+import { formatDay, formatInstantDay, todayIso } from '@minty/shared/dates';
+import { toIsoDate } from '../date';
 
 /** Run `fn` as if the machine were in `tz`. Node re-reads process.env.TZ on change. */
 function withTz(tz: string, fn: () => void) {
@@ -22,60 +24,42 @@ function withTz(tz: string, fn: () => void) {
   }
 }
 
-describe('formatDate', () => {
-  const JUNE = new Date(2026, 5, 12);
-  const SEPT = new Date(2026, 8, 12);
-  const opts = { day: '2-digit', month: 'short', year: 'numeric' } as const;
+describe('the day format the flow shows (@minty/shared/dates)', () => {
+  // owner 2026-10-21: one shared module (@minty/shared/dates). lib/date's formatDate and
+  // formatToday are gone: the flow's dates (Xero "Last connected", the trial end) are
+  // formatDay / formatInstantDay. Was "12 SEP 2026" (an upper-case month, today in the
+  // browser's zone) and, for the trial end, "1 Sep 2026" in the browser's zone.
 
-  it('writes the flow shape: 12 JUN 2026', () => {
-    expect(formatDate(JUNE, opts)).toBe('12 JUN 2026');
+  it('writes "12 Sep 2026": a two-digit day and a three-letter, title-case month', () => {
+    expect(formatDay('2026-09-12')).toBe('12 Sep 2026');
+    expect(formatDay('2026-09-01')).toBe('01 Sep 2026');
+    expect(formatDay('2026-06-12')).toBe('12 Jun 2026');
   });
 
-  it('cuts September to three letters', () => {
-    // The whole reason this function exists. en-GB `month: short` gives "Sept", so
-    // an unpatched Intl call prints "12 AUG" beside "12 SEPT" and the column stops
-    // lining up. Assert against Intl directly so the test fails if CLDR ever changes
-    // in a way that makes the workaround unnecessary -- that is worth knowing.
-    const raw = new Intl.DateTimeFormat('en-GB', opts).format(SEPT);
-    expect(raw).toContain('Sept');
-    expect(formatDate(SEPT, opts)).toBe('12 SEP 2026');
-  });
-
-  it('gives every month exactly three letters', () => {
-    for (let m = 0; m < 12; m += 1) {
-      const out = formatDate(new Date(2026, m, 1), opts);
-      const month = out.split(' ')[1];
-      expect(month, `month index ${m}`).toHaveLength(3);
+  it('gives every month exactly three letters (never "Sept")', () => {
+    for (let m = 1; m <= 12; m += 1) {
+      const out = formatDay(`2026-${String(m).padStart(2, '0')}-01`);
+      expect(out, `month ${m}`).toMatch(/^01 [A-Z][a-z]{2} 2026$/);
     }
   });
 
-  it('keeps the locale separators rather than slicing them away', () => {
-    // Only the month part is cut. Slicing a literal part would eat the spaces.
-    expect(formatDate(JUNE, opts).split(' ')).toHaveLength(3);
+  it("reads an instant's day in Hong Kong, not the browser's zone", () => {
+    // 2026-09-12 20:00 UTC is already 13 September in Hong Kong.
+    expect(formatInstantDay(new Date(Date.UTC(2026, 8, 12, 20, 0)))).toBe('13 Sep 2026');
+    // A date-only trial end parses as UTC midnight: the same day in Hong Kong.
+    expect(formatInstantDay(new Date('2026-11-21'))).toBe('21 Nov 2026');
   });
 
-  it('uppercases by default and honours upper: false', () => {
-    expect(formatDate(JUNE, opts)).toBe('12 JUN 2026');
-    expect(formatDate(JUNE, { ...opts, upper: false })).toBe('12 Jun 2026');
-  });
-
-  it('does not pass `upper` through to Intl', () => {
-    // `upper` is destructured out before the rest is handed to Intl. If it leaked
-    // through, Intl would throw on the unknown option.
-    expect(() => formatDate(JUNE, { ...opts, upper: false })).not.toThrow();
-  });
-});
-
-describe('formatToday', () => {
-  it('formats the current date in the flow shape', () => {
-    const now = new Date();
-    expect(formatToday()).toBe(
-      formatDate(now, { day: '2-digit', month: 'short', year: 'numeric' }),
+  it("formats today as Hong Kong's day", () => {
+    expect(formatDay(todayIso())).toMatch(/^\d{2} [A-Z][a-z]{2} \d{4}$/);
+    expect(todayIso()).toBe(
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Hong_Kong' }).format(new Date()),
     );
   });
 
-  it('matches DD MMM YYYY', () => {
-    expect(formatToday()).toMatch(/^\d{2} [A-Z]{3} \d{4}$/);
+  it('shows nothing for an unreadable value', () => {
+    expect(formatDay('not a date')).toBe('');
+    expect(formatInstantDay(new Date('nonsense'))).toBe('');
   });
 });
 

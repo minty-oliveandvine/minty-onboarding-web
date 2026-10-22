@@ -6,30 +6,16 @@
 // and would make a failure to start look like a failed assertion. Specs check the stack
 // is reachable first and skip with a readable reason when it is not.
 //
+// One worker (@minty/shared/playwright's, like the rest of the shared settings). The
+// authenticated specs write to a shared dev database and restore what they changed;
+// running them concurrently would interleave those writes.
+//
 //   npm run test:e2e
 //
 // See e2e/README.md for the environment variables the authenticated specs need and for
 // what this layer deliberately does NOT cover.
 
-import { defineConfig, devices } from '@playwright/test';
+import { mintyPlaywright } from '@minty/shared/playwright';
 import { BASE_URL } from './e2e/urls';
 
-export default defineConfig({
-  testDir: './e2e',
-  // One worker. The authenticated specs write to a shared dev database and restore what
-  // they changed; running them concurrently would interleave those writes.
-  workers: 1,
-  fullyParallel: false,
-  forbidOnly: !!process.env.CI,
-  retries: 0,
-  reporter: [['list']],
-  timeout: 30_000,
-  expect: { timeout: 10_000 },
-  use: {
-    baseURL: BASE_URL,
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'off',
-  },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-});
+export default mintyPlaywright({ port: 3030, baseURL: BASE_URL, timeout: 30_000 });

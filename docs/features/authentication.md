@@ -41,11 +41,13 @@ same set - it remembers the set for 30 minutes from any same-site trip (Minty
 
 ## Where the calls go
 
-`lib/flaskBase.ts`: `PETTY_CASH_URL` — Minty; `lib/apiRoutes.ts`:
-`ONBOARDING_API_URL` — minty-onboarding-api, for the paths listed in
-`DJANGO_PATHS`; everything else (`/xero_connect`, `/logout`, `/entity`, and the old `/auth*`
-forwards) is Minty. Both are inlined at build time (`next.config.ts` `env`) — an unset
-value silently means `localhost` and breaks the OTP and Xero calls in a deployment.
+`lib/apiRoutes.ts` holds both bases: `FLASK_BASE` (`PETTY_CASH_URL` — Minty) and
+`ONBOARDING_API_BASE` (`ONBOARDING_API_URL` — minty-onboarding-api, for the paths listed in
+`DJANGO_PATHS`); everything else (`/xero_connect`, `/logout`, `/entity`, and the old `/auth*`
+forwards) is Minty. Both are inlined at build time (`next.config.ts` `env`) and read through
+`@minty/shared/env`'s `envUrl` (2026-10-21): trimmed, every trailing slash stripped, the local
+port (8000 / 8030) in development and tests, and a production build throws when one is unset -
+CI and every Vercel environment set both.
 
 ## Tests
 

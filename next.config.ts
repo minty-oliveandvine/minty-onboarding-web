@@ -1,36 +1,20 @@
-import type { NextConfig } from 'next';
+import { withMintyDefaults } from '@minty/shared/next';
 import path from 'node:path';
 
-import { FLASK_BASE } from './lib/flaskBase';
-
-/**
- * Sent with every response (the URL security round, 2026-10-05). Same values in minty-web,
- * minty-payment-request-web and minty-onboarding-web, and in Flask (pettycash/core/http_hardening.py).
- * - Referrer-Policy same-origin: another site never sees a path or query from here (tokens).
- * - frame-ancestors / X-Frame-Options: only this app may frame its pages (clickjacking).
- * - HSTS in production builds only; a browser ignores it over plain http anyway.
- */
-const securityHeaders = [
-  { key: 'Referrer-Policy', value: 'same-origin' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  ...(process.env.NODE_ENV === 'production'
-    ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }]
-    : []),
-];
+import { FLASK_BASE } from './lib/apiRoutes';
 
 /**
  * Sign-in is minty-web's since phase 2 (2026-10-05): log in, sign up and invitations were this
  * app's /auth and /auth/confirm. Nothing links there any more; an old bookmark goes through Flask,
  * which knows where sign-in lives - `/register` forwards to sign-up, `/` to log in. Flask's address
- * is the one this app already has (lib/flaskBase.ts), so no variable of minty-web's is needed here.
+ * is the one this app already has (lib/apiRoutes.ts), so no variable of minty-web's is needed here.
+ *
+ * withMintyDefaults (@minty/shared/next) supplies what every Minty app sends and needs: the
+ * security headers on every path (the URL security round, 2026-10-05), no X-Powered-By,
+ * `transpilePackages: ['@minty/shared']` (the package ships .ts source) and 127.0.0.1 as an
+ * allowed dev origin. Only this app's own settings are below.
  */
-
-const nextConfig: NextConfig = {
-  async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
-  },
+export default withMintyDefaults({
   async redirects() {
     return [
       {
@@ -50,13 +34,11 @@ const nextConfig: NextConfig = {
   },
   // The two sibling URLs this app reads, inlined at build time into the client bundle
   // and the server. Raw values only ('' when unset - Next skips an undefined key and
-  // leaves `process.env.X` un-inlined); the defaults and the trailing-slash strip live
-  // where they are read: PETTY_CASH_URL in lib/flaskBase.ts, ONBOARDING_API_URL in
-  // lib/apiRoutes.ts.
+  // leaves `process.env.X` un-inlined); the defaults, the trim, the trailing-slash strip
+  // and the production throw live where both are read: lib/apiRoutes.ts, through
+  // @minty/shared/env's envUrl.
   env: {
     PETTY_CASH_URL: process.env.PETTY_CASH_URL ?? '',
     ONBOARDING_API_URL: process.env.ONBOARDING_API_URL ?? '',
   },
-};
-
-export default nextConfig;
+});

@@ -11,7 +11,8 @@
 
 import type { ModuleId } from './api';
 import type { DisplayStep, ResumeDecision, WizardState } from './types';
-import { isEmail, phoneOk } from './validation';
+import { isEmail } from '@minty/shared/emailInput';
+import { phoneOk } from './validation';
 import { toIsoDate } from './date';
 
 // Derive the frontend step id to land on from a backend /state payload. The

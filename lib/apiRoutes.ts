@@ -24,16 +24,32 @@
 // minty-web in phase 2, and the legal DOCUMENTS left Flask altogether on 2026-10-12: they
 // are minty-web's pages, `/terms` and `/privacy`. Only `/legal/current` is still Flask's.)
 
-import { FLASK_BASE } from './flaskBase';
+import { envUrl } from '@minty/shared/env';
 
-const strip = (url: string | undefined): string => (url || '').replace(/\/$/, '');
+// Both base URLs are read through @minty/shared/env's envUrl (owner 2026-10-21: one shared
+// module (@minty/shared/env)): trimmed, every trailing slash stripped, the local port in
+// development and tests, and a THROW in a production build when the variable is unset - CI and
+// every Vercel environment set both. next.config.ts lists them under `env`, so these literal
+// `process.env.X` reads are inlined at build time.
 
-// Where the extracted onboarding API lives — ONBOARDING_API_URL, inlined at build time
-// (next.config.ts `env`). Defaults to the port its docker service and
-// `manage.py runserver` both use.
-export const ONBOARDING_API_BASE = strip(process.env.ONBOARDING_API_URL || 'http://localhost:8030');
+// Base URL of Petty Cash (the Minty Flask app) — PETTY_CASH_URL. The live Terms VERSION
+// (/legal/current) and the Xero OAuth entry point (/xero_auth) live there, and every
+// /api/onboarding/* path not listed below falls through to it. The legal documents themselves
+// are minty-web's (my.dailyminty.com/terms and /privacy); Flask's /legal/terms and
+// /legal/privacy 404. The fallback is Flask's local port in the owner's layout (2026-10-16).
+export const FLASK_BASE = envUrl(
+  'PETTY_CASH_URL',
+  process.env.PETTY_CASH_URL,
+  'http://localhost:8000',
+);
 
-const FLASK = strip(FLASK_BASE);
+// Where the extracted onboarding API lives — ONBOARDING_API_URL. The fallback is the port its
+// docker service and `manage.py runserver` both use.
+export const ONBOARDING_API_BASE = envUrl(
+  'ONBOARDING_API_URL',
+  process.env.ONBOARDING_API_URL,
+  'http://localhost:8030',
+);
 
 // Paths the Django service answers. A `:name` segment matches exactly one segment.
 //
@@ -96,7 +112,7 @@ export function baseFor(path: string | null | undefined): string {
     .split('?')[0]
     .split('#')[0];
   const segments = pathname.split('/');
-  return DJANGO_PATTERNS.some((p) => matches(p, segments)) ? ONBOARDING_API_BASE : FLASK;
+  return DJANGO_PATTERNS.some((p) => matches(p, segments)) ? ONBOARDING_API_BASE : FLASK_BASE;
 }
 
 /**

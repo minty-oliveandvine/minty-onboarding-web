@@ -14,7 +14,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useMounted } from '../lib/useMounted';
+import { useMounted } from '@minty/shared/clientValue';
 
 export function ModalFrame({
   labelledBy,

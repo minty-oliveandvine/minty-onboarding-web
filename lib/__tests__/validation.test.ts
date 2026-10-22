@@ -5,16 +5,19 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  EMAIL_ASCII_HINT,
   EMAIL_RE,
-  UUID_RE,
   hasNonAsciiEmailChar,
   isEmail,
+  sanitizeEmailInput,
+} from '@minty/shared/emailInput';
+import {
+  UUID_RE,
   isUuid,
   capNational,
   maxNationalDigits,
   phoneError,
   phoneForApi,
-  sanitizeEmailInput,
   sanitizePhoneInput,
   splitStoredPhone,
   type DialCountry,
@@ -120,6 +123,47 @@ describe('sanitizeEmailInput', () => {
   it('says when a character was not English', () => {
     expect(hasNonAsciiEmailChar('user@회사.com')).toBe(true);
     expect(hasNonAsciiEmailChar('user@example.com')).toBe(false);
+  });
+});
+
+describe('the email rule -- what the shared copy must keep', () => {
+  // Pinned before EMAIL_RE, EMAIL_ASCII_HINT, sanitizeEmailInput and hasNonAsciiEmailChar
+  // moved to @minty/shared/emailInput (the shared-code refactor, 2026-10-21); they still hold.
+
+  it('has the exact hint wording', () => {
+    expect(EMAIL_ASCII_HINT).toBe('Email can only contain English letters, numbers and symbols.');
+  });
+
+  it('has the exact pattern: printable ASCII minus "@" either side, a dot in the domain', () => {
+    expect(EMAIL_RE.source).toBe(
+      '^[\\x21-\\x3F\\x41-\\x7E]+@[\\x21-\\x3F\\x41-\\x7E]+\\.[\\x21-\\x3F\\x41-\\x7E]+$',
+    );
+    expect(EMAIL_RE.flags).toBe('');
+  });
+
+  it('accepts any printable symbol and any dots, even ones no mail server would take', () => {
+    expect(isEmail('a!#$%&*<>"@b.c')).toBe(true);
+    expect(isEmail('a@b..c')).toBe(true);
+    expect(isEmail('.a@.b.c')).toBe(true);
+  });
+
+  it('keeps case: the strip does not lower-case', () => {
+    expect(sanitizeEmailInput('A@B.CO')).toBe('A@B.CO');
+  });
+
+  it('drops tabs, newlines, DEL, a no-break space and an emoji in the strip', () => {
+    expect(sanitizeEmailInput('a\t@\nb.c\u007F')).toBe('a@b.c');
+    expect(sanitizeEmailInput('a\u00a0@b.c')).toBe('a@b.c');
+    expect(sanitizeEmailInput('a\u{1F600}@b.c')).toBe('a@b.c');
+  });
+
+  it('calls control characters and spaces ASCII, so they strip without raising the hint', () => {
+    // hasNonAsciiEmailChar tests \x00-\x7F; the strip keeps only \x21-\x7E. A space or a
+    // tab is removed silently, with no "English only" message.
+    expect(hasNonAsciiEmailChar('a b@c.d')).toBe(false);
+    expect(hasNonAsciiEmailChar('a\t@c.d')).toBe(false);
+    expect(hasNonAsciiEmailChar('a\u00a0@c.d')).toBe(true);
+    expect(hasNonAsciiEmailChar('')).toBe(false);
   });
 });
 

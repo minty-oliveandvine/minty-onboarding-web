@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import Icon from './Icon';
-import { friendlyError } from '../lib/errorCopy';
+import { HOUSE_FALLBACK, friendlyError } from '@minty/shared/errorCopy';
 import NavMenu from './NavMenu';
 import {
   StepCreateEntity,
@@ -16,11 +16,11 @@ import {
   StepInvite,
   StepAllSet,
 } from './OnboardingSteps';
-import { toAmountString } from '@/lib/amount';
+import { toAmountString } from '@minty/shared/money';
 import { browserTimezone } from '@/lib/browserTimezone';
 import { fetchCurrencies } from '@/lib/refData';
 import { currencyDecimals } from './steps/pettyCashFields';
-import { formatToday } from '@/lib/date';
+import { formatDay, todayIso } from '@minty/shared/dates';
 import { urlFor } from '../lib/apiRoutes';
 import { MODULE_CODE_BY_ID, MODULE_ID_BY_CODE } from '../lib/modules';
 import {
@@ -67,7 +67,7 @@ import type {
 import type { AccountOptions, StepProps, SubmitFn, WizardState, SetState, XeroConflict } from '../lib/types';
 import { inviteRows } from '../lib/invites';
 import { phoneForApi } from '../lib/validation';
-import { useMounted } from '../lib/useMounted';
+import { useMounted } from '@minty/shared/clientValue';
 
 // Baked-in defaults that used to live in TWEAK_DEFAULTS (tweaks-panel removed from prod build)
 // Minty v2 values (mirror --mv2-action-primary / --mv2-text-link / --mv2-state-selected).
@@ -468,7 +468,7 @@ export default function OnboardingApp() {
         } catch {
           /* ignore */
         }
-        const today = formatToday();
+        const today = formatDay(todayIso());
         // The Xero tenant/org name reported back by Xero (real connected entity).
         const xeroOrg = (p.get('org') || '').trim();
         // Wrong-account block: the backend refused to connect because the Xero
@@ -642,7 +642,7 @@ export default function OnboardingApp() {
     // Starting a fresh attempt clears any prior wrong-account banner so a retry
     // doesn't show a stale "use the account for X" message.
     setXeroMismatch('');
-    const today = formatToday();
+    const today = formatDay(todayIso());
     if (!state.entity.id) {
       set({
         xero: {
@@ -957,7 +957,7 @@ export default function OnboardingApp() {
       if (!res.ok)
         return {
           ok: false,
-          error: friendlyError(data, 'Something went wrong on my end. Mind trying again?'),
+          error: friendlyError(data, HOUSE_FALLBACK),
         };
       return { ok: true };
     } catch {

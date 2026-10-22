@@ -9,6 +9,7 @@
 // restoreSavedStep. It lands on step 1 and leaves on step 2 -- never near step 9 (see
 // e2e/onboardingApi.ts).
 
+import { expectNoSideScroll } from '@minty/shared/e2e';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { reachable, requireCredentials, type Credentials } from './helpers';
 import * as api from './onboardingApi';
@@ -72,10 +73,7 @@ test('Phone Number: picker, length message, paste and resume at 360px', async ({
     await expect(number).toHaveValue('07700900123');
 
     // Nothing overflows the phone's width.
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow, 'horizontal overflow at 360px').toBeLessThanOrEqual(0);
+    await expectNoSideScroll(page);
 
     // Saved as E.164, the trunk 0 dropped.
     await save.click();

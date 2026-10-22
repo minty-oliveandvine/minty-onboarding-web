@@ -199,3 +199,99 @@ describe('the properties the list alone does not show', () => {
     expect(urlFor(undefined)).toBe(FLASK + '/');
   });
 });
+
+describe('the base URLs (envUrl, @minty/shared/env)', () => {
+  // Pinned before the base URLs moved to @minty/shared/env's envUrl (the shared-code
+  // refactor, 2026-10-21; lib/flaskBase.ts folded in here). The cases marked with the owner's
+  // date are deliberate changes: both bases are now trimmed, lose EVERY trailing slash, fall
+  // back when blank, and a production build throws when one is unset.
+
+  async function load(petty: string | undefined, onboarding: string | undefined) {
+    vi.resetModules();
+    vi.stubEnv('PETTY_CASH_URL', petty);
+    vi.stubEnv('ONBOARDING_API_URL', onboarding);
+    return import('../apiRoutes');
+  }
+
+  it('uses PETTY_CASH_URL as given', async () => {
+    const { FLASK_BASE } = await load('https://accounts-api.dailyminty.com', DJANGO);
+    expect(FLASK_BASE).toBe('https://accounts-api.dailyminty.com');
+  });
+
+  it('defaults the Petty Cash base to localhost:8000 when unset or empty', async () => {
+    expect((await load(undefined, DJANGO)).FLASK_BASE).toBe('http://localhost:8000');
+    expect((await load('', DJANGO)).FLASK_BASE).toBe('http://localhost:8000');
+  });
+
+  it('keeps a path prefix, minus its trailing slashes', async () => {
+    expect((await load('https://flask.example/base//', DJANGO)).FLASK_BASE).toBe(
+      'https://flask.example/base',
+    );
+  });
+
+  it('strips EVERY trailing slash from the onboarding base', async () => {
+    // owner 2026-10-21: one shared module (@minty/shared/env). Was: only one ("https://django.example/").
+    const { ONBOARDING_API_BASE, urlFor } = await load(FLASK, DJANGO + '//');
+    expect(ONBOARDING_API_BASE).toBe(DJANGO);
+    expect(urlFor('/api/onboarding/state')).toBe(DJANGO + '/api/onboarding/state');
+  });
+
+  it('trims whitespace from both bases', async () => {
+    // owner 2026-10-21: one shared module (@minty/shared/env). Was: neither trimmed, and a trailing space hid the slash from the strip.
+    const { ONBOARDING_API_BASE, FLASK_BASE } = await load(' ' + FLASK + '/ ', ' ' + DJANGO + ' ');
+    expect(ONBOARDING_API_BASE).toBe(DJANGO);
+    expect(FLASK_BASE).toBe(FLASK);
+  });
+
+  it('falls back for a blank or slash-only value', async () => {
+    // owner 2026-10-21: one shared module (@minty/shared/env). Was: "   " stood as the base, and "/" became "".
+    expect((await load('   ', '   ')).FLASK_BASE).toBe('http://localhost:8000');
+    expect((await load('/', '/')).FLASK_BASE).toBe('http://localhost:8000');
+    expect((await load('/', '/')).ONBOARDING_API_BASE).toBe('http://localhost:8030');
+  });
+
+  it('throws in a production build when a base is unset', async () => {
+    // owner 2026-10-21: one shared module (@minty/shared/env). Was: a silent localhost fallback.
+    vi.stubEnv('NODE_ENV', 'production');
+    await expect(load('', DJANGO)).rejects.toThrow('PETTY_CASH_URL is not set');
+    vi.stubEnv('NODE_ENV', 'production');
+    await expect(load(FLASK, '')).rejects.toThrow('ONBOARDING_API_URL is not set');
+    vi.stubEnv('NODE_ENV', 'production');
+    expect((await load(FLASK, DJANGO)).urlFor('/entity')).toBe(FLASK + '/entity');
+  });
+
+  it('strips EVERY trailing slash from the Flask base', async () => {
+    vi.resetModules();
+    vi.stubEnv('PETTY_CASH_URL', FLASK + '///');
+    vi.stubEnv('ONBOARDING_API_URL', DJANGO);
+    const { urlFor } = await import('../apiRoutes');
+    expect(urlFor('/entity')).toBe(FLASK + '/entity');
+  });
+
+  it('exports ONBOARDING_API_BASE as the stripped value', async () => {
+    vi.resetModules();
+    vi.stubEnv('PETTY_CASH_URL', FLASK);
+    vi.stubEnv('ONBOARDING_API_URL', DJANGO + '/');
+    const { ONBOARDING_API_BASE } = await import('../apiRoutes');
+    expect(ONBOARDING_API_BASE).toBe(DJANGO);
+  });
+
+  it('answers a listed path on Django and anything else on Flask, nullish included', async () => {
+    const { baseFor } = await loadRoutes();
+    expect(baseFor('/api/onboarding/plans')).toBe(DJANGO);
+    expect(baseFor('/legal/current')).toBe(FLASK);
+    expect(baseFor('')).toBe(FLASK);
+    expect(baseFor(null)).toBe(FLASK);
+    expect(baseFor(undefined)).toBe(FLASK);
+  });
+
+  it('routes by exact segments: a trailing slash on a listed path goes to Flask', async () => {
+    const { baseFor } = await loadRoutes();
+    expect(baseFor('/api/onboarding/plans/')).toBe(FLASK);
+  });
+
+  it('does not prepend a slash to a full URL, so it is glued onto the base', async () => {
+    const { urlFor } = await loadRoutes();
+    expect(urlFor('https://other.example/x')).toBe(FLASK + '/https://other.example/x');
+  });
+});

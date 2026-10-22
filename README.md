@@ -21,9 +21,10 @@ Nothing else reads a base URL. Moving an endpoint between the two is adding or d
 there; `urlFor(path)` is used for fetches and for navigations alike.
 
 Set both vars explicitly in any deployed environment. [`next.config.ts`](next.config.ts) lists
-them under `env`, so they are inlined at build time, and an unset var silently falls back to
-`localhost` — a failure this app has shipped before, which is why
-[`lib/flaskBase.ts`](lib/flaskBase.ts) carries a note about it.
+them under `env`, so they are inlined at build time. Both are read through `@minty/shared/env`'s
+`envUrl` in [`lib/apiRoutes.ts`](lib/apiRoutes.ts): trimmed, every trailing slash stripped, the
+local port in development and tests, and a production build **throws** when one is unset (a
+silent `localhost` fallback is a failure this app has shipped before).
 
 There is no cookie involved: every call carries the onboarding JWT as a bearer token, so no
 `credentials: 'include'`.
@@ -40,7 +41,7 @@ There is no cookie involved: every call carries the onboarding JWT as a bearer t
 | `npm run test:e2e`                | end-to-end against a running stack — see [e2e/README.md](e2e/README.md)      |
 | `npm run build`                   | production build (also type-checks)                                          |
 | `npm run lint`                    | eslint — **0 errors** is the baseline now                                    |
-| `npm run format` / `format:check` | prettier (single quotes, width 100)                                          |
+| `npm run format` / `format:check` | prettier, `@minty/shared/prettier` (double quotes, width 100)                |
 | `npm run check:routes`            | just the routing tests — asserts every wizard path reaches the right service |
 
 ## Before changing anything

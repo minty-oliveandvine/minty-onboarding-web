@@ -57,6 +57,21 @@ the pair (it is decorative and blocks nothing). Tests: `StepSelectModule.cards.t
 card's accessibility), `StepSelectModule.selection.test.tsx` (what must not change),
 `StepSelectModule.test.tsx` (confetti).
 
+### Amounts and prices (owner, 2026-10-21)
+
+One money rule in every app, from `@minty/shared/money` (this app's old `lib/amount.ts` became
+it): an amount is the ISO code, a non-breaking space (U+00A0, so a line never splits the code
+from its amount), then the number grouped in threes with the currency's decimal places -
+`HKD 1,234.50`. Never a symbol (`HK$`); with no code the number stands alone;
+extra decimals are cut, not rounded. Step 5's opening balance uses `formatAmount` /
+`acceptAmountInput` with `currencyDecimals` (the code sits in the field's prefix).
+
+The exception here is a **price** - Step 2's after-trial tile and its struck bundle subtotal -
+which drops a trailing `.00` through `formatPrice`: `HKD 560`, but `HKD 560.50`. The label is
+the plan's `currency_code`; the API's `currency_symbol` is never read, so a symbol cannot show.
+The struck subtotal carries no code, because it sits directly above one. Tests:
+`modulePricing.money.test.ts`, `lib/__tests__/amount.test.ts` (consumer-side proof).
+
 ### Step 3's choices (9E, 2026-10-19)
 
 The step is optional and says so with three explicit choices, not copy alone:
@@ -192,8 +207,18 @@ by clicking *Complete* on step 8 against the disposable entity.
 
 ## Copy and errors
 
-`lib/errorCopy.ts` and `docs/ERROR_COPY.md`: the backends answer `{"error": "…"}` in the
-words the wizard shows; the app never invents a message for a status it does not know.
+`@minty/shared/errorCopy` (`friendlyError`, `errorCopy`, `HOUSE_FALLBACK`; this app's
+`lib/errorCopy.ts` until 2026-10-21) and `docs/ERROR_COPY.md`: the backends answer
+`{"error": "…"}` in the words the wizard shows; the app never invents a message for a status it
+does not know.
+
+### Dates
+
+Every date the wizard shows is `@minty/shared/dates`' format, "12 Sep 2026" (owner,
+2026-10-21; it was "12 SEP 2026"): Xero's *Last connected* is `formatDay(todayIso())` - today
+in Hong Kong, not the browser's zone - and All Set's trial end is `formatInstantDay`, the day
+the trial ends in Hong Kong. Step 5's opening-date cap falls back to `todayIso()` when the
+server's time cannot be read. Tests: `lib/__tests__/date.test.ts`.
 
 ## Tests
 

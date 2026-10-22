@@ -1,12 +1,15 @@
-// lib/amount -- amounts follow the company currency's decimal places (2026-10-13).
+// Amounts follow the company currency's decimal places (2026-10-13).
 //
 // The opening balance used to be typed and shown with exactly 2 decimals whatever the
 // currency. A zero-decimal currency (JPY) must refuse "12.5" and show "1,200"; the
 // default stays 2 so every existing caller is unchanged.
+//
+// lib/amount.ts became @minty/shared/money (owner 2026-10-21: one money rule); this file
+// stays as the consumer-side proof that the shared module still does what the wizard needs.
 
 import { describe, expect, it } from 'vitest';
 
-import { acceptAmountInput, formatAmount, toAmountString } from '../amount';
+import { acceptAmountInput, formatAmount, toAmountString } from '@minty/shared/money';
 
 describe('two decimals (the default)', () => {
   it('keeps today\'s behaviour', () => {

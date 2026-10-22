@@ -9,10 +9,11 @@
 @import 'material-symbols/rounded.css';
 /* The faces, shared: @minty/shared/theme.css (--font-sans, --font-brand). Plain CSS resolved by
    the bundler, exactly like the icon font above - misspell it and the build fails. This app takes
-   the TOKENS only: it consumes no packaged component, so it needs no `@source` line (that is what
-   makes Tailwind scan node_modules for classes) and no transpilePackages.
-   This app loads no Plus Jakarta Sans, so --font-brand falls through to Inter; its own topbar
-   `.brand` keeps its three hand-written values (see minty-web's components/ui/Wordmark.tsx). */
+   the TOKENS and plain .ts modules only (`@minty/shared/money`, compiled through next.config's
+   transpilePackages): it consumes no packaged component, so it needs no `@source` line (that is
+   what makes Tailwind scan node_modules for classes).
+   app/layout.tsx loads Plus Jakarta Sans (700) for --font-brand, the topbar `.brand` alone; that
+   rule keeps its three hand-written values (see minty-web's components/ui/Wordmark.tsx). */
 @import '@minty/shared/theme.css';
 
 /* Brand tokens shared with the payment-request module so Tailwind utilities
@@ -2722,7 +2723,7 @@ textarea::placeholder {
        is what made the panel read as a different design from the one that was drawn. */
   --sum-label: var(--mv2-text-muted); /* "Selected plan", "Payment method" */
   --sum-note: var(--mv2-text-muted); /* "/month" */
-  --sum-price: var(--mv2-text-link); /* "HK$280", "Add card" */
+  --sum-price: var(--mv2-text-link); /* "HKD 280", "Add card" */
   /* A single module's name. NOT the bundle: SuperMinty is --pick-ink, and the two states
        are deliberately different colours. Plan names are not a status, so primary ink. */
   --sum-plan: var(--mv2-text-primary);

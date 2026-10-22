@@ -33,8 +33,7 @@ import {
 } from '@/lib/billing';
 import CardBrand from './CardBrand';
 import Icon from './Icon';
-import { EMAIL_ASCII_HINT, isEmail } from '../lib/validation';
-import { useEmailInput } from '../lib/emailInput';
+import { EMAIL_ASCII_HINT, isEmail, useEmailInput } from '@minty/shared/emailInput';
 
 /**
  * The billing sheet — pick the card, agree to be billed for this entity.

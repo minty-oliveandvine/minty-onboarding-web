@@ -24,7 +24,8 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { useMounted } from '../lib/useMounted';
+import { useMounted } from '@minty/shared/clientValue';
+import { HOUSE_FALLBACK } from '@minty/shared/errorCopy';
 
 export type Tone = 'success' | 'error' | 'warning' | 'info';
 
@@ -93,7 +94,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       hide,
       success: (m?: string) => show(m || 'All done!', 'success'),
       error: (m?: string) =>
-        show(m || 'Something went wrong on my end. Mind trying again?', 'error'),
+        show(m || HOUSE_FALLBACK, 'error'),
       warning: (m?: string) => show(m || 'Worth a quick look before you carry on.', 'warning'),
       info: (m?: string) => show(m || "Here's something worth knowing.", 'info'),
     }),

@@ -4,7 +4,7 @@
 // same design, Material Symbols icons, and Inter font. Items are visual
 // placeholders for the onboarding flow (they close the drawer, no navigation).
 import { useEffect, useId, useState } from 'react';
-import { useMounted } from '../lib/useMounted';
+import { useMounted } from '@minty/shared/clientValue';
 import { createPortal } from 'react-dom';
 import { urlFor } from '../lib/apiRoutes';
 

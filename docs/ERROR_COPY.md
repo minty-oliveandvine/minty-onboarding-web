@@ -28,11 +28,12 @@ is decided in `lib/apiRoutes.ts`. Both speak the same `{error}` shape, so the co
 below are unchanged -- and the onboarding service deliberately uses `error` rather than
 Django's conventional `detail` for exactly that reason.
 
-There is one wrapper (`lib/billing.js`) and ~26 hand-rolled `fetch` calls, so
-`lib/errorCopy.js` is the shared seam instead:
+There is one wrapper (`lib/billing.ts`) and ~26 hand-rolled `fetch` calls, so
+`@minty/shared/errorCopy` is the shared seam instead (this app's `lib/errorCopy.ts` until
+2026-10-21; one module in every app since):
 
 ```js
-import { friendlyError } from '../lib/errorCopy';
+import { friendlyError } from '@minty/shared/errorCopy';
 
 const data = await res.json().catch(() => ({}));
 if (!res.ok) {
@@ -40,13 +41,16 @@ if (!res.ok) {
 }
 ```
 
-- **`friendlyError(data, fallback)`** reads Flask's `{error}` or the auth
-  endpoints' `{message}`, and hands it to `errorCopy`.
+- **`friendlyError(data, fallback)`** reads Flask's `{error}`, then Django's
+  `{detail}`, then the auth endpoints' `{message}` - the first that holds text is
+  judged - and hands it to `errorCopy`.
 - **`errorCopy(message, fallback)`** returns the server's words only when they
   read as a sentence. It refuses network/parser text (`Failed to fetch`,
-  `Unexpected token '<'`), bare machine codes (`invalid_state`), anything
-  object-shaped (which used to render as `[object Object]` via `.toString()`),
-  and anything over 200 characters.
+  `Unexpected token '<'`), bare machine codes (`invalid_state`), single words in
+  any case (`Forbidden`, `INVALID_STATE`), markup and braces, HTTP statuses
+  (`HTTP 502`, `http500`), bare reason phrases (`Bad Gateway`), and anything over
+  200 characters. A list or a field-error map (`{"email": ["…"]}`) is flattened to
+  its sentences first.
 
 Always pass the specific fallback **into** `friendlyError` rather than writing
 `friendlyError(data, '') || "..."` -- the helper already falls back, so the

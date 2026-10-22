@@ -43,7 +43,9 @@ release. Tick each box against a disposable test entity — never one you care a
       from behind the cards' two top corners, and it is gone within ~2 seconds.
 - [ ] The price summary shows the plan, the card under its network's mark (our own
       wordmark — Mastercard's circles drawn as circles, not the issuer's artwork), and the
-      after-trial price.
+      after-trial price as the ISO code and the figure (a non-breaking space between, so they
+      never wrap apart), whole cents dropped (`HKD 480`,
+      never `HK$`; the struck bundle subtotal above it is the bare figure, `560`).
 - [ ] The billing sheet (card capture + consent) opens from this step and Stripe.js loads
       only once it is opened, not on page load.
 - [ ] Card network marks on this screen and on minty-web's equivalent summary render at

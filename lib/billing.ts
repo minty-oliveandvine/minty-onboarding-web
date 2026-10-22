@@ -1,6 +1,6 @@
 import type { ApiErrorBody } from './api';
 import { urlFor } from './apiRoutes';
-import { errorCopy, HOUSE_FALLBACK } from './errorCopy';
+import { errorCopy, HOUSE_FALLBACK } from '@minty/shared/errorCopy';
 
 /**
  * The payer's saved cards, and consent to bill an entity — the wire half of the billing sheet.
