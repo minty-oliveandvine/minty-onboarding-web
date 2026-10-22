@@ -14,7 +14,9 @@ jobs:
   check:
     uses: minty-oliveandvine/.github/.github/workflows/next-web.yml@v1
     with:
-      extra-scripts: check:routes
+      extra-scripts: |
+        check:routes
+        format:check
       build-env: |
         PETTY_CASH_URL=http://localhost:8010
         ONBOARDING_API_URL=http://localhost:8030
