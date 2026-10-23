@@ -23,6 +23,9 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Getting Started — Onboarding",
   description: "Entity creation onboarding flow",
+  // A shared link's preview card: the image is app/opengraph-image.png (and twitter-image.png).
+  openGraph: { siteName: "Minty", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({
