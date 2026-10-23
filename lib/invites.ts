@@ -7,8 +7,8 @@
 // had been typed this session -- which after a resume was nothing. One function, used by
 // both, is what makes them agree.
 
-import type { Invitation } from './api';
-import type { InviteRow } from './types';
+import type { Invitation } from "./api";
+import type { InviteRow } from "./types";
 
 /**
  * An API invitation as the wizard holds it.
@@ -22,8 +22,8 @@ export function inviteRow(inv: Invitation, prior?: Partial<InviteRow>): InviteRo
     id: inv.id,
     email: inv.email,
     role: inv.role,
-    first: inv.first_name || prior?.first || '',
-    last: inv.last_name || prior?.last || '',
+    first: inv.first_name || prior?.first || "",
+    last: inv.last_name || prior?.last || "",
     expiresAt: inv.expires_at ?? null,
     expired: !!inv.expired,
   };
@@ -33,7 +33,7 @@ export function inviteRow(inv: Invitation, prior?: Partial<InviteRow>): InviteRo
 export function inviteRows(list: Invitation[], prior: InviteRow[] = []): InviteRow[] {
   const known: Record<string, InviteRow> = {};
   for (const x of prior) if (x.email) known[x.email.toLowerCase()] = x;
-  return list.map((inv) => inviteRow(inv, known[(inv.email || '').toLowerCase()]));
+  return list.map((inv) => inviteRow(inv, known[(inv.email || "").toLowerCase()]));
 }
 
 /**
@@ -42,14 +42,14 @@ export function inviteRows(list: Invitation[], prior: InviteRow[] = []): InviteR
  * Empty for an invitation that never expires (older rows) or has no date yet.
  */
 export function inviteExpiryLabel(
-  row: Pick<InviteRow, 'expiresAt' | 'expired'>,
+  row: Pick<InviteRow, "expiresAt" | "expired">,
   now: Date = new Date(),
 ): string {
-  if (row.expired) return 'Expired';
-  if (!row.expiresAt) return '';
+  if (row.expired) return "Expired";
+  if (!row.expiresAt) return "";
   const ms = new Date(row.expiresAt).getTime() - now.getTime();
-  if (Number.isNaN(ms)) return '';
-  if (ms <= 0) return 'Expired';
+  if (Number.isNaN(ms)) return "";
+  if (ms <= 0) return "Expired";
   const days = Math.ceil(ms / 86_400_000);
-  return days <= 1 ? 'Expires within a day' : `Expires in ${days} days`;
+  return days <= 1 ? "Expires within a day" : `Expires in ${days} days`;
 }

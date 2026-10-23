@@ -9,10 +9,10 @@
 // users straight to "Connect to Accounting" past an incomplete step, so `current_step` and
 // `max_reached` are used only to raise the ceiling on steps already unlocked.
 
-import type { ModuleId } from './api';
-import type { DisplayStep, ResumeDecision, WizardState } from './types';
-import { isEmail, phoneOk } from './validation';
-import { toIsoDate } from './date';
+import type { ModuleId } from "./api";
+import type { DisplayStep, ResumeDecision, WizardState } from "./types";
+import { isEmail, phoneOk } from "./validation";
+import { toIsoDate } from "./date";
 
 // Derive the frontend step id to land on from a backend /state payload. The
 // backend's own `current_step` is derived from a different ordering (modules →
@@ -76,47 +76,47 @@ export function deriveResumeStep(s: WizardState, savedStep: unknown): ResumeDeci
 }
 
 export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
-  { id: 1, label: 'Basic Information' },
-  { id: 2, label: 'Select Module' },
-  { id: 3, label: 'User Invite' },
-  { id: 4, label: 'Connect to Accounting System' },
-  { id: 5, label: 'Sales Setting' },
-  { id: 6, label: 'Account Code Setting' },
-  { id: 7, label: 'Others' },
-  { id: 8, label: 'Payment Request Settings' },
-  { id: 9, label: 'All Set' },
+  { id: 1, label: "Basic Information" },
+  { id: 2, label: "Select Module" },
+  { id: 3, label: "User Invite" },
+  { id: 4, label: "Connect to Accounting System" },
+  { id: 5, label: "Sales Setting" },
+  { id: 6, label: "Account Code Setting" },
+  { id: 7, label: "Others" },
+  { id: 8, label: "Payment Request Settings" },
+  { id: 9, label: "All Set" },
 ];
 
 // Display-only structure: collapses Sales (5) + Account Code (6) + Others (7)
 // into a single "Petty Cash Settings" segment with sub-items. Petty Cash and
 // Bill segments only appear when their respective modules are selected on step 2.
 export function getDisplaySteps(modules: readonly ModuleId[]): DisplayStep[] {
-  const hasPetty = modules.includes('pettyCash');
-  const hasBills = modules.includes('bills');
+  const hasPetty = modules.includes("pettyCash");
+  const hasBills = modules.includes("bills");
   const out: DisplayStep[] = [
-    { label: 'Basic Information', tiny: 'Basic', ids: [1] },
-    { label: 'Select Module', tiny: 'Module', ids: [2] },
-    { label: 'User Invite', tiny: 'Invite', ids: [3] },
-    { label: 'Connect to Accounting System', tiny: 'Accounting', ids: [4] },
+    { label: "Basic Information", tiny: "Basic", ids: [1] },
+    { label: "Select Module", tiny: "Module", ids: [2] },
+    { label: "User Invite", tiny: "Invite", ids: [3] },
+    { label: "Connect to Accounting System", tiny: "Accounting", ids: [4] },
   ];
   if (hasPetty) {
     out.push({
-      label: 'Petty Cash Settings',
-      tiny: 'Petty Cash',
+      label: "Petty Cash Settings",
+      tiny: "Petty Cash",
       ids: [5, 6, 7],
     });
   }
   if (hasBills) {
-    out.push({ label: 'Payment Request Settings', tiny: 'Payment', ids: [8] });
+    out.push({ label: "Payment Request Settings", tiny: "Payment", ids: [8] });
   }
-  out.push({ label: 'All Set', tiny: 'All Set', ids: [9] });
+  out.push({ label: "All Set", tiny: "All Set", ids: [9] });
   return out;
 }
 
 // Flat list of step ids that are part of the active flow given the selected modules.
 export function getActiveStepIds(modules: readonly ModuleId[]): number[] {
-  const hasPetty = modules.includes('pettyCash');
-  const hasBills = modules.includes('bills');
+  const hasPetty = modules.includes("pettyCash");
+  const hasBills = modules.includes("bills");
   const ids = [1, 2, 3, 4];
   if (hasPetty) ids.push(5, 6, 7);
   if (hasBills) ids.push(8);
@@ -126,45 +126,45 @@ export function getActiveStepIds(modules: readonly ModuleId[]): number[] {
 
 export const initialState = (): WizardState => ({
   entity: {
-    name: '',
-    type: 'Private Limited',
-    industry: 'Retail & E-commerce',
+    name: "",
+    type: "Private Limited",
+    industry: "Retail & E-commerce",
     // Empty, like the phone's code: the person chooses both (owner, 2026-10-19). Both are
     // required -- step 1 refuses Save & Next without them, and so does the API.
-    country: '',
-    currency: '',
-    fyStart: 'Jan',
-    phone: '',
-    phoneCountry: '',
-    email: '',
+    country: "",
+    currency: "",
+    fyStart: "Jan",
+    phone: "",
+    phoneCountry: "",
+    email: "",
   },
   modules: [],
-  xero: { connected: false, org: '' },
+  xero: { connected: false, org: "" },
   pettyCash: {
     float: 2000,
     claimLimit: 200,
-    defaultAccount: '6420 · Office Supplies',
+    defaultAccount: "6420 · Office Supplies",
     requireReceipt: true,
     autoReplenish: false,
     notifyCustodian: true,
     electronicMethods: [],
     deliveryMethods: [],
     expenseCodes: { all: true, selected: {} },
-    pcAccount: '',
-    depositAccount: '',
-    directorCode: '',
-    cashSalesCode: '',
-    discrepancyCode: '',
-    directorContact: '',
-    cashSaleContact: '',
-    discrepancyContact: '',
+    pcAccount: "",
+    depositAccount: "",
+    directorCode: "",
+    cashSalesCode: "",
+    discrepancyCode: "",
+    directorContact: "",
+    cashSaleContact: "",
+    discrepancyContact: "",
     openingDate: toIsoDate(new Date()),
   },
   bills: {
-    terms: 'Net 30',
+    terms: "Net 30",
     threshold: 5000,
-    flow: 'Two-step',
-    glAccount: '2100 · Accounts Payable',
+    flow: "Two-step",
+    glAccount: "2100 · Accounts Payable",
     ocr: true,
     partial: true,
     dedupe: true,
@@ -178,13 +178,11 @@ export function isStepComplete(id: number, state: WizardState): boolean {
     case 1: {
       const e = state.entity;
       // Phone and email are optional — judged only when non-empty.
-      const emailOk = e.email.trim() === '' || isEmail(e.email);
+      const emailOk = e.email.trim() === "" || isEmail(e.email);
       // Country and currency are required (2026-10-19): a resume never counts a company
       // without them as past step 1. Any non-empty name, as the page and the API take it
       // (the owner, 2026-10-19 - a two-character rule here made "A" save and then stall).
-      return (
-        e.name.trim().length > 0 && !!e.country && !!e.currency && phoneOk(e.phone) && emailOk
-      );
+      return e.name.trim().length > 0 && !!e.country && !!e.currency && phoneOk(e.phone) && emailOk;
     }
     case 2:
       return state.modules.length > 0;
@@ -194,7 +192,7 @@ export function isStepComplete(id: number, state: WizardState): boolean {
       return !!(state.xero && state.xero.connected); // Accounting connection is required
     case 5: {
       const b = state.pettyCash && state.pettyCash.openingBalance;
-      return b !== undefined && b !== null && String(b).trim() !== '';
+      return b !== undefined && b !== null && String(b).trim() !== "";
     }
     case 6:
       return true;

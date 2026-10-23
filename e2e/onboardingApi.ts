@@ -16,9 +16,9 @@
 // spec that does reach All Set (walk.spec.ts) gets there by clicking through, on the
 // disposable entity, and calls `resetEntity()` before and after.
 
-import { expect, type APIRequestContext, type Page } from '@playwright/test';
-import type { Credentials } from './helpers';
-import { ONBOARDING_API_URL } from './urls';
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import type { Credentials } from "./helpers";
+import { ONBOARDING_API_URL } from "./urls";
 
 const auth = (creds: Credentials) => ({ Authorization: `Bearer ${creds.token}` });
 
@@ -27,7 +27,7 @@ export async function readState(request: APIRequestContext, creds: Credentials) 
     `${ONBOARDING_API_URL}/api/onboarding/state?entity_id=${creds.entityId}`,
     { headers: auth(creds) },
   );
-  expect(res.status(), 'GET /state').toBe(200);
+  expect(res.status(), "GET /state").toBe(200);
   return res.json();
 }
 
@@ -55,11 +55,11 @@ export async function land(
   creds: Credentials,
   step: number = SAFE_STEP,
 ) {
-  if (step === 9) throw new Error('refusing to land on step 9: arrival there finalizes the entity');
+  if (step === 9) throw new Error("refusing to land on step 9: arrival there finalizes the entity");
   await writeSavedStep(request, creds, step);
   await page.goto(`/?token=${creds.token}&entity_id=${creds.entityId}`);
-  await expect(page.locator('.stepper')).toBeVisible();
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator(".stepper")).toBeVisible();
+  await page.waitForLoadState("networkidle");
   // The wizard has ADOPTED the entity, not just rendered: it writes its session under a
   // per-entity key only once /state gave it the id. Without this a load whose /state
   // body was unusable falls back to the standalone prototype -- every later step then
@@ -67,8 +67,12 @@ export async function land(
   // without leaving the page, which reads as a pass until something downstream is empty.
   await expect
     .poll(
-      () => page.evaluate((k) => window.localStorage.getItem(k), `minty_onboarding_session:${creds.entityId}`),
-      { message: 'the wizard did not pick up the entity from GET /state' },
+      () =>
+        page.evaluate(
+          (k) => window.localStorage.getItem(k),
+          `minty_onboarding_session:${creds.entityId}`,
+        ),
+      { message: "the wizard did not pick up the entity from GET /state" },
     )
     .not.toBeNull();
 }
@@ -93,7 +97,7 @@ export async function restoreSavedStep(
 
 /** The step id of the tile the stepper is showing as active. */
 export async function activeStep(page: Page): Promise<number> {
-  const key = await page.locator('.step.active').first().getAttribute('data-step-key');
+  const key = await page.locator(".step.active").first().getAttribute("data-step-key");
   return Number(key);
 }
 
@@ -118,9 +122,9 @@ export async function resetEntity(
     headers: auth(creds),
     data: { entity_id: creds.entityId },
   });
-  expect(res.status(), 'POST /xero/disconnect (entity reset)').toBe(200);
+  expect(res.status(), "POST /xero/disconnect (entity reset)").toBe(200);
   await restoreSavedStep(request, creds, savedStep);
   const after = await readState(request, creds);
-  expect(after.status, 'the entity is back in onboarding').toBe('onboarding');
-  expect(after.xero?.connected, 'the entity has no Xero org').toBe(false);
+  expect(after.status, "the entity is back in onboarding").toBe("onboarding");
+  expect(after.xero?.connected, "the entity has no Xero org").toBe(false);
 }

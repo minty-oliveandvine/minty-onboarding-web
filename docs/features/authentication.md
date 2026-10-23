@@ -7,7 +7,7 @@ minty-web's `/login` (§2; the system-wide picture is `Minty/docs/features/authe
 
 ## 1. Launched from Minty
 
-Minty's *Create company* (and *resume*) send the browser to `/?token=<jwt>[&entity_id=…]
+Minty's _Create company_ (and _resume_) send the browser to `/?token=<jwt>[&entity_id=…]
 [&entity_name=…][&fresh=1]` — the 60-minute `scope: "onboarding"` token
 (`lib/wizardSession.ts::takeLaunchParams` reads `token`, `entity_id`, `entity_name`, `fresh`
 and the Xero-return parameters ONCE and clears them from the address bar before anything else

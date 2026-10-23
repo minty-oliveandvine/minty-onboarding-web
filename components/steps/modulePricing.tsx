@@ -12,12 +12,12 @@
 // Cash 80px, Payment Request 95px), and a colour-mix of the accent landed near neither.
 // `accent` is kept because the illustration inherits it as `currentColor`.
 
-import CardBrand from '../CardBrand';
-import Icon from '../Icon';
-import { formatAmount } from '@/lib/amount';
-import { MODULE_ID_BY_CODE } from '../../lib/modules';
-import type { ModuleId, Plan, PlanCatalog } from '../../lib/api';
-import type { PaymentMethod } from '../../lib/billing';
+import CardBrand from "../CardBrand";
+import Icon from "../Icon";
+import { formatAmount } from "@/lib/amount";
+import { MODULE_ID_BY_CODE } from "../../lib/modules";
+import type { ModuleId, Plan, PlanCatalog } from "../../lib/api";
+import type { PaymentMethod } from "../../lib/billing";
 
 /** One module card in the picker. `price` is the static fallback copy. */
 export type ModuleCard = {
@@ -35,20 +35,20 @@ export type ModuleCard = {
 export type PricedRow = { module: ModuleCard; plan: Plan; on: boolean };
 export const MODULES: ModuleCard[] = [
   {
-    id: 'pettyCash',
-    title: 'Petty Cash',
-    desc: 'Track and reimburse small office expenses with receipt capture and instant approvals.',
-    img: '/pettycash-icon.png',
-    accent: '#f5b945',
-    price: '280 HKD per Month',
+    id: "pettyCash",
+    title: "Petty Cash",
+    desc: "Track and reimburse small office expenses with receipt capture and instant approvals.",
+    img: "/pettycash-icon.png",
+    accent: "#f5b945",
+    price: "280 HKD per Month",
   },
   {
-    id: 'bills',
-    title: 'Payment Request',
-    desc: 'Capture vendor payments, schedule payments, and reconcile with your accounting ledger.',
-    img: '/payment-icon.png',
-    accent: '#3aa6f5',
-    price: '280 HKD per Month',
+    id: "bills",
+    title: "Payment Request",
+    desc: "Capture vendor payments, schedule payments, and reconcile with your accounting ledger.",
+    img: "/payment-icon.png",
+    accent: "#3aa6f5",
+    price: "280 HKD per Month",
   },
 ];
 
@@ -80,7 +80,7 @@ export function money(
   value: string | number | null | undefined,
 ): string {
   const text = trimZeroCents(formatAmount(value));
-  if (!text) return '';
+  if (!text) return "";
   return symbol ? `${symbol} ${text}` : text;
 }
 
@@ -92,7 +92,7 @@ export function money(
  * charge-confirmation dialog use, where the cents belong.
  */
 export function trimZeroCents(text: string | null | undefined): string {
-  return String(text ?? '').replace(/\.00$/, '');
+  return String(text ?? "").replace(/\.00$/, "");
 }
 
 /**
@@ -105,8 +105,8 @@ export function trimZeroCents(text: string | null | undefined): string {
  * `picked` is the priced rows (module + plan), already filtered to the selection.
  */
 export function priceSelection(catalog: PlanCatalog | null | undefined, picked: PricedRow[]) {
-  const symbol = picked[0].plan.currency_symbol || picked[0].plan.currency_code || '';
-  const interval = picked[0].plan.billing_interval || 'month';
+  const symbol = picked[0].plan.currency_symbol || picked[0].plan.currency_code || "";
+  const interval = picked[0].plan.billing_interval || "month";
   const subtotal = picked.reduce((sum, r) => sum + r.plan.amount, 0);
 
   // The bundle is a price in its own right, not a per-line discount, so it applies
@@ -210,7 +210,7 @@ export function ModuleSubscriptionSummary({
     <aside className="sub-summary" aria-live="polite">
       <h3 className="sub-summary-title">Subscription Summary</h3>
 
-      <div className={'sub-plan ' + (isBundle ? 'is-bundle' : 'is-single')}>
+      <div className={"sub-plan " + (isBundle ? "is-bundle" : "is-single")}>
         <span className="sub-row-label">Selected plan</span>
         <div className="sub-plan-value">
           {isBundle ? (

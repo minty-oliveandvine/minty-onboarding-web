@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 // Canonical flash toast — ONE source of truth for user-facing messages.
 //
@@ -22,17 +22,17 @@ import {
   useRef,
   useState,
   type ReactNode,
-} from 'react';
-import { createPortal } from 'react-dom';
-import { useMounted } from '../lib/useMounted';
+} from "react";
+import { createPortal } from "react-dom";
+import { useMounted } from "../lib/useMounted";
 
-export type Tone = 'success' | 'error' | 'warning' | 'info';
+export type Tone = "success" | "error" | "warning" | "info";
 
 const LABEL: Record<Tone, string> = {
-  success: 'Success',
-  error: 'Error',
-  warning: 'Warning',
-  info: 'Information',
+  success: "Success",
+  error: "Error",
+  warning: "Warning",
+  info: "Information",
 };
 
 const DISMISS_MS = 4000;
@@ -66,13 +66,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setVisible(false);
   }, []);
 
-  const show = useCallback((message: string, tone: Tone = 'success') => {
+  const show = useCallback((message: string, tone: Tone = "success") => {
     if (!message) return;
     // Auto-dismiss is scoped to THIS invocation. The Flask version's comment is
     // worth keeping in mind: an earlier iteration swept every `.toast` in the
     // DOM on a timer, which killed unrelated client-side validation toasts.
     if (timerRef.current) clearTimeout(timerRef.current);
-    setToast({ id: Date.now(), message, tone: tone in LABEL ? tone : 'success' });
+    setToast({ id: Date.now(), message, tone: tone in LABEL ? tone : "success" });
     setVisible(true);
     timerRef.current = setTimeout(() => setVisible(false), DISMISS_MS);
   }, []);
@@ -91,11 +91,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     () => ({
       show,
       hide,
-      success: (m?: string) => show(m || 'All done!', 'success'),
+      success: (m?: string) => show(m || "All done!", "success"),
       error: (m?: string) =>
-        show(m || 'Something went wrong on my end. Mind trying again?', 'error'),
-      warning: (m?: string) => show(m || 'Worth a quick look before you carry on.', 'warning'),
-      info: (m?: string) => show(m || "Here's something worth knowing.", 'info'),
+        show(m || "Something went wrong on my end. Mind trying again?", "error"),
+      warning: (m?: string) => show(m || "Worth a quick look before you carry on.", "warning"),
+      info: (m?: string) => show(m || "Here's something worth knowing.", "info"),
     }),
     [show, hide],
   );
@@ -112,7 +112,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <div
           key={toast.id}
           className="pointer-events-auto flex items-start gap-3 rounded border border-[#e5e7eb] bg-white p-3 text-sm text-[#171717] shadow"
-          role={toast.tone === 'error' ? 'alert' : 'status'}
+          role={toast.tone === "error" ? "alert" : "status"}
           data-toast-type={toast.tone}
         >
           <div className="min-w-0 flex-1">
@@ -142,6 +142,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export function useToast(): ToastApi {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be used inside <ToastProvider>');
+  if (!ctx) throw new Error("useToast must be used inside <ToastProvider>");
   return ctx;
 }

@@ -1,6 +1,6 @@
 // Inline icon set — stroke icons, 1.6 weight
 // Converted from window-global to ES module export.
-import type { SVGProps } from 'react';
+import type { SVGProps } from "react";
 
 /** Anything the caller wants on the <svg>: className, aria-*, a size override. */
 type SvgProps = SVGProps<SVGSVGElement>;

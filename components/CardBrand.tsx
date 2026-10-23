@@ -21,33 +21,33 @@
 /* Each network's own colour, used for the wordmark on a white chip. Anything absent falls
    through to the neutral ink below — a grey chip is a fine answer for a brand we cannot
    name a colour for, and inventing one would be a guess presented as a fact. */
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 const BRAND_INK: Record<string, string> = {
-  visa: '#1A1F71',
-  amex: '#006FCF',
-  american_express: '#006FCF',
-  discover: '#E1621E',
-  diners: '#0079BE',
-  diners_club: '#0079BE',
-  jcb: '#0B4EA2',
-  unionpay: '#E21836',
-  union_pay: '#005BAC',
-  eftpos_au: '#0F7A6E',
-  cartes_bancaires: '#153E7B',
+  visa: "#1A1F71",
+  amex: "#006FCF",
+  american_express: "#006FCF",
+  discover: "#E1621E",
+  diners: "#0079BE",
+  diners_club: "#0079BE",
+  jcb: "#0B4EA2",
+  unionpay: "#E21836",
+  union_pay: "#005BAC",
+  eftpos_au: "#0F7A6E",
+  cartes_bancaires: "#153E7B",
 };
 
 /* Long names in a 46px chip. The wordmark is what identifies the card, so it is shortened
    rather than shrunk to illegibility or clipped. */
 const SHORT: Record<string, string> = {
-  american_express: 'AMEX',
-  amex: 'AMEX',
-  diners_club: 'DINERS',
-  diners: 'DINERS',
-  cartes_bancaires: 'CB',
-  unionpay: 'UNIONPAY',
-  union_pay: 'UNIONPAY',
-  eftpos_au: 'EFTPOS',
+  american_express: "AMEX",
+  amex: "AMEX",
+  diners_club: "DINERS",
+  diners: "DINERS",
+  cartes_bancaires: "CB",
+  unionpay: "UNIONPAY",
+  union_pay: "UNIONPAY",
+  eftpos_au: "EFTPOS",
 };
 
 /**
@@ -74,7 +74,7 @@ type CardBrandProps = {
   /** Display name, when Minty already has a nicer one than the id. */
   label?: string | null;
   className?: string;
-  fit?: 'tile' | 'mark';
+  fit?: "tile" | "mark";
 };
 
 /* Mastercard's two circles, and nothing around them. */
@@ -88,12 +88,12 @@ const MIN_CROP = 4 * 6.2;
 export default function CardBrand({
   brand,
   label,
-  className = 'pm-brand',
-  fit = 'tile',
+  className = "pm-brand",
+  fit = "tile",
 }: CardBrandProps) {
-  const key = (brand || '').toLowerCase().replace(/[\s-]/g, '_');
-  const name = label || (brand ? brand.replace(/_/g, ' ') : 'Card');
-  const mark = fit === 'mark';
+  const key = (brand || "").toLowerCase().replace(/[\s-]/g, "_");
+  const name = label || (brand ? brand.replace(/_/g, " ") : "Card");
+  const mark = fit === "mark";
   // A cropped mark's own width and height go on the <svg> too: they are its intrinsic
   // ratio, which is what `height: auto` in the CSS sizes it by.
   const cropped = (x: number, y: number, w: number, h: number) =>
@@ -101,7 +101,7 @@ export default function CardBrand({
       viewBox: `${x} ${y} ${w} ${h}`,
       width: w,
       height: h,
-      preserveAspectRatio: 'xMaxYMid meet',
+      preserveAspectRatio: "xMaxYMid meet",
     }) as const;
 
   // The chip is decoration beside a row that already says "Visa ending in 4121" in words.
@@ -113,10 +113,10 @@ export default function CardBrand({
     </span>
   );
 
-  if (key === 'mastercard' || key === 'master_card') {
+  if (key === "mastercard" || key === "master_card") {
     const frame = mark
       ? cropped(CIRCLES.x, CIRCLES.y, CIRCLES.w, CIRCLES.h)
-      : { viewBox: '0 0 46 30', width: 46, height: 30 };
+      : { viewBox: "0 0 46 30", width: 46, height: 30 };
     return shell(
       <svg {...frame} role="presentation">
         <circle cx="18.5" cy="15" r="9" fill="#EB001B" />
@@ -129,7 +129,7 @@ export default function CardBrand({
     );
   }
 
-  const ink = BRAND_INK[key] || '#4A4D4B';
+  const ink = BRAND_INK[key] || "#4A4D4B";
   const text = SHORT[key] || name.toUpperCase();
   // Shrinks to fit rather than overflowing the chip — `textLength` with `spacingAndGlyphs`
   // is the only way to hold an unknown-length wordmark inside a fixed box without measuring
@@ -138,8 +138,8 @@ export default function CardBrand({
   // Cropped to the wordmark, flush right; visible overflow keeps an italic's slant.
   const crop = Math.max(length, MIN_CROP);
   const frame = mark
-    ? { ...cropped(23 + length / 2 - crop, CAPS.y, crop, CAPS.h), overflow: 'visible' }
-    : { viewBox: '0 0 46 30', width: 46, height: 30 };
+    ? { ...cropped(23 + length / 2 - crop, CAPS.y, crop, CAPS.h), overflow: "visible" }
+    : { viewBox: "0 0 46 30", width: 46, height: 30 };
 
   return shell(
     <svg {...frame} role="presentation">
@@ -153,7 +153,7 @@ export default function CardBrand({
         lengthAdjust="spacingAndGlyphs"
         fontSize="11"
         fontWeight="800"
-        fontStyle={key === 'visa' ? 'italic' : 'normal'}
+        fontStyle={key === "visa" ? "italic" : "normal"}
         letterSpacing="0.02em"
         fontFamily="Inter, system-ui, sans-serif"
       >

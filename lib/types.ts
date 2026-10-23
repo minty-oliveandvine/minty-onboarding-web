@@ -27,7 +27,7 @@ import type {
   ModuleId,
   PlanCatalog,
   Result,
-} from './api';
+} from "./api";
 
 //  ── Wizard state ────────────────────────────────────────────────────
 
@@ -237,7 +237,9 @@ export type StepProps = {
    * when the resend cooldown refused it. */
   resendInvite: (
     invitationId: string,
-  ) => Promise<Result<{ invitation?: Invitation }> | { ok: false; error: string; retryAfter: number }>;
+  ) => Promise<
+    Result<{ invitation?: Invitation }> | { ok: false; error: string; retryAfter: number }
+  >;
   completeOnboarding: () => Promise<FinalizeResult | Result>;
   /** From All Set back to a step finalize said is unfinished (the stepper is locked there). */
   returnToStep: (id: number) => void;

@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
 // Slide-in navigation drawer mirroring Module 2 (payment-request) NavMenu —
 // same design, Material Symbols icons, and Inter font. Items are visual
 // placeholders for the onboarding flow (they close the drawer, no navigation).
-import { useEffect, useId, useState } from 'react';
-import { useMounted } from '../lib/useMounted';
-import { createPortal } from 'react-dom';
-import { urlFor } from '../lib/apiRoutes';
+import { useEffect, useId, useState } from "react";
+import { useMounted } from "../lib/useMounted";
+import { createPortal } from "react-dom";
+import { urlFor } from "../lib/apiRoutes";
 
 const SECTIONS = [
   {
-    title: 'Petty Cash',
+    title: "Petty Cash",
     items: [
-      { label: 'Dashboard', icon: 'space_dashboard' },
-      { label: 'Reports', icon: 'bar_chart' },
+      { label: "Dashboard", icon: "space_dashboard" },
+      { label: "Reports", icon: "bar_chart" },
     ],
   },
   {
-    title: 'Payment Request',
-    items: [{ label: 'Payments', icon: 'local_atm' }],
+    title: "Payment Request",
+    items: [{ label: "Payments", icon: "local_atm" }],
   },
 ];
 
@@ -27,7 +27,7 @@ type NavMenuProps = {
   showFullMenu?: boolean;
 };
 
-export default function NavMenu({ companyName = 'Minty', showFullMenu = false }: NavMenuProps) {
+export default function NavMenu({ companyName = "Minty", showFullMenu = false }: NavMenuProps) {
   const [open, setOpen] = useState(false);
   const portalReady = useMounted();
   const panelId = useId();
@@ -38,44 +38,44 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
   };
 
   const abbr = !showFullMenu
-    ? '---'
-    : (companyName || 'Minty')
+    ? "---"
+    : (companyName || "Minty")
         .trim()
         .split(/\s+/)
         .filter(Boolean)
         .slice(0, 3)
         .map((w) => w[0])
-        .join('')
-        .toUpperCase() || '---';
+        .join("")
+        .toUpperCase() || "---";
 
   useEffect(() => {
     if (!open) return;
     // Keep the page scrollable (scrollbar stays visible) while the menu is open.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === "Escape") setOpen(false);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
   const itemClass =
-    'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-primary transition-colors hover:bg-primary/10';
+    "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-primary transition-colors hover:bg-primary/10";
 
   const drawer = (
     <div
-      className={`fixed inset-0 z-[200] overflow-x-hidden ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      className={`fixed inset-0 z-[200] overflow-x-hidden ${open ? "pointer-events-auto" : "pointer-events-none"}`}
       aria-hidden={!open}
     >
       <button
         type="button"
-        className={`absolute inset-0 cursor-pointer bg-black/40 transition-opacity duration-300 ease-out ${open ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 cursor-pointer bg-black/40 transition-opacity duration-300 ease-out ${open ? "opacity-100" : "opacity-0"}`}
         onClick={() => setOpen(false)}
         tabIndex={open ? 0 : -1}
         aria-label="Close menu"
       />
       <nav
         id={panelId}
-        className={`absolute right-0 top-0 flex h-full w-[min(100%,14rem)] max-w-[calc(100%-env(safe-area-inset-left)-env(safe-area-inset-right))] flex-col bg-white pt-[env(safe-area-inset-top,0px)] shadow-xl transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`absolute right-0 top-0 flex h-full w-[min(100%,14rem)] max-w-[calc(100%-env(safe-area-inset-left)-env(safe-area-inset-right))] flex-col bg-white pt-[env(safe-area-inset-top,0px)] shadow-xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
         aria-label="Main navigation"
       >
         <div className="flex flex-col gap-3 border-b border-primary/20 px-4 py-3 sm:px-6 sm:py-4">
@@ -116,7 +116,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
                   {SECTIONS.map((section) => (
                     <div
                       key={section.title}
-                      className={`flex flex-col ${section.title === 'Payment Request' ? 'mt-6 gap-3' : 'gap-1'}`}
+                      className={`flex flex-col ${section.title === "Payment Request" ? "mt-6 gap-3" : "gap-1"}`}
                       role="group"
                       aria-label={section.title}
                     >
@@ -149,7 +149,7 @@ export default function NavMenu({ companyName = 'Minty', showFullMenu = false }:
             )}
 
             <div
-              className={`-mx-4 shrink-0 sm:-mx-6 ${showFullMenu ? 'mt-4 border-t border-primary/15' : ''}`}
+              className={`-mx-4 shrink-0 sm:-mx-6 ${showFullMenu ? "mt-4 border-t border-primary/15" : ""}`}
               role="presentation"
             >
               <div className="flex flex-col gap-1 px-4 pt-4 sm:px-6">

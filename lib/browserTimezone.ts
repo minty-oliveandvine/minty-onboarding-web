@@ -3,8 +3,8 @@
 // refuses one it does not know, so "" (unavailable) simply sends nothing.
 export function browserTimezone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
   } catch {
-    return '';
+    return "";
   }
 }

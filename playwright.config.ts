@@ -11,25 +11,25 @@
 // See e2e/README.md for the environment variables the authenticated specs need and for
 // what this layer deliberately does NOT cover.
 
-import { defineConfig, devices } from '@playwright/test';
-import { BASE_URL } from './e2e/urls';
+import { defineConfig, devices } from "@playwright/test";
+import { BASE_URL } from "./e2e/urls";
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./e2e",
   // One worker. The authenticated specs write to a shared dev database and restore what
   // they changed; running them concurrently would interleave those writes.
   workers: 1,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
-  reporter: [['list']],
+  reporter: [["list"]],
   timeout: 30_000,
   expect: { timeout: 10_000 },
   use: {
     baseURL: BASE_URL,
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'off',
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "off",
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });

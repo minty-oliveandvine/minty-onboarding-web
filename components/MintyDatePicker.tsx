@@ -1,38 +1,38 @@
-'use client';
+"use client";
 
 // MintyDatePicker — themed calendar dropdown matching the mint design system.
 // Usage: <MintyDatePicker value={isoString} onChange={(iso) => …} placeholder="Select a date" />
-import { useState, useRef, useEffect } from 'react';
-import { toIsoDate } from '../lib/date';
+import { useState, useRef, useEffect } from "react";
+import { toIsoDate } from "../lib/date";
 
 const DP_MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
-const DP_DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const DP_DOW = ["S", "M", "T", "W", "T", "F", "S"];
 
 function dpParse(iso: string | null | undefined): Date | null {
   if (!iso) return null;
-  const [y, m, d] = iso.split('-').map(Number);
+  const [y, m, d] = iso.split("-").map(Number);
   if (!y || !m || !d) return null;
   return new Date(y, m - 1, d);
 }
 function dpFormat(date: Date | null): string {
-  return date ? toIsoDate(date) : '';
+  return date ? toIsoDate(date) : "";
 }
 function dpPretty(date: Date | null): string {
-  if (!date) return '';
-  return `${String(date.getDate()).padStart(2, '0')} ${DP_MONTHS[date.getMonth()].slice(0, 3)} ${date.getFullYear()}`;
+  if (!date) return "";
+  return `${String(date.getDate()).padStart(2, "0")} ${DP_MONTHS[date.getMonth()].slice(0, 3)} ${date.getFullYear()}`;
 }
 function dpSameDay(a: Date | null, b: Date | null): boolean {
   return (
@@ -57,7 +57,7 @@ type MintyDatePickerProps = {
 export default function MintyDatePicker({
   value,
   onChange,
-  placeholder = 'Select a date',
+  placeholder = "Select a date",
   minDate,
   maxDate,
 }: MintyDatePickerProps) {
@@ -81,7 +81,7 @@ export default function MintyDatePicker({
   // Hong Kong time — so future dates cannot be selected. Parse 'YYYY-MM-DD' via
   // dpParse (local midnight) to avoid the UTC shift of new Date('YYYY-MM-DD').
   const maxD = maxDate
-    ? typeof maxDate === 'string'
+    ? typeof maxDate === "string"
       ? dpParse(maxDate)
       : new Date(maxDate)
     : null;
@@ -100,13 +100,13 @@ export default function MintyDatePicker({
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -134,10 +134,10 @@ export default function MintyDatePicker({
     <div className="mdp" ref={ref}>
       <button
         type="button"
-        className={'mdp-trigger' + (open ? ' open' : '')}
+        className={"mdp-trigger" + (open ? " open" : "")}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className={'mdp-value' + (selected ? '' : ' placeholder')}>
+        <span className={"mdp-value" + (selected ? "" : " placeholder")}>
           {selected ? dpPretty(selected) : placeholder}
         </span>
         {isToday && <span className="mdp-today-tag">Today</span>}
@@ -220,10 +220,10 @@ export default function MintyDatePicker({
                   key={i}
                   type="button"
                   className={
-                    'mdp-cell' +
-                    (dpSameDay(d, selected) ? ' selected' : '') +
-                    (dpSameDay(d, today) ? ' today' : '') +
-                    (isBeforeMin(d) || isAfterMax(d) ? ' disabled' : '')
+                    "mdp-cell" +
+                    (dpSameDay(d, selected) ? " selected" : "") +
+                    (dpSameDay(d, today) ? " today" : "") +
+                    (isBeforeMin(d) || isAfterMax(d) ? " disabled" : "")
                   }
                   onClick={() => pick(d)}
                   disabled={isBeforeMin(d) || isAfterMax(d)}
@@ -242,7 +242,7 @@ export default function MintyDatePicker({
                 type="button"
                 className="mdp-clear-btn"
                 onClick={() => {
-                  onChange('');
+                  onChange("");
                   setOpen(false);
                 }}
               >

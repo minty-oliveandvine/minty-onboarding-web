@@ -22,12 +22,12 @@ export const MAX_AMOUNT_DECIMALS = 2;
 
 /** Strip grouping commas so only digits and at most one dot remain. */
 export function cleanAmountString(raw: string | number): string {
-  return String(raw).trim().replace(/,/g, '');
+  return String(raw).trim().replace(/,/g, "");
 }
 
 /** Insert a comma every 3 digits, right to left. "12345" -> "12,345". */
 function groupThousands(intPart: string): string {
-  return intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 /**
@@ -42,19 +42,19 @@ export function toAmountString(
   decimals: number = MAX_AMOUNT_DECIMALS,
 ): string | undefined {
   const cleaned = cleanAmountString(raw);
-  if (!cleaned || cleaned === '.') return undefined;
+  if (!cleaned || cleaned === ".") return undefined;
 
-  const negative = cleaned.startsWith('-');
+  const negative = cleaned.startsWith("-");
   const unsigned = negative ? cleaned.slice(1) : cleaned;
   if (!/^\d*\.?\d*$/.test(unsigned) || !/\d/.test(unsigned)) return undefined;
 
-  const [intRaw = '', decRaw = ''] = unsigned.split('.');
-  let intPart = intRaw.replace(/^0+(?=\d)/, '');
-  if (intPart === '') intPart = '0';
+  const [intRaw = "", decRaw = ""] = unsigned.split(".");
+  let intPart = intRaw.replace(/^0+(?=\d)/, "");
+  if (intPart === "") intPart = "0";
 
-  const dec = (decRaw + '0'.repeat(decimals)).slice(0, decimals);
+  const dec = (decRaw + "0".repeat(decimals)).slice(0, decimals);
 
-  const sign = negative && /[1-9]/.test(intPart + dec) ? '-' : '';
+  const sign = negative && /[1-9]/.test(intPart + dec) ? "-" : "";
   return decimals > 0 ? `${sign}${intPart}.${dec}` : `${sign}${intPart}`;
 }
 
@@ -67,14 +67,14 @@ export function formatAmount(
   value: string | number | null | undefined,
   decimals: number = MAX_AMOUNT_DECIMALS,
 ): string {
-  if (value === null || value === undefined) return '';
-  const raw = typeof value === 'number' ? numberToPlainString(value) : value;
+  if (value === null || value === undefined) return "";
+  const raw = typeof value === "number" ? numberToPlainString(value) : value;
   const normalized = toAmountString(raw, decimals);
-  if (normalized === undefined) return '';
-  const [intPart, dec] = normalized.split('.');
-  const negative = intPart.startsWith('-');
+  if (normalized === undefined) return "";
+  const [intPart, dec] = normalized.split(".");
+  const negative = intPart.startsWith("-");
   const digits = negative ? intPart.slice(1) : intPart;
-  return `${negative ? '-' : ''}${groupThousands(digits)}${dec !== undefined ? `.${dec}` : ''}`;
+  return `${negative ? "-" : ""}${groupThousands(digits)}${dec !== undefined ? `.${dec}` : ""}`;
 }
 
 /**
@@ -90,7 +90,7 @@ export function formatAmount(
  * 2.00000000, which then truncates cleanly.
  */
 function numberToPlainString(n: number): string {
-  if (!Number.isFinite(n)) return '';
+  if (!Number.isFinite(n)) return "";
   return n.toFixed(8);
 }
 
@@ -107,10 +107,10 @@ export function acceptAmountInput(
   decimals: number = MAX_AMOUNT_DECIMALS,
 ): string | null {
   const cleaned = cleanAmountString(next);
-  if (cleaned === '') return '';
+  if (cleaned === "") return "";
   if (!/^\d*\.?\d*$/.test(cleaned)) return null;
-  if (decimals === 0 && cleaned.includes('.')) return null;
-  const [intPart = '', dec = ''] = cleaned.split('.');
+  if (decimals === 0 && cleaned.includes(".")) return null;
+  const [intPart = "", dec = ""] = cleaned.split(".");
   if (intPart.length > MAX_AMOUNT_INT_DIGITS) return null;
   if (dec.length > decimals) return null;
   return cleaned;
@@ -118,6 +118,6 @@ export function acceptAmountInput(
 
 /** Strip grouping so a formatted amount can be edited as plain digits on focus. */
 export function toAmountEditString(raw: string | number | null | undefined): string {
-  if (raw === null || raw === undefined) return '';
+  if (raw === null || raw === undefined) return "";
   return cleanAmountString(raw);
 }

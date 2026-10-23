@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   AddressElement,
@@ -6,19 +6,19 @@ import {
   PaymentElement,
   useElements,
   useStripe,
-} from '@stripe/react-stripe-js';
+} from "@stripe/react-stripe-js";
 // `/pure`: the main entry injects js.stripe.com as soon as it is IMPORTED, and this sheet
 // is imported by the wizard's first page - so Stripe's script ran on every launch, with the
 // launch token still in the URL. `/pure` loads it only when the sheet calls loadStripe.
-import { loadStripe } from '@stripe/stripe-js/pure';
+import { loadStripe } from "@stripe/stripe-js/pure";
 import type {
   Appearance,
   Stripe,
   StripeAddressElementOptions,
   StripePaymentElementOptions,
-} from '@stripe/stripe-js';
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import ReactDOM from 'react-dom';
+} from "@stripe/stripe-js";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import ReactDOM from "react-dom";
 
 import {
   authorizeBilling,
@@ -30,11 +30,11 @@ import {
   type BillingAccountChoice,
   type CardSetup,
   type PaymentMethod,
-} from '@/lib/billing';
-import CardBrand from './CardBrand';
-import Icon from './Icon';
-import { EMAIL_ASCII_HINT, isEmail } from '../lib/validation';
-import { useEmailInput } from '../lib/emailInput';
+} from "@/lib/billing";
+import CardBrand from "./CardBrand";
+import Icon from "./Icon";
+import { EMAIL_ASCII_HINT, isEmail } from "../lib/validation";
+import { useEmailInput } from "../lib/emailInput";
 
 /**
  * The billing sheet — pick the card, agree to be billed for this entity.
@@ -109,7 +109,7 @@ function stripeFor(key: string): Promise<Stripe | null> {
     // ad blocker, a privacy extension, a proxy blocking js.stripe.com. Left to reject it
     // becomes an unhandled rejection and the dialog sits on its skeleton saying nothing.
     promise = loadStripe(key).catch((err) => {
-      console.error('Stripe.js failed to load', err);
+      console.error("Stripe.js failed to load", err);
       return null;
     });
     stripeByKey.set(key, promise);
@@ -135,31 +135,31 @@ function reason(err: unknown, fallback: string): string {
  * Element — the payer would watch a half-typed card number disappear.
  */
 const STRIPE_APPEARANCE: Appearance = {
-  theme: 'stripe',
+  theme: "stripe",
   variables: {
-    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-    fontSizeBase: '14px',
-    colorText: '#16202E',
-    colorTextPlaceholder: '#9AA6AC',
-    colorDanger: '#b4231f',
-    borderRadius: '8px',
-    spacingUnit: '4px',
+    fontFamily: "Inter, system-ui, -apple-system, sans-serif",
+    fontSizeBase: "14px",
+    colorText: "#16202E",
+    colorTextPlaceholder: "#9AA6AC",
+    colorDanger: "#b4231f",
+    borderRadius: "8px",
+    spacingUnit: "4px",
   },
   rules: {
-    '.Input': {
-      border: '1px solid #D7DEE2',
-      boxShadow: 'none',
-      padding: '12px 14px',
+    ".Input": {
+      border: "1px solid #D7DEE2",
+      boxShadow: "none",
+      padding: "12px 14px",
     },
-    '.Input:focus': {
-      border: '1px solid #4FC7C7',
-      boxShadow: '0 0 0 3px rgba(79, 199, 199, 0.18)',
-      outline: 'none',
+    ".Input:focus": {
+      border: "1px solid #4FC7C7",
+      boxShadow: "0 0 0 3px rgba(79, 199, 199, 0.18)",
+      outline: "none",
     },
-    '.Label': {
-      fontWeight: '600',
-      fontSize: '13px',
-      color: '#16202E',
+    ".Label": {
+      fontWeight: "600",
+      fontSize: "13px",
+      color: "#16202E",
     },
   },
 };
@@ -170,26 +170,26 @@ const STRIPE_APPEARANCE: Appearance = {
    system face. `fonts` is the only way in, and it has to be a URL — the same Google copy
    app/layout.tsx loads for the rest of the app, cut to the weights the fields use. */
 const STRIPE_FONTS = [
-  { cssSrc: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap' },
+  { cssSrc: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" },
 ];
 
 /* Options objects, out here for the same reason: a fresh literal each render is a new
    prop, and these Elements remount when their options change identity. */
 const PAYMENT_ELEMENT_OPTIONS: StripePaymentElementOptions = {
-  layout: 'tabs',
+  layout: "tabs",
   /* `terms.card: 'never'` suppresses Stripe's own mandate line, which is rendered inside
      the iframe and names the STRIPE ACCOUNT rather than Minty — in test mode that reads
      "Cash sandbox". Suppressing it moves the disclosure obligation to us, so the sentence
      in the form below is not decoration: it is the mandate, and it has to keep saying that
      a payment method is being stored and may be charged. */
-  terms: { card: 'never' },
+  terms: { card: "never" },
   /* The name and address are the AddressElement's. Left on, PaymentElement asks for them
      too and the payer fills the same fields twice. */
-  fields: { billingDetails: { name: 'never', address: 'never' } },
+  fields: { billingDetails: { name: "never", address: "never" } },
 };
 const ADDRESS_ELEMENT_OPTIONS: StripeAddressElementOptions = {
-  mode: 'billing',
-  display: { name: 'full' },
+  mode: "billing",
+  display: { name: "full" },
 };
 
 /** The address form starting on the company's own country. Left to itself Stripe guesses from
@@ -240,18 +240,18 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
   const stripe = useStripe();
   const elements = useElements();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [dead, setDead] = useState(false);
-  const [email, setEmail] = useState('');
-  const [company, setCompany] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({ email: '', company: '' });
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({ email: "", company: "" });
   /* The error clears as soon as they start fixing it. Left until the next submit,
      a message sits under a field the payer has already corrected. */
   const emailInput = useEmailInput((v) => {
     setEmail(v);
-    if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: '' }));
+    if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: "" }));
   });
-  const emailMessage = fieldErrors.email || (emailInput.rejected ? EMAIL_ASCII_HINT : '');
+  const emailMessage = fieldErrors.email || (emailInput.rejected ? EMAIL_ASCII_HINT : "");
 
   /* Both fields are REQUIRED, and this runs before Stripe is touched at all.
    *
@@ -266,12 +266,12 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
    * address works is sending to it — so this catches typos, not edge cases.
    */
   const validate = () => {
-    const next = { email: '', company: '' };
+    const next = { email: "", company: "" };
     const e = email.trim();
     const c = company.trim();
-    if (!e) next.email = 'Enter the email address invoices should go to.';
+    if (!e) next.email = "Enter the email address invoices should go to.";
     else if (!isEmail(e)) next.email = "That email address doesn't look right.";
-    if (!c) next.company = 'Enter the company name to invoice.';
+    if (!c) next.company = "Enter the company name to invoice.";
     setFieldErrors(next);
     return !next.email && !next.company;
   };
@@ -283,13 +283,13 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
     if (!validate()) return;
 
     setBusy(true);
-    setError('');
+    setError("");
 
     // The Element's own validation first, so an empty or malformed field is caught in the
     // form rather than coming back as a confirm failure.
     const submitted = await elements.submit();
     if (submitted.error) {
-      setError(submitted.error.message || 'Please check the card details.');
+      setError(submitted.error.message || "Please check the card details.");
       setBusy(false);
       return;
     }
@@ -300,7 +300,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
       elements,
       // The page without its query: nothing in the address bar is Stripe's business.
       confirmParams: { return_url: window.location.origin + window.location.pathname },
-      redirect: 'if_required',
+      redirect: "if_required",
     });
 
     if (confirmError) {
@@ -325,7 +325,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
       // `payment_method` is a string unless the intent was expanded, which this one is
       // not; the object form is narrowed to its id for the same reason.
       const pm = confirmed?.payment_method;
-      await onSaved(confirmed?.id || setupIntent, typeof pm === 'string' ? pm : pm?.id, {
+      await onSaved(confirmed?.id || setupIntent, typeof pm === "string" ? pm : pm?.id, {
         email: email.trim() || null,
         company: company.trim() || null,
       });
@@ -355,14 +355,14 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
         </label>
         <input
           id="billing-email"
-          className={'billing-input' + (fieldErrors.email ? ' is-invalid' : '')}
+          className={"billing-input" + (fieldErrors.email ? " is-invalid" : "")}
           {...emailInput.props}
           required
           placeholder="name@company.com"
           value={email}
           disabled={busy}
           aria-invalid={fieldErrors.email ? true : undefined}
-          aria-describedby={emailMessage ? 'billing-email-error' : undefined}
+          aria-describedby={emailMessage ? "billing-email-error" : undefined}
         />
         {emailMessage ? (
           <p className="billing-fielderror" id="billing-email-error">
@@ -380,7 +380,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
         </label>
         <input
           id="billing-company"
-          className={'billing-input' + (fieldErrors.company ? ' is-invalid' : '')}
+          className={"billing-input" + (fieldErrors.company ? " is-invalid" : "")}
           type="text"
           required
           autoComplete="organization"
@@ -388,11 +388,11 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
           value={company}
           onChange={(e) => {
             setCompany(e.target.value);
-            if (fieldErrors.company) setFieldErrors((f) => ({ ...f, company: '' }));
+            if (fieldErrors.company) setFieldErrors((f) => ({ ...f, company: "" }));
           }}
           disabled={busy}
           aria-invalid={fieldErrors.company ? true : undefined}
-          aria-describedby={fieldErrors.company ? 'billing-company-error' : undefined}
+          aria-describedby={fieldErrors.company ? "billing-company-error" : undefined}
         />
         {fieldErrors.company ? (
           <p className="billing-fielderror" id="billing-company-error">
@@ -407,11 +407,11 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
           not see the contents of. */}
       <div className="billing-field">
         <span className="billing-label">
-            Payment method
-            <span className="req" aria-hidden>
-              *
-            </span>
+          Payment method
+          <span className="req" aria-hidden>
+            *
           </span>
+        </span>
         <div className="billing-stripe">
           {/* `loaderror` is the Element itself failing to come up — a blocked
               js.stripe.com, a client secret it can't fetch, a key from another account.
@@ -419,7 +419,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
               is indistinguishable from a button that does nothing. */}
           <PaymentElement
             onLoadError={(event) => {
-              console.error('Stripe PaymentElement failed to load', event);
+              console.error("Stripe PaymentElement failed to load", event);
               setDead(true);
               setError(
                 event?.error?.message ||
@@ -467,7 +467,7 @@ function CardForm({ setupIntent, onSaved, onBack, busyLabel, country }: CardForm
           className="btn btn-primary billing-save"
           disabled={!stripe || busy || dead}
         >
-          {busy ? busyLabel : 'Save billing account'}
+          {busy ? busyLabel : "Save billing account"}
         </button>
       </div>
     </form>
@@ -508,8 +508,8 @@ function CardAdded({
   }, []);
 
   const name = card
-    ? [card.brand_label, card.last4].filter(Boolean).join(' ') || card.label
-    : 'Your card';
+    ? [card.brand_label, card.last4].filter(Boolean).join(" ") || card.label
+    : "Your card";
 
   return (
     <div className="billing-done">
@@ -595,10 +595,10 @@ export default function BillingSheet({
   onDone,
 }: BillingSheetProps) {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [accounts, setAccounts] = useState<BillingAccount[]>([]);
-  const [chosen, setChosen] = useState('');
+  const [chosen, setChosen] = useState("");
   const [adding, setAdding] = useState(false);
   const [intent, setIntent] = useState<CardSetup | null>(null);
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
@@ -640,7 +640,7 @@ export default function BillingSheet({
     setChosen(
       nominatedId && list.some((m) => m.id === nominatedId)
         ? nominatedId
-        : data.default_id || (list[0] ? list[0].id : ''),
+        : data.default_id || (list[0] ? list[0].id : ""),
     );
     return list;
   }, [token, nominatedId]);
@@ -680,11 +680,11 @@ export default function BillingSheet({
   // success card focuses its own Done button; the X is not rendered there.)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !saving) dismiss();
+      if (e.key === "Escape" && !saving) dismiss();
     };
-    window.addEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
     if (closeRef.current) closeRef.current.focus();
-    return () => window.removeEventListener('keydown', onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [dismiss, saving]);
 
   // Showing the form and fetching what it needs are deliberately two things: the button
@@ -733,7 +733,7 @@ export default function BillingSheet({
   }, [accounts]);
 
   const openCardForm = useCallback(() => {
-    setError('');
+    setError("");
     setAdding(true);
   }, []);
 
@@ -811,7 +811,7 @@ export default function BillingSheet({
   const confirmExisting = async () => {
     if (!chosen || saving) return;
     setSaving(true);
-    setError('');
+    setError("");
     try {
       await authorizeBilling(token, entityId, chosen);
       onDone();
@@ -824,7 +824,7 @@ export default function BillingSheet({
   /* The three frames are three widths, and the modifier is what carries that — see the
      note at the top of the file. `is-list` is the fallback while the wallet loads, so the
      dialog does not resize under the payer the moment it knows what to show. */
-  const stage = saved ? 'done' : adding ? 'form' : 'list';
+  const stage = saved ? "done" : adding ? "form" : "list";
 
   const body = (
     <div
@@ -839,11 +839,11 @@ export default function BillingSheet({
         role="dialog"
         aria-modal="true"
         aria-label={
-          stage === 'done'
-            ? 'Card added'
-            : stage === 'form'
-              ? 'New billing account'
-              : 'Payment methods'
+          stage === "done"
+            ? "Card added"
+            : stage === "form"
+              ? "New billing account"
+              : "Payment methods"
         }
       >
         <div className="billing-head">
@@ -856,8 +856,8 @@ export default function BillingSheet({
 
                 Nothing on the success card — 01-J carries its own heading, in two
                 colours, and a second title above it would be a heading for a heading. */}
-            {loading || stage === 'done' ? null : (
-              <p className="billing-title">{adding ? 'New billing account' : 'Payment Methods'}</p>
+            {loading || stage === "done" ? null : (
+              <p className="billing-title">{adding ? "New billing account" : "Payment Methods"}</p>
             )}
             {/* ON THE FORM ONLY, because that is where the frame draws one: what happens
                 to the card number, worded identically in Minty and the payer portal — the
@@ -871,14 +871,14 @@ export default function BillingSheet({
 
                 THE PICKER USED TO CARRY ONE TOO and it was removed deliberately — see the
                 note in the component docblock before writing another. */}
-            {adding && !loading && stage !== 'done' ? (
+            {adding && !loading && stage !== "done" ? (
               <p className="billing-sub">
                 Card details are held by our payment provider, Stripe — they are never stored by
                 Minty.
               </p>
             ) : null}
           </div>
-          {stage === 'done' ? null : (
+          {stage === "done" ? null : (
             <button
               ref={closeRef}
               type="button"
@@ -894,7 +894,7 @@ export default function BillingSheet({
 
         {loading ? (
           <p className="billing-loading">Loading your payment methods…</p>
-        ) : stage === 'done' && saved ? (
+        ) : stage === "done" && saved ? (
           <CardAdded card={saved.card} isDefault={saved.isDefault} onDone={onDone} />
         ) : adding ? (
           <div className="billing-formwrap">
@@ -947,7 +947,7 @@ export default function BillingSheet({
                 const company = companyByCard.get(m.id);
                 return (
                   <li key={m.id}>
-                    <label className={'billing-pm' + (chosen === m.id ? ' is-chosen' : '')}>
+                    <label className={"billing-pm" + (chosen === m.id ? " is-chosen" : "")}>
                       <input
                         type="radio"
                         name="billing-pm"
@@ -1016,7 +1016,7 @@ export default function BillingSheet({
                 onClick={confirmExisting}
                 disabled={!chosen || saving}
               >
-                {saving ? 'Confirming…' : 'Confirm'}
+                {saving ? "Confirming…" : "Confirm"}
               </button>
             </div>
           </>
@@ -1028,5 +1028,5 @@ export default function BillingSheet({
   // Portalled to the body for the same reason the other wizard dialogs are: the step
   // content sits in a transformed, scrolling container, which would otherwise clip a
   // position:fixed overlay to the card instead of the viewport.
-  return typeof document === 'undefined' ? null : ReactDOM.createPortal(body, document.body);
+  return typeof document === "undefined" ? null : ReactDOM.createPortal(body, document.body);
 }

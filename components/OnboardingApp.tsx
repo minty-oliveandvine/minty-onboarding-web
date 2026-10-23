@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import ReactDOM from 'react-dom';
-import Icon from './Icon';
-import { friendlyError } from '../lib/errorCopy';
-import NavMenu from './NavMenu';
+import { useState, useEffect, useMemo, useRef } from "react";
+import ReactDOM from "react-dom";
+import Icon from "./Icon";
+import { friendlyError } from "../lib/errorCopy";
+import NavMenu from "./NavMenu";
 import {
   StepCreateEntity,
   StepSelectModule,
@@ -15,14 +15,14 @@ import {
   StepBills,
   StepInvite,
   StepAllSet,
-} from './OnboardingSteps';
-import { toAmountString } from '@/lib/amount';
-import { browserTimezone } from '@/lib/browserTimezone';
-import { fetchCurrencies } from '@/lib/refData';
-import { currencyDecimals } from './steps/pettyCashFields';
-import { formatToday } from '@/lib/date';
-import { urlFor } from '../lib/apiRoutes';
-import { MODULE_CODE_BY_ID, MODULE_ID_BY_CODE } from '../lib/modules';
+} from "./OnboardingSteps";
+import { toAmountString } from "@/lib/amount";
+import { browserTimezone } from "@/lib/browserTimezone";
+import { fetchCurrencies } from "@/lib/refData";
+import { currencyDecimals } from "./steps/pettyCashFields";
+import { formatToday } from "@/lib/date";
+import { urlFor } from "../lib/apiRoutes";
+import { MODULE_CODE_BY_ID, MODULE_ID_BY_CODE } from "../lib/modules";
 import {
   STORAGE_KEY,
   XERO_RESUME_KEY,
@@ -33,7 +33,7 @@ import {
   sessionKey,
   takeLaunchParams,
   writeTabToken,
-} from '../lib/wizardSession';
+} from "../lib/wizardSession";
 import {
   STEPS,
   deriveResumeStep,
@@ -41,9 +41,9 @@ import {
   getDisplaySteps,
   initialState,
   isStepComplete,
-} from '../lib/wizardSteps';
-import Stepper from './Stepper';
-import { useToast } from './Toast';
+} from "../lib/wizardSteps";
+import Stepper from "./Stepper";
+import { useToast } from "./Toast";
 import type {
   AccountCodesResponse,
   ApiErrorBody,
@@ -63,17 +63,24 @@ import type {
   PlanCatalog,
   Result,
   SalesMethods,
-} from '../lib/api';
-import type { AccountOptions, StepProps, SubmitFn, WizardState, SetState, XeroConflict } from '../lib/types';
-import { inviteRows } from '../lib/invites';
-import { phoneForApi } from '../lib/validation';
-import { useMounted } from '../lib/useMounted';
+} from "../lib/api";
+import type {
+  AccountOptions,
+  StepProps,
+  SubmitFn,
+  WizardState,
+  SetState,
+  XeroConflict,
+} from "../lib/types";
+import { inviteRows } from "../lib/invites";
+import { phoneForApi } from "../lib/validation";
+import { useMounted } from "../lib/useMounted";
 
 // Baked-in defaults that used to live in TWEAK_DEFAULTS (tweaks-panel removed from prod build)
 const ACCENT_DEFAULTS = {
-  accent: '#36c3b4',
-  accentInk: '#0f7a6e',
-  accentSoft: '#e6f7f4',
+  accent: "#36c3b4",
+  accentInk: "#0f7a6e",
+  accentSoft: "#e6f7f4",
 };
 
 export default function OnboardingApp() {
@@ -84,12 +91,12 @@ export default function OnboardingApp() {
   // Logged-in user, passed in by Module 1 on the launch URL after entity creation
   // (e.g. /?first=Dan&last=Smith or /?name=Dan%20Smith). No backend call needed.
   const [user, setUser] = useState<{ first: string; last: string; name: string }>({
-    first: '',
-    last: '',
-    name: '',
+    first: "",
+    last: "",
+    name: "",
   });
   // Short-lived JWT from Module 1 used to create the entity on Step 1.
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState("");
   const [accountOptions, setAccountOptions] = useState<AccountOptions>({
     bank: [],
     cashSale: [],
@@ -109,15 +116,15 @@ export default function OnboardingApp() {
   // Why the needs-Xero pop-up is showing: 'not-connected' (the entity isn't
   // connected in the DB) or 'expired' (the /state re-check came back 401 — the
   // session lapsed, typically after ~30 min past step 4). Drives the modal copy.
-  const [xeroPromptReason, setXeroPromptReason] = useState<'not-connected' | 'expired'>(
-    'not-connected',
+  const [xeroPromptReason, setXeroPromptReason] = useState<"not-connected" | "expired">(
+    "not-connected",
   );
   // Set when the Xero OAuth round-trip returns `xero=mismatch` — the user logged
   // in with a Xero account whose email differs from the onboarding initiator's,
   // so the backend refused to connect the entity. Holds the email they MUST use
   // (the initiator's, from the `expected` param) so the Accounting step can show
   // a specific "use the account for X" message. Empty string = no mismatch.
-  const [xeroMismatch, setXeroMismatch] = useState('');
+  const [xeroMismatch, setXeroMismatch] = useState("");
   // Set when the Xero OAuth round-trip returns `xero=conflict` — the chosen Xero
   // org is already linked to a different company, so the backend refused to
   // connect this one. Holds that company (name, id and whether this person may
@@ -178,7 +185,7 @@ export default function OnboardingApp() {
   };
 
   const set: SetState = (patch) =>
-    setState((prev) => ({ ...prev, ...(typeof patch === 'function' ? patch(prev) : patch) }));
+    setState((prev) => ({ ...prev, ...(typeof patch === "function" ? patch(prev) : patch) }));
 
   // Latest `state` mirrored into a ref for async flows (cold resume) that must
   // both write the state AND keep using the value they wrote. Reading it inside
@@ -200,8 +207,8 @@ export default function OnboardingApp() {
     if (!token || !state.entity.id) return;
     try {
       fetch(urlFor(`/api/onboarding/saved-step`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id, saved_step: step }),
       }).catch(() => {});
     } catch {
@@ -231,7 +238,7 @@ export default function OnboardingApp() {
     // Block forward jumps from a step that isn't complete (e.g. sub-step "Account Code" from "Sales")
     if (id > current && !isStepComplete(current, state)) {
       window.dispatchEvent(
-        new CustomEvent('onb-validation-blocked', { detail: { from: current, to: id } }),
+        new CustomEvent("onb-validation-blocked", { detail: { from: current, to: id } }),
       );
       return;
     }
@@ -263,7 +270,7 @@ export default function OnboardingApp() {
   const hydratedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     if (!hydratedRef.current) return;
     try {
       const key = sessionKey(state.entity.id);
@@ -377,8 +384,8 @@ export default function OnboardingApp() {
         entity_name: nextState.entity.name,
         country: nextState.entity.country,
         currency: nextState.entity.currency,
-        business_email: (nextState.entity.email || '').trim(),
-        contact_phone: phoneForApi(nextState.entity.phone || ''),
+        business_email: (nextState.entity.email || "").trim(),
+        contact_phone: phoneForApi(nextState.entity.phone || ""),
       };
       // Land on the FE step the backend persisted (`payload.saved_step`), with
       // the Xero gate applied — deriveResumeStep handles the contract, including
@@ -399,7 +406,7 @@ export default function OnboardingApp() {
       // Resumed past the Xero gate without a live connection — prompt the user
       // back to step 4 (they keep their place; the pop-up routes them).
       if (derived.needsXero) {
-        setXeroPromptReason('not-connected');
+        setXeroPromptReason("not-connected");
         setNeedsXeroPrompt(true);
       }
       return;
@@ -408,13 +415,13 @@ export default function OnboardingApp() {
     // Fallback: server resume unavailable — try this entity's own cached
     // session (per-entity key). (Different/expired sessions are ignored.)
     try {
-      const saved = JSON.parse(window.localStorage.getItem(sessionKey(entityId)) || 'null');
+      const saved = JSON.parse(window.localStorage.getItem(sessionKey(entityId)) || "null");
       if (saved && saved.state) {
         const sameEntity = saved.state.entity && saved.state.entity.id === entityId;
         if (sameEntity) {
           setState(saved.state);
-          if (typeof saved.current === 'number' && saved.current >= 1) setCurrent(saved.current);
-          if (typeof saved.maxReached === 'number' && saved.maxReached >= 1)
+          if (typeof saved.current === "number" && saved.current >= 1) setCurrent(saved.current);
+          if (typeof saved.maxReached === "number" && saved.maxReached >= 1)
             setMaxReached(saved.maxReached);
         }
       }
@@ -427,7 +434,7 @@ export default function OnboardingApp() {
   // launch URL that Module 1 opens after the entity is created. Falls back to
   // nothing if absent, so running the app standalone still works.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     try {
       hydrateOnce();
     } finally {
@@ -442,7 +449,7 @@ export default function OnboardingApp() {
       // pre-id draft so we never resume the last in-progress entity. Per-entity
       // sessions (minty_onboarding_session:<id>) are left intact so other
       // in-progress entities keep their saved progress.
-      const isFresh = p.get('fresh') === '1';
+      const isFresh = p.get("fresh") === "1";
       if (isFresh) {
         try {
           window.localStorage.removeItem(STORAGE_KEY);
@@ -454,11 +461,11 @@ export default function OnboardingApp() {
       // Returning from the real Xero OAuth round-trip (Module 1 → Xero → here).
       // Restore the progress we stashed before leaving and land on the
       // Accounting step (3). Cleared immediately so a later refresh won't resume.
-      const xeroParam = (p.get('xero') || '').trim();
+      const xeroParam = (p.get("xero") || "").trim();
       if (xeroParam) {
         let resumed = null;
         try {
-          resumed = JSON.parse(window.sessionStorage.getItem(XERO_RESUME_KEY) || 'null');
+          resumed = JSON.parse(window.sessionStorage.getItem(XERO_RESUME_KEY) || "null");
         } catch {
           /* ignore corrupt storage */
         }
@@ -469,15 +476,15 @@ export default function OnboardingApp() {
         }
         const today = formatToday();
         // The Xero tenant/org name reported back by Xero (real connected entity).
-        const xeroOrg = (p.get('org') || '').trim();
+        const xeroOrg = (p.get("org") || "").trim();
         // Wrong-account block: the backend refused to connect because the Xero
         // login email didn't match the onboarding initiator. `expected` carries
         // the email the user must log in with (URL-encoded). Record it so the
         // Accounting step can message it; connection state stays false below.
-        if (xeroParam === 'mismatch') {
-          setXeroMismatch((p.get('expected') || '').trim() || 'unknown');
+        if (xeroParam === "mismatch") {
+          setXeroMismatch((p.get("expected") || "").trim() || "unknown");
         } else {
-          setXeroMismatch('');
+          setXeroMismatch("");
         }
         // One-org-one-company block: the org the user picked is already linked to
         // another company. `conflict_entity` names it (URL-encoded; searchParams
@@ -486,11 +493,11 @@ export default function OnboardingApp() {
         // `conflict_entity_id` and `conflict_can_move` go with it, so the step can
         // OFFER the move (free it there, then back through Xero) rather than only
         // telling the person to go and do it themselves.
-        if (xeroParam === 'conflict') {
+        if (xeroParam === "conflict") {
           setXeroConflict({
-            name: (p.get('conflict_entity') || '').trim() || 'unknown',
-            entityId: (p.get('conflict_entity_id') || '').trim(),
-            canMove: p.get('conflict_can_move') === '1',
+            name: (p.get("conflict_entity") || "").trim() || "unknown",
+            entityId: (p.get("conflict_entity_id") || "").trim(),
+            canMove: p.get("conflict_can_move") === "1",
           });
         } else {
           setXeroConflict(null);
@@ -499,7 +506,7 @@ export default function OnboardingApp() {
         // backend-side. Force disconnected rather than restoring the stashed
         // state, which would wrongly show "connected" for a user who was already
         // linked to one org and tried to switch to a conflicting one.
-        const blocked = xeroParam === 'mismatch' || xeroParam === 'conflict';
+        const blocked = xeroParam === "mismatch" || xeroParam === "conflict";
         if (resumed) {
           if (resumed.token) setToken(resumed.token);
           if (resumed.user) setUser(resumed.user);
@@ -507,20 +514,20 @@ export default function OnboardingApp() {
             ...prev,
             ...(resumed.state || {}),
             xero:
-              xeroParam === 'connected'
+              xeroParam === "connected"
                 ? { connected: true, org: xeroOrg, lastConnected: today }
                 : blocked
                   ? {
                       ...((resumed.state && resumed.state.xero) || prev.xero),
                       connected: false,
-                      org: '',
+                      org: "",
                     }
                   : (resumed.state && resumed.state.xero) || prev.xero,
           }));
           setMaxReached((m) => Math.max(m, resumed.maxReached || 4, 4));
         } else if (blocked) {
-          setState((prev) => ({ ...prev, xero: { ...prev.xero, connected: false, org: '' } }));
-        } else if (xeroParam === 'connected') {
+          setState((prev) => ({ ...prev, xero: { ...prev.xero, connected: false, org: "" } }));
+        } else if (xeroParam === "connected") {
           setState((prev) => ({
             ...prev,
             xero: { connected: true, org: xeroOrg, lastConnected: today },
@@ -536,17 +543,17 @@ export default function OnboardingApp() {
       // set identity from the URL synchronously, kick off the async server fetch,
       // and skip the localStorage path (resumeFromServer falls back to it on
       // failure). This is what makes resume survive empty localStorage.
-      const resumeEntityId = (p.get('entity_id') || '').trim();
-      const resumeUrlToken = (p.get('token') || '').trim();
+      const resumeEntityId = (p.get("entity_id") || "").trim();
+      const resumeUrlToken = (p.get("token") || "").trim();
       if (resumeEntityId && resumeUrlToken) {
         setToken(resumeUrlToken);
-        const rFirst = (p.get('first') || '').trim();
-        const rLast = (p.get('last') || '').trim();
-        const rName = (p.get('name') || '').trim();
+        const rFirst = (p.get("first") || "").trim();
+        const rLast = (p.get("last") || "").trim();
+        const rName = (p.get("name") || "").trim();
         if (rFirst || rLast || rName) {
           setUser({ first: rFirst, last: rLast, name: rName || `${rFirst} ${rLast}`.trim() });
         }
-        const rEntityName = (p.get('entity_name') || p.get('entity') || '').trim();
+        const rEntityName = (p.get("entity_name") || p.get("entity") || "").trim();
         if (rEntityName) {
           setState((prev) => ({ ...prev, entity: { ...prev.entity, name: rEntityName } }));
         }
@@ -556,14 +563,14 @@ export default function OnboardingApp() {
         return;
       }
 
-      const urlToken = (p.get('token') || '').trim();
+      const urlToken = (p.get("token") || "").trim();
       // No URL entity_id reached here (the resume branch above returns early), so
       // this is the pre-id draft under the bare global key. On a fresh launch it
       // was just cleared, so `saved` will be null and we start clean.
       let saved = null;
       if (!isFresh) {
         try {
-          saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || 'null');
+          saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null");
         } catch {
           /* ignore corrupt storage */
         }
@@ -589,10 +596,10 @@ export default function OnboardingApp() {
         // intent from Module 1. If the saved blob is for a different entity, it's
         // stale (e.g. a prior abandoned session) — discard it so the new entity
         // wins instead of replaying the old id/name and 403-ing on its modules.
-        const urlEntityName = (p.get('entity_name') || p.get('entity') || '').trim();
+        const urlEntityName = (p.get("entity_name") || p.get("entity") || "").trim();
         const savedEntityName = (
           (saved.state && saved.state.entity && saved.state.entity.name) ||
-          ''
+          ""
         ).trim();
         const differentEntity = !!(
           urlEntityName &&
@@ -610,25 +617,25 @@ export default function OnboardingApp() {
           else if (savedToken) setToken(savedToken);
           if (saved.user) setUser(saved.user);
           if (saved.state) setState(saved.state);
-          if (typeof saved.current === 'number' && saved.current >= 1) setCurrent(saved.current);
-          if (typeof saved.maxReached === 'number' && saved.maxReached >= 1) {
+          if (typeof saved.current === "number" && saved.current >= 1) setCurrent(saved.current);
+          if (typeof saved.maxReached === "number" && saved.maxReached >= 1) {
             setMaxReached(saved.maxReached);
           }
           return;
         }
       }
 
-      const first = (p.get('first') || '').trim();
-      const last = (p.get('last') || '').trim();
-      const name = (p.get('name') || '').trim();
+      const first = (p.get("first") || "").trim();
+      const last = (p.get("last") || "").trim();
+      const name = (p.get("name") || "").trim();
       if (first || last || name) {
         setUser({ first, last, name: name || `${first} ${last}`.trim() });
       }
-      const entityName = (p.get('entity_name') || p.get('entity') || '').trim();
+      const entityName = (p.get("entity_name") || p.get("entity") || "").trim();
       if (entityName) {
         setState((prev) => ({ ...prev, entity: { ...prev.entity, name: entityName } }));
       }
-      const t = (p.get('token') || '').trim();
+      const t = (p.get("token") || "").trim();
       if (t) setToken(t);
     }
   }, []);
@@ -640,13 +647,13 @@ export default function OnboardingApp() {
   const connectXero = () => {
     // Starting a fresh attempt clears any prior wrong-account banner so a retry
     // doesn't show a stale "use the account for X" message.
-    setXeroMismatch('');
+    setXeroMismatch("");
     const today = formatToday();
     if (!state.entity.id) {
       set({
         xero: {
           connected: true,
-          org: state.entity.name || 'Olive & Vine Inc',
+          org: state.entity.name || "Olive & Vine Inc",
           lastConnected: today,
         },
       });
@@ -667,7 +674,7 @@ export default function OnboardingApp() {
     window.location.href =
       urlFor(`/xero_connect?from=onboarding`) +
       `&entity_id=${encodeURIComponent(state.entity.id)}` +
-      `&entity_name=${encodeURIComponent(state.entity.name || '')}`;
+      `&entity_name=${encodeURIComponent(state.entity.name || "")}`;
   };
 
   // Disconnect Xero from the Accounting step. The entity stays in onboarding
@@ -676,13 +683,13 @@ export default function OnboardingApp() {
   // prototype still works.
   const disconnectXero = async (): Promise<Result> => {
     if (!token || !state.entity.id) {
-      set({ xero: { ...state.xero, connected: false, org: '' } });
+      set({ xero: { ...state.xero, connected: false, org: "" } });
       return { ok: true };
     }
     try {
       const res = await fetch(urlFor(`/api/onboarding/xero/disconnect`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id }),
       });
       const data = await res.json().catch(() => ({}));
@@ -691,7 +698,7 @@ export default function OnboardingApp() {
           ok: false,
           error: friendlyError(data, "I couldn't disconnect that. Mind trying again?"),
         };
-      set({ xero: { ...state.xero, connected: false, org: '' } });
+      set({ xero: { ...state.xero, connected: false, org: "" } });
       return { ok: true };
     } catch {
       return { ok: false, error: "I couldn't reach the server. Mind trying again?" };
@@ -710,18 +717,21 @@ export default function OnboardingApp() {
   const releaseXeroConflict = async (): Promise<Result> => {
     const holder = xeroConflict?.entityId;
     if (!holder) return { ok: false, error: "I don't know which company to disconnect." };
-    if (!token) return { ok: false, error: 'Please sign in again to do that.' };
+    if (!token) return { ok: false, error: "Please sign in again to do that." };
     try {
       const res = await fetch(urlFor(`/api/onboarding/xero/release`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: holder }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok)
         return {
           ok: false,
-          error: friendlyError(data, "I couldn't disconnect that company from Xero. Mind trying again?"),
+          error: friendlyError(
+            data,
+            "I couldn't disconnect that company from Xero. Mind trying again?",
+          ),
         };
       setXeroConflict(null);
       connectXero();
@@ -754,7 +764,7 @@ export default function OnboardingApp() {
       // 401 → the session token lapsed (typically ~30 min past step 4). Surface
       // it distinctly so the caller can show the "reconnect" prompt rather than
       // silently swallowing it as a transient blip.
-      if (res.status === 401) return 'expired';
+      if (res.status === 401) return "expired";
       if (!res.ok) return null;
       const payload = await res.json().catch(() => null);
       if (!payload) return null;
@@ -772,7 +782,7 @@ export default function OnboardingApp() {
               ...prev,
               xero: { ...prev.xero, connected: true, org: payload.xero.org || prev.xero.org },
             }
-          : { ...prev, xero: { ...prev.xero, connected: false, org: '' } };
+          : { ...prev, xero: { ...prev.xero, connected: false, org: "" } };
       });
       return connected;
     } catch {
@@ -807,12 +817,12 @@ export default function OnboardingApp() {
         const connected = await verifyXeroConnection();
         if (cancelled) return;
         if (current > 4) {
-          if (connected === 'expired') {
+          if (connected === "expired") {
             // Session lapsed under us — nudge the user to reconnect.
-            setXeroPromptReason('expired');
+            setXeroPromptReason("expired");
             setNeedsXeroPrompt(true);
           } else if (connected === false) {
-            setXeroPromptReason('not-connected');
+            setXeroPromptReason("not-connected");
             setNeedsXeroPrompt(true);
           }
         }
@@ -844,8 +854,8 @@ export default function OnboardingApp() {
       // Optional. Always sent, even when empty: the backend reads an empty
       // string as "clear this field", so a user who deletes their phone number
       // on revisit actually gets it removed.
-      business_email: (state.entity.email || '').trim(),
-      contact_phone: phoneForApi(state.entity.phone || ''),
+      business_email: (state.entity.email || "").trim(),
+      contact_phone: phoneForApi(state.entity.phone || ""),
       // The browser's zone, with no field on screen: the company's emails are dated in it.
       timezone: browserTimezone(),
     };
@@ -874,8 +884,8 @@ export default function OnboardingApp() {
         const res = await fetch(
           urlFor(`/api/onboarding/entity/${encodeURIComponent(state.entity.id)}`),
           {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            method: "PUT",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify(payload),
           },
         );
@@ -904,8 +914,8 @@ export default function OnboardingApp() {
     // --- First time through: create the entity. ---
     try {
       const res = await fetch(urlFor(`/api/onboarding/create`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
       const data: Partial<CreateEntityResponse> & ApiErrorBody = await res.json().catch(() => ({}));
@@ -948,15 +958,15 @@ export default function OnboardingApp() {
       };
     try {
       const res = await fetch(urlFor(`/api/onboarding/modules`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id, modules: moduleCodes }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok)
         return {
           ok: false,
-          error: friendlyError(data, 'Something went wrong on my end. Mind trying again?'),
+          error: friendlyError(data, "Something went wrong on my end. Mind trying again?"),
         };
       return { ok: true };
     } catch {
@@ -968,8 +978,8 @@ export default function OnboardingApp() {
     if (!token || !state.entity.id) return { ok: true };
     try {
       const res = await fetch(urlFor(`/api/onboarding/sales-methods`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           entity_id: state.entity.id,
           electronic: state.pettyCash.electronicMethods || [],
@@ -994,14 +1004,14 @@ export default function OnboardingApp() {
     const empty =
       p.openingBalance === undefined ||
       p.openingBalance === null ||
-      String(p.openingBalance).trim() === '';
+      String(p.openingBalance).trim() === "";
     if (empty) return { ok: true };
     // In the company currency's places (JPY is whole amounts); the API refuses finer ones.
     const decimals = currencyDecimals(state.entity.currency, await fetchCurrencies());
     try {
       const res = await fetch(urlFor(`/api/onboarding/opening-balance`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           entity_id: state.entity.id,
           opening_date: p.openingDate,
@@ -1009,7 +1019,7 @@ export default function OnboardingApp() {
           // is forced to 0 by the backend); send it here so save and resume agree.
           // Normalized to an exact 2dp decimal string so the payload doesn't depend
           // on whether the user blurred the field before saving.
-          opening_balance: toAmountString(p.openingBalance ?? '', decimals),
+          opening_balance: toAmountString(p.openingBalance ?? "", decimals),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1064,7 +1074,7 @@ export default function OnboardingApp() {
         const cd = data.contact_defaults || {};
         const labelFor = (list: { id: string; label: string }[], id: string | undefined) => {
           const found = id ? list.find((o) => o.id === id) : null;
-          return found ? found.label : '';
+          return found ? found.label : "";
         };
         let expenseCodesVal;
         if (data.default_all) {
@@ -1096,7 +1106,7 @@ export default function OnboardingApp() {
       })
       .catch((err) => {
         // Loud, and retried on the next visit: an empty step would post no codes at all.
-        console.error('[onboarding] the account codes did not load', err);
+        console.error("[onboarding] the account codes did not load", err);
         accountLoadedRef.current = false;
         toast.error("I couldn't load your account codes. Mind refreshing the page?");
       });
@@ -1108,7 +1118,7 @@ export default function OnboardingApp() {
     const p = state.pettyCash;
     const idFor = (list: { id: string; label: string }[], label: string) => {
       const found = label ? (list || []).find((o) => o.label === label) : null;
-      return found ? found.id : '';
+      return found ? found.id : "";
     };
     const mapping = {
       pettycash: idFor(accountOptions.bank, p.pcAccount),
@@ -1124,8 +1134,8 @@ export default function OnboardingApp() {
     const selectedCodes = allCodes.filter((c) => (isAll ? sel[c] !== false : sel[c] === true));
     try {
       const res = await fetch(urlFor(`/api/onboarding/account-codes`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id, expense_codes: selectedCodes, mapping }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1145,7 +1155,7 @@ export default function OnboardingApp() {
     const p = state.pettyCash;
     const idFor = (label: string) => {
       const found = label ? (accountOptions.contacts || []).find((o) => o.label === label) : null;
-      return found ? found.id : '';
+      return found ? found.id : "";
     };
     const contacts = {
       director: idFor(p.directorContact),
@@ -1154,8 +1164,8 @@ export default function OnboardingApp() {
     };
     try {
       const res = await fetch(urlFor(`/api/onboarding/contacts`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id, contacts }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1175,8 +1185,8 @@ export default function OnboardingApp() {
   // {id, label} is appended to accountOptions.contacts (no re-fetch needed) and
   // returned so the caller can select it in the relevant role dropdown.
   const createContact = async (name: string): Promise<ContactResult> => {
-    const trimmed = (name || '').trim();
-    if (!trimmed) return { ok: false, error: 'Who should I put down as the contact?' };
+    const trimmed = (name || "").trim();
+    if (!trimmed) return { ok: false, error: "Who should I put down as the contact?" };
     if (!token || !state.entity.id) {
       // Standalone / no Module 1 handoff: fake an option so the prototype works.
       const option = { id: `local-${trimmed}`, label: trimmed };
@@ -1185,8 +1195,8 @@ export default function OnboardingApp() {
     }
     try {
       const res = await fetch(urlFor(`/api/onboarding/contacts/create`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id, name: trimmed }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1235,11 +1245,11 @@ export default function OnboardingApp() {
         }
         setState((prev) => ({
           ...prev,
-          bills: { ...prev.bills, billCodes: billCodesVal, defaultCode: data.default_code || '' },
+          bills: { ...prev.bills, billCodes: billCodesVal, defaultCode: data.default_code || "" },
         }));
       })
       .catch((err) => {
-        console.error('[onboarding] the payment account codes did not load', err);
+        console.error("[onboarding] the payment account codes did not load", err);
         billLoadedRef.current = false;
         toast.error("I couldn't load your payment account codes. Mind refreshing the page?");
       });
@@ -1254,13 +1264,13 @@ export default function OnboardingApp() {
     const sel = bc.selected || {};
     const selectedCodes = allCodes.filter((c) => (isAll ? sel[c] !== false : sel[c] === true));
     // A default that was unticked since it was chosen is dropped, never sent: the API refuses it.
-    const defaultCode = selectedCodes.includes(state.bills.defaultCode || '')
+    const defaultCode = selectedCodes.includes(state.bills.defaultCode || "")
       ? state.bills.defaultCode
-      : '';
+      : "";
     try {
       const res = await fetch(urlFor(`/api/onboarding/bill-codes`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           entity_id: state.entity.id,
           selected_codes: selectedCodes,
@@ -1290,8 +1300,8 @@ export default function OnboardingApp() {
       return { ok: true, invitation: { email, role, first_name, last_name } };
     try {
       const res = await fetch(urlFor(`/api/onboarding/invite`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id, email, role, first_name, last_name }),
       });
       const data: Partial<InviteResponse> & ApiErrorBody = await res.json().catch(() => ({}));
@@ -1320,8 +1330,8 @@ export default function OnboardingApp() {
     if (!token || !invitationId) return { ok: true };
     try {
       const res = await fetch(urlFor(`/api/onboarding/invite/cancel`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ invitation_id: invitationId }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1336,19 +1346,19 @@ export default function OnboardingApp() {
     }
   };
 
-  const resendInvite: StepProps['resendInvite'] = async (invitationId) => {
+  const resendInvite: StepProps["resendInvite"] = async (invitationId) => {
     if (!token || !invitationId) return { ok: true };
     try {
       const res = await fetch(urlFor(`/api/onboarding/invite/resend`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ invitation_id: invitationId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const error = friendlyError(data, "I couldn't resend that. Mind trying again?");
         // The resend cooldown: say when it can go again rather than the API's sentence.
-        if (res.status === 429 && typeof data.retry_after === 'number')
+        if (res.status === 429 && typeof data.retry_after === "number")
           return { ok: false, error, retryAfter: data.retry_after };
         return { ok: false, error };
       }
@@ -1402,7 +1412,7 @@ export default function OnboardingApp() {
   const completeOnboarding = async (): Promise<FinalizeResult | Result> => {
     if (!token || !state.entity.id) return { ok: true, trialEnd: null };
     const chosen = state.modules[0]; // 'pettyCash' | 'bills' | undefined
-    if (chosen !== 'bills') {
+    if (chosen !== "bills") {
       const result = await submitOpeningBalance();
       if (!result?.ok) return result;
     }
@@ -1410,8 +1420,8 @@ export default function OnboardingApp() {
     // entity-list click instead of bouncing back here, and starts the module trials.
     try {
       const res = await fetch(urlFor(`/api/onboarding/finalize`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ entity_id: state.entity.id }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1454,7 +1464,7 @@ export default function OnboardingApp() {
   // block the exit — we save what's valid and go.
   const saveAndExit = async (submitFn?: SubmitFn) => {
     try {
-      if (typeof submitFn === 'function') await submitFn();
+      if (typeof submitFn === "function") await submitFn();
     } catch {
       /* best-effort — never block the exit on a save failure */
     }
@@ -1464,8 +1474,8 @@ export default function OnboardingApp() {
     if (token && state.entity.id) {
       try {
         await fetch(urlFor(`/api/onboarding/saved-step`), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ entity_id: state.entity.id, saved_step: current }),
         });
       } catch {
@@ -1478,28 +1488,28 @@ export default function OnboardingApp() {
   // Avatar initials — prefer the connected user, fall back to entity name.
   const profileInitials = (() => {
     if (user.first || user.last) {
-      return ((user.first[0] || '') + (user.last[0] || '')).toUpperCase() || 'DD';
+      return ((user.first[0] || "") + (user.last[0] || "")).toUpperCase() || "DD";
     }
-    const source = user.name || state.entity.name || '';
+    const source = user.name || state.entity.name || "";
     const fromWords = source
       .trim()
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((w) => w[0])
-      .join('')
+      .join("")
       .toUpperCase();
-    return fromWords || 'DD';
+    return fromWords || "DD";
   })();
-  const profileLabel = user.name || state.entity.name || 'Your entity';
+  const profileLabel = user.name || state.entity.name || "Your entity";
 
   // Apply accent CSS vars from baked-in defaults
   useEffect(() => {
     const r = document.documentElement;
-    r.style.setProperty('--accent', ACCENT_DEFAULTS.accent);
-    r.style.setProperty('--accent-ink', ACCENT_DEFAULTS.accentInk);
-    r.style.setProperty('--accent-soft', ACCENT_DEFAULTS.accentSoft);
-    r.style.setProperty('--accent-hover', ACCENT_DEFAULTS.accent);
+    r.style.setProperty("--accent", ACCENT_DEFAULTS.accent);
+    r.style.setProperty("--accent-ink", ACCENT_DEFAULTS.accentInk);
+    r.style.setProperty("--accent-soft", ACCENT_DEFAULTS.accentSoft);
+    r.style.setProperty("--accent-hover", ACCENT_DEFAULTS.accent);
   }, []);
 
   // The last content step (immediately before "All Set", step 9) shows a
@@ -1519,7 +1529,7 @@ export default function OnboardingApp() {
     connectXero,
     disconnectXero,
     xeroMismatch,
-    clearXeroMismatch: () => setXeroMismatch(''),
+    clearXeroMismatch: () => setXeroMismatch(""),
     xeroConflict,
     clearXeroConflict: () => setXeroConflict(null),
     releaseXeroConflict,
@@ -1556,7 +1566,7 @@ export default function OnboardingApp() {
               {profileInitials}
             </span>
             {/* Nav stays Logout-only through onboarding; full menu populates on the final "All Set" step. */}
-            <NavMenu companyName={state.entity.name || 'Minty'} showFullMenu={current === 9} />
+            <NavMenu companyName={state.entity.name || "Minty"} showFullMenu={current === 9} />
           </div>
         </div>
       </div>
@@ -1573,9 +1583,9 @@ export default function OnboardingApp() {
           <aside className="pc-side-menu" aria-label="Petty Cash sub-steps">
             <div className="pc-side-title">Petty Cash Settings</div>
             {[
-              { id: 5, num: '1', label: 'Sales' },
-              { id: 6, num: '2', label: 'Account Code' },
-              { id: 7, num: '3', label: 'Others' },
+              { id: 5, num: "1", label: "Sales" },
+              { id: 6, num: "2", label: "Account Code" },
+              { id: 7, num: "3", label: "Others" },
             ].map(({ id, num, label }) => {
               // A sub-step is reachable once the user has been there. Forward
               // jumps to an incomplete step are still blocked inside goto(), so
@@ -1587,13 +1597,13 @@ export default function OnboardingApp() {
                   key={id}
                   type="button"
                   className={
-                    'pc-side-item' +
-                    (current === id ? ' active' : '') +
-                    (current > id ? ' done' : '')
+                    "pc-side-item" +
+                    (current === id ? " active" : "") +
+                    (current > id ? " done" : "")
                   }
                   onClick={() => goto(id)}
                   disabled={!reachable || current === id}
-                  aria-current={current === id ? 'step' : undefined}
+                  aria-current={current === id ? "step" : undefined}
                 >
                   <span className="substep-circle">{current > id ? <Icon.CheckSm /> : num}</span>
                   <span className="substep-label">{label}</span>
@@ -1624,14 +1634,14 @@ export default function OnboardingApp() {
             role="presentation"
             onClick={() => setNeedsXeroPrompt(false)}
             style={{
-              position: 'fixed',
+              position: "fixed",
               inset: 0,
               zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               padding: 20,
-              background: 'rgba(15, 23, 27, 0.45)',
+              background: "rgba(15, 23, 27, 0.45)",
             }}
           >
             <div
@@ -1641,28 +1651,28 @@ export default function OnboardingApp() {
               aria-labelledby="xero-prompt-title"
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#f1f3f4',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--radius)',
-                boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22)',
-                padding: '26px 26px 22px',
+                background: "#f1f3f4",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                boxShadow: "0 20px 48px rgba(0, 0, 0, 0.22)",
+                padding: "26px 26px 22px",
                 maxWidth: 440,
-                width: '100%',
+                width: "100%",
               }}
             >
               <p id="xero-prompt-title" className="skip-modal-lead">
-                {xeroPromptReason === 'expired'
-                  ? 'Your session has timed out.'
-                  : 'Connect to your accounting system first.'}
+                {xeroPromptReason === "expired"
+                  ? "Your session has timed out."
+                  : "Connect to your accounting system first."}
               </p>
               <p className="skip-modal-body" style={{ marginBottom: 32 }}>
-                {xeroPromptReason === 'expired'
-                  ? 'It has been more than 30 minutes, so your connection to Xero has expired. Please go back to the “Connect to Accounting System” step and reconnect to continue your setup.'
-                  : 'You’re not connected to Xero yet. Please go back to the “Connect to Accounting System” step and connect before continuing your setup.'}
+                {xeroPromptReason === "expired"
+                  ? "It has been more than 30 minutes, so your connection to Xero has expired. Please go back to the “Connect to Accounting System” step and reconnect to continue your setup."
+                  : "You’re not connected to Xero yet. Please go back to the “Connect to Accounting System” step and connect before continuing your setup."}
               </p>
               <div
                 className="skip-modal-actions"
-                style={{ display: 'flex', justifyContent: 'center', gap: 10 }}
+                style={{ display: "flex", justifyContent: "center", gap: 10 }}
               >
                 <button
                   type="button"
@@ -1673,7 +1683,7 @@ export default function OnboardingApp() {
                     setCurrent(4);
                   }}
                 >
-                  {xeroPromptReason === 'expired' ? 'Reconnect to Xero' : 'Go to Connect step'}
+                  {xeroPromptReason === "expired" ? "Reconnect to Xero" : "Go to Connect step"}
                 </button>
               </div>
             </div>

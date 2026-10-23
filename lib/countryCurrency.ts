@@ -13,5 +13,5 @@ export function currencyForCountry(
   current: string,
 ): string {
   if (current) return current;
-  return countries.find((c) => c.country_code === country)?.currency_id ?? '';
+  return countries.find((c) => c.country_code === country)?.currency_id ?? "";
 }

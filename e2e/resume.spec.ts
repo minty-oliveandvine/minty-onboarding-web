@@ -30,10 +30,10 @@
 // the browser and walk.spec.ts clicks from there to All Set. This spec stays on the
 // resume contract only.
 
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { mintToken, reachable, requireCredentials, type Credentials } from './helpers';
-import * as api from './onboardingApi';
-import { ONBOARDING_API_URL } from './urls';
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { mintToken, reachable, requireCredentials, type Credentials } from "./helpers";
+import * as api from "./onboardingApi";
+import { ONBOARDING_API_URL } from "./urls";
 
 let creds: Credentials;
 
@@ -58,34 +58,34 @@ const restoreSavedStep = (request: APIRequestContext, original: number | null) =
   api.restoreSavedStep(request, creds, original);
 const activeStep = api.activeStep;
 
-test('a valid launch token opens the wizard rather than the sign-in screen', async ({
+test("a valid launch token opens the wizard rather than the sign-in screen", async ({
   page,
   request,
 }) => {
   const original = await stashSavedStep(request);
   try {
     await land(page, request);
-    await expect(page.locator('.stepper')).toBeVisible();
+    await expect(page.locator(".stepper")).toBeVisible();
     expect(await activeStep(page)).toBe(SAFE_STEP);
   } finally {
     await restoreSavedStep(request, original);
   }
 });
 
-test('the launch token is stripped from the address bar', async ({ page, request }) => {
+test("the launch token is stripped from the address bar", async ({ page, request }) => {
   // It is a bearer credential. Leaving it in the URL puts it in history, in the
   // Referer header of every outbound link, and in any screenshot the user sends.
   const original = await stashSavedStep(request);
   try {
     await land(page, request);
-    expect(page.url()).not.toContain('token=');
-    expect(new URL(page.url()).search).toBe('');
+    expect(page.url()).not.toContain("token=");
+    expect(new URL(page.url()).search).toBe("");
   } finally {
     await restoreSavedStep(request, original);
   }
 });
 
-test('the wizard resumes where the DATABASE says, not where the browser does', async ({
+test("the wizard resumes where the DATABASE says, not where the browser does", async ({
   page,
   request,
 }) => {
@@ -112,7 +112,7 @@ test('the wizard resumes where the DATABASE says, not where the browser does', a
 
     expect(
       await activeStep(page),
-      'a cold browser did not land on the step the database recorded',
+      "a cold browser did not land on the step the database recorded",
     ).toBe(target);
 
     // And the API agrees with what the screen is showing.
@@ -123,7 +123,7 @@ test('the wizard resumes where the DATABASE says, not where the browser does', a
   }
 });
 
-test('saved_step and current_step are allowed to disagree', async ({ request }) => {
+test("saved_step and current_step are allowed to disagree", async ({ request }) => {
   // Two different numbers that both look like "the step": saved_step is the FRONTEND
   // id the user was on when they hit Save, current_step is the backend's own derived
   // landing step from a different ordering. /saved-step stores the frontend one
@@ -135,14 +135,14 @@ test('saved_step and current_step are allowed to disagree', async ({ request }) 
     const body = await writeSavedStep(request, 3);
     expect(body).toMatchObject({ ok: true, saved_step: 3 });
     const after = await readState(request);
-    expect(after.saved_step, 'saved_step is stored verbatim').toBe(3);
-    expect(typeof after.current_step).toBe('number');
+    expect(after.saved_step, "saved_step is stored verbatim").toBe(3);
+    expect(typeof after.current_step).toBe("number");
   } finally {
     if (original !== null) await writeSavedStep(request, original);
   }
 });
 
-test('an out-of-range saved_step is refused with the wizard own wording', async ({ request }) => {
+test("an out-of-range saved_step is refused with the wizard own wording", async ({ request }) => {
   const res = await request.post(`${ONBOARDING_API_URL}/api/onboarding/saved-step`, {
     headers: auth(),
     data: { entity_id: creds.entityId, saved_step: 42 },
@@ -151,15 +151,15 @@ test('an out-of-range saved_step is refused with the wizard own wording', async 
   const body = await res.json();
   // The wizard renders this sentence as-is, so it is part of the contract. Note the
   // body key is `error`, not ninja's default `detail`.
-  expect(body.error).toBe('saved_step must be an integer 1-9');
+  expect(body.error).toBe("saved_step must be an integer 1-9");
 });
 
-test('a token minted for a DIFFERENT scope is refused', async ({ request }) => {
+test("a token minted for a DIFFERENT scope is refused", async ({ request }) => {
   // The Django service verifies `scope`; Flask's own decoder never did, so any HS256
   // token over the shared secret used to open this surface -- including the short-lived
   // assertion the Xero token service accepts. This asserts that tightening is in force,
   // and it is signed with the REAL secret, so only the scope check can reject it.
-  const xeroAssertion = mintToken(creds.userId, creds.secret, { scope: 'xero-access-token' });
+  const xeroAssertion = mintToken(creds.userId, creds.secret, { scope: "xero-access-token" });
   const res = await request.get(
     `${ONBOARDING_API_URL}/api/onboarding/state?entity_id=${creds.entityId}`,
     { headers: { Authorization: `Bearer ${xeroAssertion}` } },
@@ -167,8 +167,8 @@ test('a token minted for a DIFFERENT scope is refused', async ({ request }) => {
   expect(res.status()).toBe(401);
 });
 
-test('a token signed with the WRONG secret is refused', async ({ request }) => {
-  const forged = mintToken(creds.userId, 'not-the-shared-secret');
+test("a token signed with the WRONG secret is refused", async ({ request }) => {
+  const forged = mintToken(creds.userId, "not-the-shared-secret");
   const res = await request.get(
     `${ONBOARDING_API_URL}/api/onboarding/state?entity_id=${creds.entityId}`,
     { headers: { Authorization: `Bearer ${forged}` } },
@@ -176,7 +176,7 @@ test('a token signed with the WRONG secret is refused', async ({ request }) => {
   expect(res.status()).toBe(401);
 });
 
-test('an expired token is refused', async ({ request }) => {
+test("an expired token is refused", async ({ request }) => {
   const stale = mintToken(creds.userId, creds.secret, { ttlSeconds: -60 });
   const res = await request.get(
     `${ONBOARDING_API_URL}/api/onboarding/state?entity_id=${creds.entityId}`,
@@ -185,15 +185,15 @@ test('an expired token is refused', async ({ request }) => {
   expect(res.status()).toBe(401);
 });
 
-test('a malformed bearer value is refused', async ({ request }) => {
+test("a malformed bearer value is refused", async ({ request }) => {
   const res = await request.get(
     `${ONBOARDING_API_URL}/api/onboarding/state?entity_id=${creds.entityId}`,
-    { headers: { Authorization: 'Bearer not-a-jwt' } },
+    { headers: { Authorization: "Bearer not-a-jwt" } },
   );
   expect(res.status()).toBe(401);
 });
 
-test('no token at all is refused', async ({ request }) => {
+test("no token at all is refused", async ({ request }) => {
   const res = await request.get(
     `${ONBOARDING_API_URL}/api/onboarding/state?entity_id=${creds.entityId}`,
   );

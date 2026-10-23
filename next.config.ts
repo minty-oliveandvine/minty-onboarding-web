@@ -1,7 +1,7 @@
-import type { NextConfig } from 'next';
-import path from 'node:path';
+import type { NextConfig } from "next";
+import path from "node:path";
 
-import { FLASK_BASE } from './lib/flaskBase';
+import { FLASK_BASE } from "./lib/flaskBase";
 
 /**
  * Sent with every response (the URL security round, 2026-10-05). Same values in minty-web,
@@ -11,12 +11,12 @@ import { FLASK_BASE } from './lib/flaskBase';
  * - HSTS in production builds only; a browser ignores it over plain http anyway.
  */
 const securityHeaders = [
-  { key: 'Referrer-Policy', value: 'same-origin' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  ...(process.env.NODE_ENV === 'production'
-    ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }]
+  { key: "Referrer-Policy", value: "same-origin" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=31536000" }]
     : []),
 ];
 
@@ -29,18 +29,18 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [{ source: "/:path*", headers: securityHeaders }];
   },
   async redirects() {
     return [
       {
-        source: '/auth',
-        has: [{ type: 'query', key: 'mode', value: 'signup' }],
+        source: "/auth",
+        has: [{ type: "query", key: "mode", value: "signup" }],
         destination: `${FLASK_BASE}/register`,
         permanent: false,
       },
-      { source: '/auth', destination: `${FLASK_BASE}/`, permanent: false },
-      { source: '/auth/confirm', destination: `${FLASK_BASE}/`, permanent: false },
+      { source: "/auth", destination: `${FLASK_BASE}/`, permanent: false },
+      { source: "/auth/confirm", destination: `${FLASK_BASE}/`, permanent: false },
     ];
   },
   turbopack: {
@@ -54,8 +54,8 @@ const nextConfig: NextConfig = {
   // where they are read: PETTY_CASH_URL in lib/flaskBase.ts, ONBOARDING_API_URL in
   // lib/apiRoutes.ts.
   env: {
-    PETTY_CASH_URL: process.env.PETTY_CASH_URL ?? '',
-    ONBOARDING_API_URL: process.env.ONBOARDING_API_URL ?? '',
+    PETTY_CASH_URL: process.env.PETTY_CASH_URL ?? "",
+    ONBOARDING_API_URL: process.env.ONBOARDING_API_URL ?? "",
   },
 };
 

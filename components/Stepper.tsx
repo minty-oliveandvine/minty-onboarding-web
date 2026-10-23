@@ -5,9 +5,9 @@
 // `is-overflow` class and a `--scroll-end` custom property, remeasured on resize, so the CSS
 // can scroll it rather than truncating a step name to something unreadable.
 
-import { useEffect, useRef, type CSSProperties } from 'react';
-import Icon from './Icon';
-import type { DisplayStep } from '../lib/types';
+import { useEffect, useRef, type CSSProperties } from "react";
+import Icon from "./Icon";
+import type { DisplayStep } from "../lib/types";
 
 type StepperProps = {
   current: number;
@@ -26,27 +26,27 @@ export default function Stepper({ current, onClick, maxReached, displaySteps }: 
     const el = ref.current;
     if (!el) return;
     const check = () => {
-      el.querySelectorAll<HTMLElement>('.step .label').forEach((label) => {
-        if (getComputedStyle(label).display === 'none') return;
-        const inner = label.querySelector<HTMLElement>('.label-inner');
+      el.querySelectorAll<HTMLElement>(".step .label").forEach((label) => {
+        if (getComputedStyle(label).display === "none") return;
+        const inner = label.querySelector<HTMLElement>(".label-inner");
         if (!inner) return;
         const overflow = inner.scrollWidth - label.clientWidth;
         if (overflow > 1) {
-          label.classList.add('is-overflow');
-          inner.style.setProperty('--scroll-end', -overflow - 8 + 'px');
+          label.classList.add("is-overflow");
+          inner.style.setProperty("--scroll-end", -overflow - 8 + "px");
         } else {
-          label.classList.remove('is-overflow');
-          inner.style.removeProperty('--scroll-end');
+          label.classList.remove("is-overflow");
+          inner.style.removeProperty("--scroll-end");
         }
       });
     };
     check();
     const ro = new ResizeObserver(check);
     ro.observe(el);
-    window.addEventListener('resize', check);
+    window.addEventListener("resize", check);
     return () => {
       ro.disconnect();
-      window.removeEventListener('resize', check);
+      window.removeEventListener("resize", check);
     };
   }, [current, maxReached]);
 
@@ -55,12 +55,12 @@ export default function Stepper({ current, onClick, maxReached, displaySteps }: 
       className="stepper"
       ref={ref}
       data-screen-label="Stepper"
-      style={{ '--step-count': displaySteps.length } as CSSProperties}
+      style={{ "--step-count": displaySteps.length } as CSSProperties}
     >
       {displaySteps.map((d) => {
         const isActive = d.ids.includes(current);
         const isDone = d.ids.every((i) => current > i);
-        const status = isDone ? 'done' : isActive ? 'active' : 'todo';
+        const status = isDone ? "done" : isActive ? "active" : "todo";
         const firstId = d.ids[0];
         const reachable = firstId <= maxReached;
         // Once on "All Set" (9), onboarding is finished — no step is clickable
@@ -78,10 +78,10 @@ export default function Stepper({ current, onClick, maxReached, displaySteps }: 
             key={d.ids[0]}
             data-step-key={d.ids[0]}
             className={
-              'step ' + status + (reachable ? '' : ' locked') + (clickable ? '' : ' not-clickable')
+              "step " + status + (reachable ? "" : " locked") + (clickable ? "" : " not-clickable")
             }
             onClick={() => clickable && onClick(targetId)}
-            title={reachable ? undefined : 'Complete the previous steps first'}
+            title={reachable ? undefined : "Complete the previous steps first"}
           >
             {(isDone || !reachable) && (
               <span className="num">{isDone ? <Icon.Check /> : <Icon.Lock />}</span>

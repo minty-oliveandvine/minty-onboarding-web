@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 // Part 15.3 / 15.G error summary, as minty-payment-request-web's `components/ui/ErrorSummary`
 // draws it: when a submit is refused with MORE THAN ONE problem, a list at the top of the form
@@ -8,7 +8,7 @@
 // Wording follows Part 11 (issue, then action): "The country is still empty. Choose the
 // company's country to continue." -- never "Error", "Invalid" or "Mandatory".
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 export type SummaryItem = { fieldId: string; message: string };
 

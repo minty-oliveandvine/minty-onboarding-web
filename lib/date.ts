@@ -28,23 +28,23 @@ const MONTH_LETTERS = 3;
 export type FormatDateOptions = Intl.DateTimeFormatOptions & { upper?: boolean };
 
 export function formatDate(date: Date, { upper = true, ...opts }: FormatDateOptions = {}): string {
-  const out = new Intl.DateTimeFormat('en-GB', opts)
+  const out = new Intl.DateTimeFormat("en-GB", opts)
     .formatToParts(date)
     .map((part) =>
       // Only the month is cut. A numeric day or year is already short, and slicing a
       // literal would eat the separators the locale put there.
-      part.type === 'month' ? part.value.slice(0, MONTH_LETTERS) : part.value,
+      part.type === "month" ? part.value.slice(0, MONTH_LETTERS) : part.value,
     )
-    .join('');
+    .join("");
   return upper ? out.toUpperCase() : out;
 }
 
 /** Today, as the flow writes it: "12 JUN 2026". */
 export function formatToday(): string {
   return formatDate(new Date(), {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -59,8 +59,8 @@ export function formatToday(): string {
  */
 export function toIsoDate(date: Date | string | number): string {
   const d = date instanceof Date ? date : new Date(date);
-  if (Number.isNaN(d.getTime())) return '';
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  if (Number.isNaN(d.getTime())) return "";
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${m}-${day}`;
 }

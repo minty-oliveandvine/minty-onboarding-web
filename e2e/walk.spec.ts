@@ -16,12 +16,12 @@
 // The browser is never NAVIGATED to step 9. It gets there by clicking "Complete", which
 // is the only way a user does either.
 
-import { expect, test, type Page } from '@playwright/test';
-import { IDS, LABELS } from './fixtures/xero';
-import { reachable, requireCredentials, type Credentials } from './helpers';
-import { land, readState, resetEntity, stashSavedStep } from './onboardingApi';
-import { ONBOARDING_API_URL } from './urls';
-import { installXeroFake } from './xeroFake';
+import { expect, test, type Page } from "@playwright/test";
+import { IDS, LABELS } from "./fixtures/xero";
+import { reachable, requireCredentials, type Credentials } from "./helpers";
+import { land, readState, resetEntity, stashSavedStep } from "./onboardingApi";
+import { ONBOARDING_API_URL } from "./urls";
+import { installXeroFake } from "./xeroFake";
 
 let creds: Credentials;
 
@@ -33,15 +33,15 @@ test.beforeEach(async () => {
   );
 });
 
-const saveNext = (page: Page) => page.getByRole('button', { name: /Save & Next/ });
-const activeTile = (page: Page) => page.locator('.step.active');
+const saveNext = (page: Page) => page.getByRole("button", { name: /Save & Next/ });
+const activeTile = (page: Page) => page.locator(".step.active");
 
 /** The card on a petty cash step whose title is `title`, e.g. "Deposit Bank Account". */
 const card = (page: Page, title: string) =>
-  page.locator('.pc-card', { has: page.locator('.pc-title', { hasText: title }) });
-const select = (page: Page, title: string) => card(page, title).locator('input.mselect-input');
+  page.locator(".pc-card", { has: page.locator(".pc-title", { hasText: title }) });
+const select = (page: Page, title: string) => card(page, title).locator("input.mselect-input");
 
-test('walks from Connect to All Set and finalizes the disposable entity', async ({
+test("walks from Connect to All Set and finalizes the disposable entity", async ({
   page,
   request,
 }) => {
@@ -58,50 +58,50 @@ test('walks from Connect to All Set and finalizes the disposable entity', async 
     // The click must actually leave for /xero_connect; a wizard with no entity id fakes
     // the connection locally, and that would walk the rest of this in prototype mode.
     await Promise.all([
-      page.waitForRequest((r) => new URL(r.url()).pathname === '/xero_connect'),
-      page.getByRole('button', { name: 'Connect to Xero' }).click(),
+      page.waitForRequest((r) => new URL(r.url()).pathname === "/xero_connect"),
+      page.getByRole("button", { name: "Connect to Xero" }).click(),
     ]);
-    await expect(page.locator('.status-card .pill-status')).toHaveText('Connected');
+    await expect(page.locator(".status-card .pill-status")).toHaveText("Connected");
     await saveNext(page).click();
 
     // --- 5. Sales ---
-    await expect(activeTile(page)).toHaveAttribute('data-step-key', '5');
+    await expect(activeTile(page)).toHaveAttribute("data-step-key", "5");
     await expect(
-      page.getByRole('heading', { name: 'Type of sales method of your company' }),
+      page.getByRole("heading", { name: "Type of sales method of your company" }),
     ).toBeVisible();
     // A previous run's balance is rehydrated from the draft, and focusing the field
     // re-renders it from "100.00" to its edit string -- which collapses fill()'s
     // select-all if the two happen together. Focus first, then replace.
     const balance = page.locator('input[inputmode="decimal"][placeholder="0.00"]');
     await balance.click();
-    await balance.fill('100');
-    await expect(balance).toHaveValue('100');
+    await balance.fill("100");
+    await expect(balance).toHaveValue("100");
     await saveNext(page).click();
 
     // --- 6. Account Code ---
-    await expect(page.getByRole('heading', { name: 'Account Code Setting' })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Account Code Setting" })).toBeVisible();
     // Four of five pre-filled from the fixture's mapping_defaults...
-    await expect(select(page, 'Petty Cash Account')).toHaveValue(LABELS.pettyCashBank);
-    await expect(select(page, 'Deposit Bank Account')).toHaveValue(LABELS.depositBank);
-    await expect(select(page, 'Director Personal Account')).toHaveValue(LABELS.director);
-    await expect(select(page, 'Cash Sales')).toHaveValue(LABELS.cashSale);
+    await expect(select(page, "Petty Cash Account")).toHaveValue(LABELS.pettyCashBank);
+    await expect(select(page, "Deposit Bank Account")).toHaveValue(LABELS.depositBank);
+    await expect(select(page, "Director Personal Account")).toHaveValue(LABELS.director);
+    await expect(select(page, "Cash Sales")).toHaveValue(LABELS.cashSale);
     // ...and the one it left out blocks Save & Next until it is chosen.
-    await expect(select(page, 'Discrepancy')).toHaveValue('');
+    await expect(select(page, "Discrepancy")).toHaveValue("");
     await saveNext(page).click();
-    await expect(card(page, 'Discrepancy')).toHaveClass(/is-error/);
-    await expect(card(page, 'Discrepancy')).toContainText("I'll need this one to keep going.");
-    await select(page, 'Discrepancy').click();
+    await expect(card(page, "Discrepancy")).toHaveClass(/is-error/);
+    await expect(card(page, "Discrepancy")).toContainText("I'll need this one to keep going.");
+    await select(page, "Discrepancy").click();
     await page.locator('.mselect-menu [role="option"]', { hasText: LABELS.discrepancy }).click();
-    await expect(select(page, 'Discrepancy')).toHaveValue(LABELS.discrepancy);
+    await expect(select(page, "Discrepancy")).toHaveValue(LABELS.discrepancy);
     await saveNext(page).click();
 
     // --- 7. Contacts ---
-    await expect(page.getByRole('heading', { name: 'Contact Setup' })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Contact Setup" })).toBeVisible();
     // The step sent ids, resolved from the labels it showed.
-    expect(fake.posted['account-codes']).toEqual([
+    expect(fake.posted["account-codes"]).toEqual([
       {
         entity_id: creds.entityId,
-        expense_codes: ['400', '404', '420'],
+        expense_codes: ["400", "404", "420"],
         mapping: {
           pettycash: IDS.pettyCashBank,
           deposit: IDS.depositBank,
@@ -112,14 +112,14 @@ test('walks from Connect to All Set and finalizes the disposable entity', async 
       },
     ]);
     await expect(select(page, "Director's Contact")).toHaveValue(LABELS.directorContact);
-    await expect(select(page, 'Cash Sales Contact')).toHaveValue(LABELS.cashSaleContact);
-    await expect(select(page, 'Discrepancy Contact')).toHaveValue(LABELS.discrepancyContact);
+    await expect(select(page, "Cash Sales Contact")).toHaveValue(LABELS.cashSaleContact);
+    await expect(select(page, "Discrepancy Contact")).toHaveValue(LABELS.discrepancyContact);
     await saveNext(page).click();
 
     // --- 8. Payment Request Settings ---
-    await expect(activeTile(page)).toHaveAttribute('data-step-key', '8');
-    await expect(page.getByRole('heading', { name: 'Payment Request Settings' })).toBeVisible();
-    expect(fake.posted['contacts']).toEqual([
+    await expect(activeTile(page)).toHaveAttribute("data-step-key", "8");
+    await expect(page.getByRole("heading", { name: "Payment Request Settings" })).toBeVisible();
+    expect(fake.posted["contacts"]).toEqual([
       {
         entity_id: creds.entityId,
         contacts: {
@@ -129,56 +129,58 @@ test('walks from Connect to All Set and finalizes the disposable entity', async 
         },
       },
     ]);
-    await expect(page.locator('.acc-row')).toHaveCount(3);
+    await expect(page.locator(".acc-row")).toHaveCount(3);
 
     // The FIRST finalize fails the way a failed trial start does (the subscription API's
     // 502, relayed by the onboarding API); every later one is real. All Set must not claim
     // a trial, and Try again must finish the job.
-    const trialFailure = 'This trial could not be started. Mind trying again?';
+    const trialFailure = "This trial could not be started. Mind trying again?";
     let finalizeCalls = 0;
-    await page.route('**/api/onboarding/finalize', async (route) => {
+    await page.route("**/api/onboarding/finalize", async (route) => {
       finalizeCalls += 1;
       if (finalizeCalls === 1) {
         await route.fulfill({
           status: 502,
-          contentType: 'application/json',
-          headers: { 'Access-Control-Allow-Origin': '*' },
+          contentType: "application/json",
+          headers: { "Access-Control-Allow-Origin": "*" },
           body: JSON.stringify({ error: trialFailure }),
         });
         return;
       }
       await route.continue();
     });
-    await page.getByRole('button', { name: 'Complete' }).click();
+    await page.getByRole("button", { name: "Complete" }).click();
 
     // --- 9. All Set ---
-    await expect(activeTile(page)).toHaveAttribute('data-step-key', '9');
-    await expect(page.locator('h2.allset-title')).toHaveText("You're all set!");
-    expect(fake.posted['bill-codes']).toEqual([
+    await expect(activeTile(page)).toHaveAttribute("data-step-key", "9");
+    await expect(page.locator("h2.allset-title")).toHaveText("You're all set!");
+    expect(fake.posted["bill-codes"]).toEqual([
       // no default picked on step 8: "" (an empty default clears any saved one)
-      { entity_id: creds.entityId, selected_codes: ['300', '310', '469'], default_code: '' },
+      { entity_id: creds.entityId, selected_codes: ["300", "310", "469"], default_code: "" },
     ]);
 
-    await expect(page.locator('.allset-facts').getByRole('alert')).toHaveText(trialFailure);
-    await expect(page.locator('.allset-facts')).toContainText("trial hasn't started yet");
-    await expect(page.getByRole('button', { name: 'Add Payment Now' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Try again' }).click();
+    await expect(page.locator(".allset-facts").getByRole("alert")).toHaveText(trialFailure);
+    await expect(page.locator(".allset-facts")).toContainText("trial hasn't started yet");
+    await expect(page.getByRole("button", { name: "Add Payment Now" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Try again" }).click();
 
     // The facts block waits on finalize AND the (faked) billing status; both in means
     // the commit has returned.
-    await expect(page.locator('.allset-facts').getByRole('alert')).toHaveCount(0);
+    await expect(page.locator(".allset-facts").getByRole("alert")).toHaveCount(0);
     expect(finalizeCalls).toBe(2);
-    await expect(page.locator('.allset-facts')).toBeVisible();
-    await expect(page.locator('.allset-facts')).toContainText('trial has started');
-    await expect(page.getByRole('button', { name: 'Add Payment Now' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Go to entity list' })).toBeEnabled();
+    await expect(page.locator(".allset-facts")).toBeVisible();
+    await expect(page.locator(".allset-facts")).toContainText("trial has started");
+    await expect(page.getByRole("button", { name: "Add Payment Now" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Go to entity list" })).toBeEnabled();
 
     // And the row agrees: the real finalize ran.
     const after = await readState(request, creds);
     // entity_status is onboarding / connected / disconnected since C2: finalize leaves the
     // company `connected` when a Xero org is linked, `disconnected` otherwise (the walk fakes
     // the Xero round-trip, so either is a finished company; `onboarding` would be the failure)
-    expect(['connected', 'disconnected'], 'finalize left the company onboarding').toContain(after.status);
+    expect(["connected", "disconnected"], "finalize left the company onboarding").toContain(
+      after.status,
+    );
     expect(after.saved_step).toBe(9);
     expect(Number(after.opening_balance?.opening_balance)).toBe(100);
   } finally {

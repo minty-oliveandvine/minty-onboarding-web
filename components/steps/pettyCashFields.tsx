@@ -6,22 +6,22 @@
 
 // --- Step 4: Petty Cash Settings ---
 
-import { useState, useRef, useEffect, type DragEvent, type ReactNode, type Ref } from 'react';
-import Icon from '../Icon';
-import MintySelect, { type SelectOption } from '../MintySelect';
-import { UUID_RE } from '../../lib/validation';
-import type { CurrencyRow } from '../../lib/refData';
-import type { ContactResult } from '../../lib/api';
-import type { CodeSelection } from '../../lib/types';
+import { useState, useRef, useEffect, type DragEvent, type ReactNode, type Ref } from "react";
+import Icon from "../Icon";
+import MintySelect, { type SelectOption } from "../MintySelect";
+import { UUID_RE } from "../../lib/validation";
+import type { CurrencyRow } from "../../lib/refData";
+import type { ContactResult } from "../../lib/api";
+import type { CodeSelection } from "../../lib/types";
 
 export const CURRENCY_CODES: Record<string, string> = {
-  'Hong Kong Dollar': 'HKD',
-  'Singapore Dollar': 'SGD',
-  'Australian Dollar': 'AUD',
-  'New Zealand Dollar': 'NZD',
-  'Pound Sterling': 'GBP',
-  'US Dollar': 'USD',
-  'Indian Rupee': 'INR',
+  "Hong Kong Dollar": "HKD",
+  "Singapore Dollar": "SGD",
+  "Australian Dollar": "AUD",
+  "New Zealand Dollar": "NZD",
+  "Pound Sterling": "GBP",
+  "US Dollar": "USD",
+  "Indian Rupee": "INR",
 };
 // state.entity.currency holds a currency_info uuid (Step 1 dropdowns submit
 // uuids); resolve it to the ISO code via the fetched registry. The name-based
@@ -29,21 +29,21 @@ export const CURRENCY_CODES: Record<string, string> = {
 // render a bare uuid — while the registry is still loading, show nothing.
 export const currencyCode = (
   c: string | null | undefined,
-  registry: readonly Pick<CurrencyRow, 'currency_id' | 'iso_code' | 'currency_name'>[] = [],
+  registry: readonly Pick<CurrencyRow, "currency_id" | "iso_code" | "currency_name">[] = [],
 ): string => {
   const row = registry.find((r) => r.currency_id === c);
   if (row) return row.iso_code || row.currency_name;
-  if (UUID_RE.test(c || '')) return '';
-  return CURRENCY_CODES[c || ''] || (c || '').split(' ')[0];
+  if (UUID_RE.test(c || "")) return "";
+  return CURRENCY_CODES[c || ""] || (c || "").split(" ")[0];
 };
 
 /** The company currency's decimal places for amounts (JPY is 0); 2 until the registry is in. */
 export const currencyDecimals = (
   c: string | null | undefined,
-  registry: readonly Pick<CurrencyRow, 'currency_id' | 'decimal_places'>[] = [],
+  registry: readonly Pick<CurrencyRow, "currency_id" | "decimal_places">[] = [],
 ): number => {
   const places = registry.find((r) => r.currency_id === c)?.decimal_places;
-  return typeof places === 'number' && places >= 0 ? places : 2;
+  return typeof places === "number" && places >= 0 ? places : 2;
 };
 
 type MethodListProps = {
@@ -59,13 +59,13 @@ type MethodListProps = {
 export function MethodList({
   title,
   methods,
-  placeholder = 'Enter method name',
+  placeholder = "Enter method name",
   onAdd,
   onChange,
   autoFilled = false,
 }: MethodListProps) {
   const [adding, setAdding] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,15 +83,15 @@ export function MethodList({
   const onDragStart = (i: number) => (e: DragEvent) => {
     setDragIdx(i);
     if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.effectAllowed = "move";
       try {
-        e.dataTransfer.setData('text/plain', String(i));
+        e.dataTransfer.setData("text/plain", String(i));
       } catch {}
     }
   };
   const onDragOver = (i: number) => (e: DragEvent) => {
     e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     if (overIdx !== i) setOverIdx(i);
   };
   const onDrop = (i: number) => (e: DragEvent) => {
@@ -115,13 +115,13 @@ export function MethodList({
 
   const cancel = () => {
     setAdding(false);
-    setName('');
+    setName("");
   };
   const submit = () => {
     const v = name.trim();
     if (!v) return;
     onAdd(v);
-    setName('');
+    setName("");
     setAdding(false);
   };
 
@@ -137,14 +137,14 @@ export function MethodList({
           )}
         </span>
       </div>
-      <div className="method-body" style={{ display: 'block' }}>
+      <div className="method-body" style={{ display: "block" }}>
         <ul className="method-list">
           {methods.map((m, i) => (
             <li
               className={
-                'method-row' +
-                (dragIdx === i ? ' is-dragging' : '') +
-                (overIdx === i && dragIdx !== i ? ' is-drag-over' : '')
+                "method-row" +
+                (dragIdx === i ? " is-dragging" : "") +
+                (overIdx === i && dragIdx !== i ? " is-drag-over" : "")
               }
               key={m + i}
               onDragOver={onDragOver(i)}
@@ -158,7 +158,7 @@ export function MethodList({
                 <button
                   type="button"
                   className="method-trash"
-                  aria-label={'Delete ' + m}
+                  aria-label={"Delete " + m}
                   onClick={() => remove(i)}
                 >
                   <Icon.Trash />
@@ -166,7 +166,7 @@ export function MethodList({
                 <span
                   className="method-drag"
                   role="button"
-                  aria-label={'Drag to reorder ' + m}
+                  aria-label={"Drag to reorder " + m}
                   draggable
                   onDragStart={onDragStart(i)}
                   onDragEnd={onDragEnd}
@@ -181,7 +181,12 @@ export function MethodList({
         {adding ? (
           <div className="method-add-form">
             <div className="method-add-field">
-              <label>Name<span className="req" aria-hidden>*</span></label>
+              <label>
+                Name
+                <span className="req" aria-hidden>
+                  *
+                </span>
+              </label>
               <div className="field">
                 <input
                   ref={inputRef}
@@ -190,8 +195,8 @@ export function MethodList({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') submit();
-                    if (e.key === 'Escape') cancel();
+                    if (e.key === "Enter") submit();
+                    if (e.key === "Escape") cancel();
                   }}
                 />
               </div>
@@ -235,7 +240,7 @@ export function MintCheck({
       role="checkbox"
       aria-checked={checked}
       aria-label={ariaLabel}
-      className={'mint-check' + (checked ? ' on' : '')}
+      className={"mint-check" + (checked ? " on" : "")}
       onClick={() => onChange(!checked)}
     >
       {checked && <Icon.CheckSm />}
@@ -278,7 +283,7 @@ export function AccountCodesCard({
   labelAria = true,
   bodyStyle = { padding: 20 },
 }: AccountCodesCardProps) {
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState("");
   const sel: Record<string, boolean> = value.selected || {};
   const isAll = value.all !== false;
   const isOn = (code: string) => (isAll ? sel[code] !== false : sel[code] === true);
@@ -340,7 +345,7 @@ export function AccountCodesCard({
           </span>
         </div>
         <div className="acc-allrow">
-          <span className="acc-all-label">{allOn ? 'Deselect all' : 'Select all'}</span>
+          <span className="acc-all-label">{allOn ? "Deselect all" : "Select all"}</span>
           <MintCheck checked={allOn} onChange={toggleAll} ariaLabel="Select all" />
         </div>
         <ul className="acc-list">
@@ -392,10 +397,10 @@ type PCSectionProps = {
 export function PCSection({ title, fields, cardRef }: PCSectionProps) {
   const cardHasError = fields.some((f) => f.error);
   return (
-    <div className={'pc-card' + (cardHasError ? ' is-error' : '')} ref={cardRef}>
+    <div className={"pc-card" + (cardHasError ? " is-error" : "")} ref={cardRef}>
       <div className="pc-title">{title}</div>
       {fields.map((f, i) => (
-        <div className={'pc-field' + (f.error ? ' field-error' : '')} key={i}>
+        <div className={"pc-field" + (f.error ? " field-error" : "")} key={i}>
           <div className="pc-sub">
             {f.label}
             {f.required === false ? null : (

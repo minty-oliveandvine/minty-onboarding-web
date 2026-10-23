@@ -24,14 +24,14 @@
 // minty-web in phase 2, and the legal DOCUMENTS left Flask altogether on 2026-10-12: they
 // are minty-web's pages, `/terms` and `/privacy`. Only `/legal/current` is still Flask's.)
 
-import { FLASK_BASE } from './flaskBase';
+import { FLASK_BASE } from "./flaskBase";
 
-const strip = (url: string | undefined): string => (url || '').replace(/\/$/, '');
+const strip = (url: string | undefined): string => (url || "").replace(/\/$/, "");
 
 // Where the extracted onboarding API lives — ONBOARDING_API_URL, inlined at build time
 // (next.config.ts `env`). Defaults to the port its docker service and
 // `manage.py runserver` both use.
-export const ONBOARDING_API_BASE = strip(process.env.ONBOARDING_API_URL || 'http://localhost:8030');
+export const ONBOARDING_API_BASE = strip(process.env.ONBOARDING_API_URL || "http://localhost:8030");
 
 const FLASK = strip(FLASK_BASE);
 
@@ -43,59 +43,59 @@ const FLASK = strip(FLASK_BASE);
 // for. Segment matching makes the two independent.
 const DJANGO_PATHS = [
   // Reference data — implemented in Django
-  '/api/onboarding/server-time',
-  '/api/onboarding/currencies',
-  '/api/onboarding/countries',
-  '/api/onboarding/plans',
+  "/api/onboarding/server-time",
+  "/api/onboarding/currencies",
+  "/api/onboarding/countries",
+  "/api/onboarding/plans",
   // Wizard state — implemented in Django
-  '/api/onboarding/state',
-  '/api/onboarding/saved-step',
+  "/api/onboarding/state",
+  "/api/onboarding/saved-step",
   // The company — implemented in Django
-  '/api/onboarding/create',
-  '/api/onboarding/entity/:entityId',
+  "/api/onboarding/create",
+  "/api/onboarding/entity/:entityId",
   // Petty-cash config — implemented in Django
-  '/api/onboarding/sales-methods',
-  '/api/onboarding/opening-balance',
+  "/api/onboarding/sales-methods",
+  "/api/onboarding/opening-balance",
   // Invites — GET and cancel implemented in Django; POST /invite is a proxy,
   // because the invitation email links into a Flask route and uses a Flask template
-  '/api/onboarding/invite',
-  '/api/onboarding/invite/cancel',
+  "/api/onboarding/invite",
+  "/api/onboarding/invite/cancel",
   // Proxied to Flask by the Django service: Flask sends the email (template, accept link)
-  '/api/onboarding/invite/resend',
+  "/api/onboarding/invite/resend",
   // Proxied to Flask by the Django service. Listed so the wizard still talks to one
   // base URL; delete a line to route it straight at Flask instead.
-  '/api/onboarding/account-codes',
-  '/api/onboarding/contacts',
-  '/api/onboarding/contacts/create',
-  '/api/onboarding/bill-codes',
-  '/api/onboarding/modules',
-  '/api/onboarding/payment-method',
-  '/api/onboarding/billing/payment-methods',
-  '/api/onboarding/billing/payment-methods/setup-intent',
-  '/api/onboarding/billing/payment-methods/confirm',
-  '/api/onboarding/billing/payment-methods/default',
-  '/api/onboarding/billing/accounts',
-  '/api/onboarding/billing/authorize',
-  '/api/onboarding/finalize',
-  '/api/onboarding/xero/disconnect',
-  '/api/onboarding/xero/release',
+  "/api/onboarding/account-codes",
+  "/api/onboarding/contacts",
+  "/api/onboarding/contacts/create",
+  "/api/onboarding/bill-codes",
+  "/api/onboarding/modules",
+  "/api/onboarding/payment-method",
+  "/api/onboarding/billing/payment-methods",
+  "/api/onboarding/billing/payment-methods/setup-intent",
+  "/api/onboarding/billing/payment-methods/confirm",
+  "/api/onboarding/billing/payment-methods/default",
+  "/api/onboarding/billing/accounts",
+  "/api/onboarding/billing/authorize",
+  "/api/onboarding/finalize",
+  "/api/onboarding/xero/disconnect",
+  "/api/onboarding/xero/release",
 ];
 
-const DJANGO_PATTERNS = DJANGO_PATHS.map((p) => p.split('/'));
+const DJANGO_PATTERNS = DJANGO_PATHS.map((p) => p.split("/"));
 
 function matches(pattern: string[], segments: string[]): boolean {
   if (pattern.length !== segments.length) return false;
-  return pattern.every((part, i) => part.startsWith(':') || part === segments[i]);
+  return pattern.every((part, i) => part.startsWith(":") || part === segments[i]);
 }
 
 /** The base URL that answers `path`. Exported for tests and for debugging. */
 export function baseFor(path: string | null | undefined): string {
   // Compare the path only. A query string is never part of the routing decision,
   // and `?entity_id=…` on /state would otherwise defeat an exact match.
-  const pathname = String(path || '')
-    .split('?')[0]
-    .split('#')[0];
-  const segments = pathname.split('/');
+  const pathname = String(path || "")
+    .split("?")[0]
+    .split("#")[0];
+  const segments = pathname.split("/");
   return DJANGO_PATTERNS.some((p) => matches(p, segments)) ? ONBOARDING_API_BASE : FLASK;
 }
 
@@ -109,6 +109,6 @@ export function baseFor(path: string | null | undefined): string {
  * way: which service serves this path.
  */
 export function urlFor(path: string | null | undefined): string {
-  const suffix = String(path || '');
-  return `${baseFor(suffix)}${suffix.startsWith('/') ? '' : '/'}${suffix}`;
+  const suffix = String(path || "");
+  return `${baseFor(suffix)}${suffix.startsWith("/") ? "" : "/"}${suffix}`;
 }

@@ -10,25 +10,20 @@
  * mid-composition makes the Korean IME duplicate characters.
  */
 
-import {
-  useState,
-  type ChangeEvent,
-  type CompositionEvent,
-  type InputHTMLAttributes,
-} from 'react';
+import { useState, type ChangeEvent, type CompositionEvent, type InputHTMLAttributes } from "react";
 
-import { hasNonAsciiEmailChar, sanitizeEmailInput } from './validation';
+import { hasNonAsciiEmailChar, sanitizeEmailInput } from "./validation";
 
 type EmailInputProps = Pick<
   InputHTMLAttributes<HTMLInputElement>,
-  | 'type'
-  | 'inputMode'
-  | 'autoComplete'
-  | 'autoCapitalize'
-  | 'autoCorrect'
-  | 'spellCheck'
-  | 'onChange'
-  | 'onCompositionEnd'
+  | "type"
+  | "inputMode"
+  | "autoComplete"
+  | "autoCapitalize"
+  | "autoCorrect"
+  | "spellCheck"
+  | "onChange"
+  | "onCompositionEnd"
 >;
 
 /**
@@ -57,11 +52,11 @@ export function useEmailInput(onValue?: (value: string) => void): {
   return {
     rejected,
     props: {
-      type: 'text',
-      inputMode: 'email',
-      autoComplete: 'email',
-      autoCapitalize: 'none',
-      autoCorrect: 'off',
+      type: "text",
+      inputMode: "email",
+      autoComplete: "email",
+      autoCapitalize: "none",
+      autoCorrect: "off",
       spellCheck: false,
       onChange: (e: ChangeEvent<HTMLInputElement>) => {
         if ((e.nativeEvent as InputEvent).isComposing) onValue?.(e.currentTarget.value);

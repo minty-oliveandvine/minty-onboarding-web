@@ -6,7 +6,7 @@
 // answers the same question without a state update inside an effect: the server
 // snapshot is false, the client snapshot is true, and React swaps them after hydration.
 
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from "react";
 
 const subscribe = () => () => {};
 

@@ -6,7 +6,7 @@ return-path parsing).
 
 ## Connecting
 
-*Connect to Xero* navigates the tab to Minty:
+_Connect to Xero_ navigates the tab to Minty:
 `{FLASK_BASE}/xero_connect?from=onboarding&entity_id=<id>&entity_name=<name>` — the
 entity travels in the query so Minty can embed it in the OAuth `state` and bind the
 tenant to **exactly this company** on the callback (`entity_id` is the exact match,
@@ -18,11 +18,11 @@ the organisation's financial year end on the company (`entities.financial_year_e
 revoked and the wizard gets `?xero=cancelled` like any other failed connect), stores the token on the connecting person, starts the accounts/contacts
 sync and sends the browser back to the wizard root with one of:
 
-| Return | Meaning | What the step shows |
-|---|---|---|
-| `/?xero=connected&step=3&org=<tenant>` | connected; the tenant name | *Connected to <org>*, the Save & Next unlocks |
-| `/?xero=mismatch&expected=<email>` | the person signed into Xero as somebody else | the mismatch notice with the expected email; the connection is not made |
-| `/?xero=conflict&conflict_entity=<name>[&conflict_entity_id=<id>&conflict_can_move=1]` | that Xero organisation is already connected to another company | the **"That Xero organisation is taken"** dialog — see below |
+| Return                                                                                 | Meaning                                                        | What the step shows                                                     |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `/?xero=connected&step=3&org=<tenant>`                                                 | connected; the tenant name                                     | _Connected to <org>_, the Save & Next unlocks                           |
+| `/?xero=mismatch&expected=<email>`                                                     | the person signed into Xero as somebody else                   | the mismatch notice with the expected email; the connection is not made |
+| `/?xero=conflict&conflict_entity=<name>[&conflict_entity_id=<id>&conflict_can_move=1]` | that Xero organisation is already connected to another company | the **"That Xero organisation is taken"** dialog — see below            |
 
 On every landing at step 4 or later the app re-reads `GET /state` and takes
 `xero.connected` / `xero.org` from the database, so a reload after the round-trip is
@@ -41,9 +41,9 @@ disconnect of another company and that has to be asked for. It is minty-web's
 beside the title included — `public/assets/minty-dont.png`, the same art and the same
 100×130 as the Entity & Integration tab's, since the two dialogs say the same thing. `conflict_entity_id` and
 `conflict_can_move=1` are what make the offer possible; without them (no permission there, or
-Minty could not say) the dialog only names the company to ask, with one *Close*.
+Minty could not say) the dialog only names the company to ask, with one _Close_.
 
-*Move it here* does it in two steps, since the grant the refused attempt created was handed
+_Move it here_ does it in two steps, since the grant the refused attempt created was handed
 back to Xero and there is no token left to reuse:
 
 1. `POST /api/onboarding/xero/release` with the **other** company's `entity_id` — Minty
@@ -52,12 +52,12 @@ back to Xero and there is no token left to reuse:
 2. then `connectXero()` again, straight back through Xero's consent screen for this company.
 
 A refusal is shown in the dialog and it stays open to retry — the success case leaves the
-page, so a toast would not outlive it. *Go back* and Escape change nothing.
+page, so a toast would not outlive it. _Go back_ and Escape change nothing.
 `e2e/xero.spec.ts` covers all four outcomes (no offer, go back, the move, a refused release).
 
 ## Disconnecting
 
-*Disconnect* posts `POST /api/onboarding/xero/disconnect` (proxied to Minty, which
+_Disconnect_ posts `POST /api/onboarding/xero/disconnect` (proxied to Minty, which
 revokes the connection at Xero and clears the token state); the company stays in
 `onboarding` and is still resumable. Steps 6–8 need a connected organisation — their
 endpoints (`account-codes`, `contacts`, `bill-codes`) answer 409 without one.

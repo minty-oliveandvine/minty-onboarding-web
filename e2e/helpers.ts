@@ -14,14 +14,14 @@
 // The secret is read from the environment and never committed. Without it the
 // authenticated specs skip rather than fail -- see e2e/README.md.
 
-import { createHmac } from 'node:crypto';
-import { test } from '@playwright/test';
+import { createHmac } from "node:crypto";
+import { test } from "@playwright/test";
 
 /** Claims the Django service requires: see minty-onboarding-api/core/auth.py. */
-const SCOPE = 'onboarding';
+const SCOPE = "onboarding";
 
 const b64url = (input: Buffer | string) =>
-  Buffer.from(input).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
 /**
  * A signed onboarding launch token.
@@ -35,7 +35,7 @@ export function mintToken(
   secret: string,
   { ttlSeconds = 900, scope = SCOPE }: { ttlSeconds?: number; scope?: string } = {},
 ): string {
-  const header = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = b64url(
     JSON.stringify({
       user_id: userId,
@@ -43,7 +43,7 @@ export function mintToken(
       exp: Math.floor(Date.now() / 1000) + ttlSeconds,
     }),
   );
-  const signature = b64url(createHmac('sha256', secret).update(`${header}.${payload}`).digest());
+  const signature = b64url(createHmac("sha256", secret).update(`${header}.${payload}`).digest());
   return `${header}.${payload}.${signature}`;
 }
 
@@ -71,7 +71,7 @@ export function requireCredentials(): Credentials {
   const creds = credentials();
   test.skip(
     !creds,
-    'Set E2E_JWT_SECRET, E2E_USER_ID and E2E_ENTITY_ID to run the authenticated specs (see e2e/README.md)',
+    "Set E2E_JWT_SECRET, E2E_USER_ID and E2E_ENTITY_ID to run the authenticated specs (see e2e/README.md)",
   );
   // Non-null after the skip above; Playwright aborts the test before reaching here.
   return creds as Credentials;

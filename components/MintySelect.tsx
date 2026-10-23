@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 // Themed dropdown — replaces native <select> for unified styling.
 // `searchable` turns the field itself into a type-to-filter combobox
 // (like Module 1 create-entity: type in the field, suggestions filter below).
-import { useState, useRef, useEffect, useMemo, type SyntheticEvent } from 'react';
-import { UUID_RE } from '../lib/validation';
-import type { ContactResult } from '../lib/api';
+import { useState, useRef, useEffect, useMemo, type SyntheticEvent } from "react";
+import { UUID_RE } from "../lib/validation";
+import type { ContactResult } from "../lib/api";
 
 /** An option is a plain string (value === label) or a { value, label } pair. */
 export type SelectOption = string | { value: string; label: string };
@@ -41,11 +41,11 @@ export default function MintySelect({
   value,
   onChange,
   options,
-  placeholder = 'Select an option',
+  placeholder = "Select an option",
   disabled = false,
   searchable = false,
   onCreate = null,
-  createNoun = 'contact',
+  createNoun = "contact",
   clearable = false,
   required = false,
   invalid = false,
@@ -61,7 +61,7 @@ export default function MintySelect({
   // Inline "new contact" panel: null = closed; a string = the pre-filled name.
   const [creating, setCreating] = useState<string | null>(null);
   const [createBusy, setCreateBusy] = useState(false);
-  const [createError, setCreateError] = useState('');
+  const [createError, setCreateError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,13 +73,13 @@ export default function MintySelect({
   const items = useMemo(
     () =>
       (options || []).map((o): { value: string; label: string } =>
-        typeof o === 'string' ? { value: o, label: o } : o,
+        typeof o === "string" ? { value: o, label: o } : o,
       ),
     [options],
   );
 
   const filtered = useMemo(() => {
-    if (!searchable || query === null || query.trim() === '') return items;
+    if (!searchable || query === null || query.trim() === "") return items;
     const q = query.trim().toLowerCase();
     return items.filter((o) => o.label.toLowerCase().includes(q));
   }, [searchable, query, items]);
@@ -87,19 +87,19 @@ export default function MintySelect({
   // The typed-but-not-yet-a-contact name. Show the "+ Add '<name>'" row whenever
   // a create handler exists, the user has typed something, and it isn't already
   // an exact (case-insensitive) match of an existing option.
-  const typed = (query || '').trim();
+  const typed = (query || "").trim();
   const exactMatch =
-    typed !== '' && items.some((o) => o.label.toLowerCase() === typed.toLowerCase());
-  const canCreate = !!onCreate && searchable && typed !== '' && !exactMatch;
+    typed !== "" && items.some((o) => o.label.toLowerCase() === typed.toLowerCase());
+  const canCreate = !!onCreate && searchable && typed !== "" && !exactMatch;
   // Before anything is typed, say that typing is how a new one gets added -- the
   // "+ Add" row only appears once there is a name to add. Heads the list.
-  const showCreateHint = !!onCreate && searchable && typed === '';
+  const showCreateHint = !!onCreate && searchable && typed === "";
 
   const close = () => {
     setOpen(false);
     setQuery(null);
     setCreating(null);
-    setCreateError('');
+    setCreateError("");
   };
   const choose = (opt: { value: string; label: string }) => {
     onChange(opt.value);
@@ -110,28 +110,28 @@ export default function MintySelect({
   const clear = (e: SyntheticEvent) => {
     e.stopPropagation();
     if (disabled) return;
-    onChange('');
+    onChange("");
     setQuery(null);
     close();
   };
 
   // Open the inline new-contact panel with the typed name pre-filled.
   const startCreate = (name: string) => {
-    setCreateError('');
+    setCreateError("");
     setCreating(name);
     requestAnimationFrame(() => createRef.current && createRef.current.focus());
   };
   const cancelCreate = () => {
     setCreating(null);
-    setCreateError('');
+    setCreateError("");
     inputRef.current && inputRef.current.focus();
   };
   const submitCreate = async () => {
-    const name = (creating || '').trim();
+    const name = (creating || "").trim();
     // The panel only opens through startCreate, which canCreate gates on onCreate
     // existing -- so this never fires. It is here for the checker, not the user.
     if (!name || createBusy || !onCreate) return;
-    setCreateError('');
+    setCreateError("");
     setCreateBusy(true);
     const result = await onCreate(name);
     setCreateBusy(false);
@@ -154,31 +154,31 @@ export default function MintySelect({
     const onKey = (e: KeyboardEvent) => {
       // While the inline new-contact panel is open, its own input owns the keys.
       if (creating !== null) return;
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         close();
         return;
       }
       // The "+ Add '<name>'" row, when shown, is a virtual item at filtered.length.
       const maxIdx = filtered.length - 1 + (canCreate ? 1 : 0);
-      if (e.key === 'ArrowDown') {
+      if (e.key === "ArrowDown") {
         e.preventDefault();
         setActiveIdx((i) => Math.min(maxIdx, i + 1));
       }
-      if (e.key === 'ArrowUp') {
+      if (e.key === "ArrowUp") {
         e.preventDefault();
         setActiveIdx((i) => Math.max(0, i - 1));
       }
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         e.preventDefault();
         if (canCreate && activeIdx === filtered.length) startCreate(typed);
         else if (activeIdx >= 0 && filtered[activeIdx] !== undefined) choose(filtered[activeIdx]);
       }
     };
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
     };
   }, [open, activeIdx, filtered, canCreate, creating, typed]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -204,7 +204,7 @@ export default function MintySelect({
   const selectedLabel = useMemo(() => {
     const match = items.find((o) => o.value === value);
     if (match) return valueLabel ? valueLabel(match) : match.label;
-    return UUID_RE.test(value || '') ? '' : value || '';
+    return UUID_RE.test(value || "") ? "" : value || "";
   }, [items, value, valueLabel]);
   const display = selectedLabel || placeholder;
   const hasValue = !!value;
@@ -212,7 +212,10 @@ export default function MintySelect({
   return (
     <div
       className={
-        'mselect' + (open ? ' open' : '') + (disabled ? ' disabled' : '') + (invalid ? ' is-invalid' : '')
+        "mselect" +
+        (open ? " open" : "") +
+        (disabled ? " disabled" : "") +
+        (invalid ? " is-invalid" : "")
       }
       ref={rootRef}
     >
@@ -233,8 +236,8 @@ export default function MintySelect({
             aria-describedby={ariaDescribedBy}
             aria-required={required || undefined}
             aria-invalid={invalid || undefined}
-            className={'mselect-input' + (selectedLabel || query !== null ? '' : ' placeholder')}
-            value={query === null ? selectedLabel || '' : query}
+            className={"mselect-input" + (selectedLabel || query !== null ? "" : " placeholder")}
+            value={query === null ? selectedLabel || "" : query}
             placeholder={placeholder}
             disabled={disabled}
             autoComplete="off"
@@ -300,7 +303,7 @@ export default function MintySelect({
           aria-haspopup="listbox"
           aria-expanded={open}
         >
-          <span className={'mselect-value' + (selectedLabel ? '' : ' placeholder')}>{display}</span>
+          <span className={"mselect-value" + (selectedLabel ? "" : " placeholder")}>{display}</span>
           {clearable && hasValue && !disabled && (
             <span
               role="button"
@@ -310,7 +313,7 @@ export default function MintySelect({
               onMouseDown={(e) => e.preventDefault()}
               onClick={clear}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   clear(e);
                 }
@@ -356,7 +359,7 @@ export default function MintySelect({
             </div>
           )}
           {filtered.length === 0 && (
-            <div className="mselect-empty">{onCreate ? 'No Xero contact found' : 'No matches'}</div>
+            <div className="mselect-empty">{onCreate ? "No Xero contact found" : "No matches"}</div>
           )}
           {filtered.map((opt, i) => {
             const selected = opt.value === value;
@@ -367,7 +370,7 @@ export default function MintySelect({
                 role="option"
                 aria-selected={selected}
                 className={
-                  'mselect-opt' + (selected ? ' selected' : '') + (active ? ' active' : '')
+                  "mselect-opt" + (selected ? " selected" : "") + (active ? " active" : "")
                 }
                 onMouseEnter={() => setActiveIdx(i)}
                 onClick={() => choose(opt)}
@@ -397,7 +400,7 @@ export default function MintySelect({
               role="option"
               aria-selected={false}
               className={
-                'mselect-opt mselect-create' + (activeIdx === filtered.length ? ' active' : '')
+                "mselect-opt mselect-create" + (activeIdx === filtered.length ? " active" : "")
               }
               onMouseEnter={() => setActiveIdx(filtered.length)}
               onClick={() => startCreate(typed)}
@@ -421,11 +424,11 @@ export default function MintySelect({
             placeholder={`Enter a new ${createNoun}`}
             onChange={(e) => setCreating(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 e.preventDefault();
                 submitCreate();
               }
-              if (e.key === 'Escape') {
+              if (e.key === "Escape") {
                 e.preventDefault();
                 cancelCreate();
               }
@@ -445,9 +448,9 @@ export default function MintySelect({
               type="button"
               className="mselect-create-btn primary"
               onClick={submitCreate}
-              disabled={createBusy || !(creating || '').trim()}
+              disabled={createBusy || !(creating || "").trim()}
             >
-              {createBusy ? 'Creating…' : 'Create'}
+              {createBusy ? "Creating…" : "Create"}
             </button>
           </div>
         </div>

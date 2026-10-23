@@ -1,18 +1,18 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 /* The icon font, self-hosted from npm as minty-web and minty-payment-request-web do
    (2026-10-12) - this replaced a Google Fonts <link>. Deliberately NOT `layer(base)`: the
    package's CSS is unlayered, so its `font-size: 24px` outranks any size utility and every glyph
    renders at 24px in all three apps. That was already true here through the old <link> (also
    unlayered, winning on document order), so nothing changed size - but it does mean the
    `text-[26px]` / `text-[22px]` on the spans in components/NavMenu.tsx have no effect. */
-@import 'material-symbols/outlined.css';
+@import "material-symbols/outlined.css";
 /* The faces, shared: @minty/shared/theme.css (--font-sans, --font-brand). Plain CSS resolved by
    the bundler, exactly like the icon font above - misspell it and the build fails. This app takes
    the TOKENS only: it consumes no packaged component, so it needs no `@source` line (that is what
    makes Tailwind scan node_modules for classes) and no transpilePackages.
    This app loads no Plus Jakarta Sans, so --font-brand falls through to Inter; its own topbar
    `.brand` keeps its three hand-written values (see minty-web's components/ui/Wordmark.tsx). */
-@import '@minty/shared/theme.css';
+@import "@minty/shared/theme.css";
 
 /* Brand tokens shared with the payment-request module so Tailwind utilities
    like text-primary / bg-secondary resolve to the same colours. */
@@ -605,7 +605,7 @@ textarea {
   grid-template-columns: 132px minmax(0, 1fr);
   gap: 8px;
 }
-.phone-row input[type='tel'] {
+.phone-row input[type="tel"] {
   min-width: 0;
   width: 100%;
 }
@@ -1130,7 +1130,7 @@ textarea {
   gap: 6px;
 }
 .field-required::before {
-  content: '*';
+  content: "*";
   font-size: 15px;
   line-height: 1;
   color: var(--danger);
@@ -1467,7 +1467,7 @@ textarea {
 }
 /* Solid mint fill that scales in from the centre on hover/active */
 .autofill-btn::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -1777,12 +1777,12 @@ textarea {
 }
 
 /* Petty Cash opening balance fields — pick up themed date picker */
-.pc-card .field input[type='date']::-webkit-calendar-picker-indicator {
+.pc-card .field input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.55;
   cursor: pointer;
   filter: invert(40%) sepia(30%) saturate(560%) hue-rotate(135deg);
 }
-.pc-card .field input[type='date']::-webkit-calendar-picker-indicator:hover {
+.pc-card .field input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
@@ -2269,7 +2269,7 @@ textarea {
 /* Bridges the 10px gap above the icon so the pointer can travel into the
    popup without passing over dead space and closing it. */
 .info-tip-pop::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   left: 0;
@@ -2691,11 +2691,7 @@ textarea {
   height: 360px;
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(
-    150deg,
-    color-mix(in oklab, var(--art-accent) 12%, white),
-    white 65%
-  );
+  background: linear-gradient(150deg, color-mix(in oklab, var(--art-accent) 12%, white), white 65%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3279,7 +3275,7 @@ textarea {
 }
 .check-circle::before,
 .check-circle::after {
-  content: '';
+  content: "";
   position: absolute;
   border-radius: 50%;
   border: 1.5px solid var(--accent-soft);

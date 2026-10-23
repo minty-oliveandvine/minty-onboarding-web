@@ -5,14 +5,14 @@ steps from the company name to a live company, entered with a token Minty minted
 talks to two backends — `minty-onboarding-api` for `/api/onboarding/*` and Minty for
 sign-in, legal text and the Xero connection — and never verifies anything itself.
 
-| Feature | Document |
-|---|---|
-| Entering with Minty's token; `/auth*` forwarding to minty-web's sign-in (phase 2); which backend answers what | [authentication.md](authentication.md) — the system-wide picture is `Minty/docs/features/authentication.md` |
-| The nine steps, saving and resuming, All Set finalizing on arrival | [wizard.md](wizard.md) |
-| Step 4 — connecting to Xero, the three returns, disconnecting, the network-layer fake in tests | [xero-step.md](xero-step.md) |
-| Toasts - `components/Toast.tsx`, minty-web's card, one at a time | `Minty/docs/features/toasts.md` - the system-wide rule and the look, value for value |
-| User-facing error copy | [../ERROR_COPY.md](../ERROR_COPY.md) |
-| Manual QA checklist for the wizard, grounded in the docs above and the e2e suite's traps, plus the `pettycashv3` rows each step writes | [qa-checklist.md](qa-checklist.md) |
+| Feature                                                                                                                                | Document                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Entering with Minty's token; `/auth*` forwarding to minty-web's sign-in (phase 2); which backend answers what                          | [authentication.md](authentication.md) — the system-wide picture is `Minty/docs/features/authentication.md` |
+| The nine steps, saving and resuming, All Set finalizing on arrival                                                                     | [wizard.md](wizard.md)                                                                                      |
+| Step 4 — connecting to Xero, the three returns, disconnecting, the network-layer fake in tests                                         | [xero-step.md](xero-step.md)                                                                                |
+| Toasts - `components/Toast.tsx`, minty-web's card, one at a time                                                                       | `Minty/docs/features/toasts.md` - the system-wide rule and the look, value for value                        |
+| User-facing error copy                                                                                                                 | [../ERROR_COPY.md](../ERROR_COPY.md)                                                                        |
+| Manual QA checklist for the wizard, grounded in the docs above and the e2e suite's traps, plus the `pettycashv3` rows each step writes | [qa-checklist.md](qa-checklist.md)                                                                          |
 
 Link previews (owner, 2026-10-23): a link to any page of this app, pasted into a chat app, previews with one card - the Minty cat mark (`Minty/static/img/new_logo.png`, the flat drawing) centred on a white 1200x630 PNG. It is `app/opengraph-image.png` and `app/twitter-image.png` (alt text "Minty" in the `.alt.txt` beside each), which Next attaches to every route that sets no image of its own, plus `openGraph`/`twitter` in `app/layout.tsx`. The same file sits in minty-web, minty-petty-cash-web, minty-payment-request-web and minty-onboarding-web, and `app/__tests__/linkPreview.test.ts` pins its size and sha256 in each: a new card goes into all four, with the new hash. There is no `metadataBase`; on Vercel Next makes the image URL absolute from the deployment's own address. Previews never name a company or show report data.
 
