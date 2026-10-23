@@ -15,12 +15,12 @@ export default defineConfig({
   // No @vitejs/plugin-react. It exists for Fast Refresh, which a test run never uses,
   // and its current major needs a newer vite than vitest ships -- installing both put
   // two copies of vite in the tree, which is a type error in this file and a
-  // resolution failure at runtime. esbuild does the only part that matters:
+  // resolution failure at runtime. Oxc does the only part that matters:
   //
   // the app's .jsx files never import React, because Next compiles them with the
   // automatic runtime. Without this line vite falls back to the classic transform and
   // every component dies on "React is not defined" at its first JSX node.
-  esbuild: { jsx: 'automatic' },
+  oxc: { jsx: { runtime: 'automatic' } },
   resolve: {
     alias: {
       // Mirrors the `@/*` -> `./*` mapping in tsconfig.json. Declared by hand rather
