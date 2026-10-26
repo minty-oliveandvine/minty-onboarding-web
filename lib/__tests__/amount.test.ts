@@ -6,13 +6,17 @@
 
 import { describe, expect, it } from "vitest";
 
-import { acceptAmountInput, formatAmount, toAmountString } from "../amount";
+import { formatAmount, toAmountString } from "../amount";
 
 describe("two decimals (the default)", () => {
   it("keeps today's behaviour", () => {
     expect(toAmountString("1200.5")).toBe("1200.50");
     expect(formatAmount("1200.5")).toBe("1,200.50");
-    expect(acceptAmountInput("12.345")).toBeNull();
+  });
+
+  it("reads the grouped text the field now holds while typing", () => {
+    expect(toAmountString("1,234,567.5")).toBe("1234567.50");
+    expect(toAmountString("1,234.")).toBe("1234.00");
   });
 });
 
@@ -21,19 +25,11 @@ describe("a zero-decimal currency", () => {
     expect(toAmountString("1200", 0)).toBe("1200");
     expect(formatAmount("1200", 0)).toBe("1,200");
   });
-
-  it("refuses a decimal point while typing", () => {
-    expect(acceptAmountInput("12", 0)).toBe("12");
-    expect(acceptAmountInput("12.", 0)).toBeNull();
-    expect(acceptAmountInput("12.5", 0)).toBeNull();
-  });
 });
 
 describe("a three-decimal currency", () => {
   it("keeps three places", () => {
     expect(toAmountString("1.5", 3)).toBe("1.500");
     expect(formatAmount("1234.5678", 3)).toBe("1,234.567");
-    expect(acceptAmountInput("1.234", 3)).toBe("1.234");
-    expect(acceptAmountInput("1.2345", 3)).toBeNull();
   });
 });

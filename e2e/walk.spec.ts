@@ -69,9 +69,7 @@ test("walks from Connect to All Set and finalizes the disposable entity", async 
     await expect(
       page.getByRole("heading", { name: "Type of sales method of your company" }),
     ).toBeVisible();
-    // A previous run's balance is rehydrated from the draft, and focusing the field
-    // re-renders it from "100.00" to its edit string -- which collapses fill()'s
-    // select-all if the two happen together. Focus first, then replace.
+    // A previous run's balance ("100.00") is rehydrated from the draft; replace it.
     const balance = page.locator('input[inputmode="decimal"][placeholder="0.00"]');
     await balance.click();
     await balance.fill("100");

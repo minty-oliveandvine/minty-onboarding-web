@@ -5,9 +5,9 @@
  * decimal places - 2 unless a caller passes the currency's own
  * (`currency_info.decimal_places`; JPY is 0, so 12000 -> "12,000").
  *
- * Entry: while a field is focused the user sees plain digits; grouping is
- * applied on blur. Typing is capped at MAX_AMOUNT_INT_DIGITS digits before the
- * decimal point and the currency's places after it (no point at all for 0).
+ * Entry is @minty/shared/amountInput (owner, 2026-10-26): commas as the user
+ * types, the places padded on blur, the same digit limits. What it hands back
+ * is grouped text ("1,234.5"), which toAmountString reads as it is.
  *
  * Grouping and rounding are done with string operations rather than
  * parseFloat/toLocaleString, so a 12-digit amount keeps every digit instead of
@@ -92,32 +92,4 @@ export function formatAmount(
 function numberToPlainString(n: number): string {
   if (!Number.isFinite(n)) return "";
   return n.toFixed(8);
-}
-
-/**
- * Gate a keystroke in an amount field. Returns the value to store, or null to
- * reject the edit and leave the field untouched.
- *
- * While typing, the value is kept as plain digits (no grouping); call
- * formatAmount() on blur to add the commas. Input past the digit limits is
- * silently refused rather than truncated, so the caret never jumps.
- */
-export function acceptAmountInput(
-  next: string,
-  decimals: number = MAX_AMOUNT_DECIMALS,
-): string | null {
-  const cleaned = cleanAmountString(next);
-  if (cleaned === "") return "";
-  if (!/^\d*\.?\d*$/.test(cleaned)) return null;
-  if (decimals === 0 && cleaned.includes(".")) return null;
-  const [intPart = "", dec = ""] = cleaned.split(".");
-  if (intPart.length > MAX_AMOUNT_INT_DIGITS) return null;
-  if (dec.length > decimals) return null;
-  return cleaned;
-}
-
-/** Strip grouping so a formatted amount can be edited as plain digits on focus. */
-export function toAmountEditString(raw: string | number | null | undefined): string {
-  if (raw === null || raw === undefined) return "";
-  return cleanAmountString(raw);
 }

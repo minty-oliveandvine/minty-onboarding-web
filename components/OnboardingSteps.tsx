@@ -2,6 +2,7 @@
 
 // Step content components. Each receives { state, set, next, back }.
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from "react";
+import { useAmountInput } from "@minty/shared/amountInput";
 import Icon from "./Icon";
 import MintySelect from "./MintySelect";
 import PhoneField, { phoneFieldError } from "./PhoneField";
@@ -12,7 +13,7 @@ import { ModalFrame } from "./ModalFrame";
 import { useToast } from "./Toast";
 import { fetchCountries, fetchCurrencies } from "@/lib/refData";
 import { currencyForCountry } from "@/lib/countryCurrency";
-import { acceptAmountInput, formatAmount, toAmountEditString } from "@/lib/amount";
+import { formatAmount } from "@/lib/amount";
 import { formatDate } from "@/lib/date";
 import { fetchBillingStatus } from "@/lib/billing";
 import { urlFor } from "../lib/apiRoutes";
@@ -1035,9 +1036,19 @@ export function StepSalesSetting({
     };
   }, []);
   const [showBalanceError, setShowBalanceError] = useState(false);
-  // While focused the field shows plain digits; commas and the trailing ".00"
-  // are applied on blur (and on any value rehydrated from the backend).
-  const [balanceFocused, setBalanceFocused] = useState(false);
+  // Commas as it is typed, the currency's places padded on blur
+  // (@minty/shared/amountInput); a number rehydrated from the backend shows padded.
+  const balanceInput = useAmountInput({
+    value:
+      typeof p.openingBalance === "number"
+        ? formatAmount(p.openingBalance, balanceDecimals)
+        : (p.openingBalance ?? ""),
+    decimals: balanceDecimals,
+    onValue: (v) => {
+      upd("openingBalance", v);
+      if (v !== "") setShowBalanceError(false);
+    },
+  });
   const [saving, setSaving] = useState(false);
   const toast = useToast();
   const balanceEmpty =
@@ -1262,23 +1273,9 @@ export function StepSalesSetting({
                   {currencyCode(state.entity.currency, currencyRegistry)}
                 </div>
                 <input
-                  type="text"
-                  inputMode={balanceDecimals > 0 ? "decimal" : "numeric"}
                   placeholder={balanceDecimals > 0 ? `0.${"0".repeat(balanceDecimals)}` : "0"}
                   aria-required="true"
-                  value={
-                    balanceFocused
-                      ? toAmountEditString(p.openingBalance)
-                      : formatAmount(p.openingBalance, balanceDecimals)
-                  }
-                  onFocus={() => setBalanceFocused(true)}
-                  onChange={(e) => {
-                    const raw = acceptAmountInput(e.target.value, balanceDecimals);
-                    if (raw === null) return; // past the digit limits — refuse the keystroke
-                    upd("openingBalance", raw);
-                    if (raw !== "") setShowBalanceError(false);
-                  }}
-                  onBlur={() => setBalanceFocused(false)}
+                  {...balanceInput}
                 />
               </div>
             </div>
