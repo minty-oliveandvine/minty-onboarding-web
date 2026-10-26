@@ -19,7 +19,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@minty/shared": "github:minty-oliveandvine/minty-shared-ts#v0.10",
+    "@minty/shared": "github:minty-oliveandvine/minty-shared-ts#v0.11",
     "@stripe/react-stripe-js": "^6.8.1",
     "@stripe/stripe-js": "^9.13.0",
     "material-symbols": "^0.48.1",

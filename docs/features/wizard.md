@@ -287,10 +287,14 @@ as a gated button must (2026-10-26):
   company name to 100 characters or fewer._ shows under the field as it is typed and clears at
   100; the reason reads _Shorten the company name to continue._ There is no `maxLength`, so a
   paste is not silently cut.
-- **A badly shaped business email**: a half-typed address only means "not finished yet", so
-  _That email address doesn't look right._ waits until the field is left (blur, like the
-  phone's message), then follows the typing and clears once the address is valid; the reason
-  reads _Check the business email to continue._ An empty email is optional and never warns.
+- **A badly shaped business email** never disables Save & Next (owner, 2026-10-26): a
+  half-typed address only means "not finished yet", so _That email address doesn't look
+  right._ waits until the field is left (blur, like the phone's message) or Save & Next is
+  pressed. Pressing it then is a refused submit: the field turns red (`aria-invalid`) and
+  takes focus, nothing is saved, and with other problems the email joins the error summary.
+  From then on the message follows the typing and clears once the address is valid; the
+  reason beside the button reads _Check the business email to continue._ An empty email is
+  optional and never warns.
 
 Tests: `components/__tests__/StepCreateEntity.test.tsx`, `lib/__tests__/wizardSteps.test.ts`,
 and `e2e/phone.spec.ts`'s new-company case.

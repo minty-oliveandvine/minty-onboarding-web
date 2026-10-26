@@ -128,7 +128,7 @@ export default function PhoneField({
           name="tel-national"
           autoComplete="tel-national"
           inputMode="tel"
-          placeholder="Please enter your phone number"
+          placeholder="Phone number"
           value={national}
           aria-invalid={shown || undefined}
           aria-describedby={shown ? `${id}-error` : undefined}

@@ -627,6 +627,9 @@ textarea::placeholder {
 .field .input-prefix input {
   border: 0;
   flex: 1;
+  /* An <input> is ~20 characters wide by default; without this it never shrinks below that,
+     and at 360px the box scrolled sideways under the code ("IKD"). */
+  min-width: 0;
   height: 100%;
   min-height: 0;
   padding: 0 12px;
@@ -4314,7 +4317,7 @@ textarea::placeholder {
   min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--mv2-radius-lg);
   background: var(--bg);
   color: var(--accent-ink);
   font: inherit;
