@@ -28,6 +28,9 @@ const securityHeaders = [
  */
 
 const nextConfig: NextConfig = {
+  // @minty/shared ships .ts source (since this app imports @minty/shared/amountInput, not just
+  // its theme.css), so Next has to compile it; development gets the same from withMintyDefaults.
+  transpilePackages: ["@minty/shared"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
