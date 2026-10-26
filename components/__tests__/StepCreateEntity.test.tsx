@@ -5,7 +5,7 @@
 // required field; pressing it is a refused submit that marks the fields red and says what is
 // missing -- one problem focuses its field, two or more put a focused summary at the top.
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -206,19 +206,72 @@ const NAME_LONG_MSG = "Keep the company name to 100 characters or fewer.";
 const emailInput = () => screen.getByPlaceholderText("Please enter your business email");
 
 describe("StepCreateEntity -- a badly shaped business email", () => {
-  it("waits for the field to be left, then says so and gives Save & Next's reason", async () => {
+  it("never holds Save & Next while it is typed, and says nothing until it is left", async () => {
     const { container } = renderStep();
     await userEvent.type(emailInput(), "bob@acme");
-    // Not finished yet: nothing said, nothing red, but the button is held.
+    // Not finished yet: nothing said, nothing red, and the button stays available.
     expect(screen.queryByText(EMAIL_MSG)).not.toBeInTheDocument();
     expect(container.querySelector(".field-error")).toBeNull();
-    expect(saveNext()).toBeDisabled();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(saveNext()).toBeEnabled();
 
     await userEvent.tab();
     expect(screen.getByText(EMAIL_MSG)).toBeInTheDocument();
     expect(emailInput()).toHaveAttribute("aria-invalid", "true");
-    expect(saveNext()).toBeDisabled();
+    expect(saveNext()).toBeEnabled();
     expect(screen.getByRole("note")).toHaveTextContent("Check the business email to continue.");
+  });
+
+  it("pressing Save & Next with it half-typed says so, focuses it and does not save", async () => {
+    const { byId, container, submitEntity, next } = renderStep();
+    await userEvent.type(byId("entity-name"), "Acme Ltd");
+    await chooseCountry(byId, "Hong Kong SAR China");
+    await userEvent.type(emailInput(), "bob@acme");
+    expect(saveNext()).toBeEnabled();
+
+    await userEvent.click(saveNext());
+    expect(submitEntity).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+    expect(byId("entity-email-error")).toHaveTextContent(EMAIL_MSG);
+    expect(emailInput()).toHaveAttribute("aria-invalid", "true");
+    expect(emailInput()).toHaveAttribute("aria-describedby", "entity-email-error");
+    expect(container.querySelector(".error-summary")).toBeNull();
+    await waitFor(() => expect(emailInput()).toHaveFocus());
+    expect(screen.getByRole("note")).toHaveTextContent("Check the business email to continue.");
+
+    // Fixing it clears everything, and the next press saves.
+    await userEvent.type(emailInput(), ".com");
+    expect(screen.queryByText(EMAIL_MSG)).not.toBeInTheDocument();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    await userEvent.click(saveNext());
+    expect(submitEntity).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(next).toHaveBeenCalledTimes(1));
+  });
+
+  it("a press keeps focus in the field, so the blur message cannot move the button away", async () => {
+    // In a browser, blurring on mousedown drew the message, pushed Save & Next down under the
+    // pointer, and the click never landed. jsdom has no layout, so pin the cause instead.
+    renderStep();
+    await userEvent.type(emailInput(), "bob@acme");
+    expect(fireEvent.mouseDown(saveNext())).toBe(false); // default prevented
+  });
+
+  it("joins the summary when other fields are missing too", async () => {
+    const { byId } = renderStep();
+    await userEvent.type(byId("entity-name"), "Acme Ltd");
+    await userEvent.type(emailInput(), "bob@acme");
+    await userEvent.click(saveNext());
+
+    const summary = screen.getByRole("alert");
+    await waitFor(() => expect(summary).toHaveFocus());
+    const links = screen.getAllByRole("link");
+    expect(links.map((a) => a.getAttribute("href"))).toEqual([
+      "#entity-country",
+      "#entity-currency",
+      "#entity-email",
+    ]);
+    expect(links[2]).toHaveTextContent(EMAIL_MSG);
+    expect(byId("entity-email-error")).toHaveTextContent(EMAIL_MSG);
   });
 
   it("clears as soon as a valid address is typed", async () => {

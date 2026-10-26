@@ -25,10 +25,11 @@ release. Tick each box against a disposable test entity — never one you care a
 
 - [ ] Business email with non-ASCII characters (e.g. an IME composition) is dropped once
       composition ends, and the field explains why — never silently accepted.
-- [ ] A malformed business email (no dot in the domain, etc.) holds Save & Next: once the
-      field is left it says _That email address doesn't look right._ (nothing while still
-      typing), the button shows _Check the business email to continue._ beside it, and both
-      clear as a valid address is typed.
+- [ ] A malformed business email (no dot in the domain, etc.) never disables Save & Next:
+      nothing is said while still typing; once the field is left, or Save & Next is pressed,
+      it says _That email address doesn't look right._ (pressing also moves focus to the
+      field and does not save), the button shows _Check the business email to continue._
+      beside it, and both clear as a valid address is typed.
 - [ ] A company name of 101 characters says _Keep the company name to 100 characters or
       fewer._ as it is typed and holds Save & Next (_Shorten the company name to continue._);
       100 is fine.

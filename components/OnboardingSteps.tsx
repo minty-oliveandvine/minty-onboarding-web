@@ -67,17 +67,22 @@ export function StepCreateEntity({
   // still be valid (the phone's length for its dial code; standard email shape).
   const emailOk = s.email.trim() === "" || isEmail(s.email);
   // A half-typed address only means "not finished yet", so its message waits for the first
-  // blur (like the phone's); from then on it follows the typing.
+  // blur (like the phone's) or a press of Save & Next; from then on it follows the typing.
   const [emailTouched, setEmailTouched] = useState(false);
   const emailShown = emailTouched && !emailOk;
+  const emailProblem: SummaryItem = {
+    fieldId: "entity-email",
+    message: "That email address doesn't look right.",
+  };
   // entities.name holds 100; the API refuses more (NAME_MAX). Said as it is typed.
   const nameTooLong = s.name.trim().length > NAME_MAX;
   const [dial, setDial] = useState<DialCountry[]>([]);
   const phoneOk = phoneFieldError(s.phone, dial) === "";
   // Name, Country and Currency never disable Save & Next when EMPTY: pressing it with one empty
-  // is a refused submit, which says what is missing (CLAUDE.md, "Validation while typing"). The
-  // phone, the email and a too-long name gate it as they are typed.
-  const canNext = phoneOk && emailOk && !nameTooLong;
+  // is a refused submit, which says what is missing (CLAUDE.md, "Validation while typing"). Nor
+  // does a malformed email (owner, 2026-10-26): pressing it then is a refused submit too. The
+  // phone and a too-long name gate it as they are typed.
+  const canNext = phoneOk && !nameTooLong;
   // A gated button shows its reason beside it (CLAUDE.md).
   const gateReason = nameTooLong
     ? "Shorten the company name to continue."
@@ -109,6 +114,8 @@ export function StepCreateEntity({
     .filter((f) => f.empty)
     .map(({ fieldId, message }) => ({ fieldId, message }));
   const shownMissing = showErrors ? missing : [];
+  // The summary lists the email too once a refused submit has shown its message.
+  const shownProblems = showErrors && emailShown ? [...shownMissing, emailProblem] : shownMissing;
   const messageFor = (fieldId: string) => shownMissing.find((f) => f.fieldId === fieldId);
   const toast = useToast();
   // Set when the backend rejects the name as already-taken, so we can flag the
@@ -224,12 +231,14 @@ export function StepCreateEntity({
 
   const handleNext = async () => {
     if (!canNext || saving) return;
-    if (missing.length > 0) {
+    const problems = emailOk ? missing : [...missing, emailProblem];
+    if (problems.length > 0) {
       setShowErrors(true);
+      if (!emailOk) setEmailTouched(true);
       setAttempt((n) => n + 1);
       // One problem: focus that field. Two or more: the summary takes focus (ErrorSummary).
-      if (missing.length === 1) {
-        const fieldId = missing[0].fieldId;
+      if (problems.length === 1) {
+        const fieldId = problems[0].fieldId;
         requestAnimationFrame(() => document.getElementById(fieldId)?.focus());
       }
       return;
@@ -262,7 +271,7 @@ export function StepCreateEntity({
         <h2>Basic Information</h2>
         <p>Let&apos;s start by creating your first entity. It only takes a minute.</p>
       </div>
-      <ErrorSummary items={shownMissing} attempt={attempt} />
+      <ErrorSummary items={shownProblems} attempt={attempt} />
       <div className="form-stack">
         <div
           className={
@@ -395,7 +404,7 @@ export function StepCreateEntity({
           )}
           {emailShown && (
             <div className="field-required" id="entity-email-error">
-              That email address doesn&apos;t look right.
+              {emailProblem.message}
             </div>
           )}
         </div>
@@ -404,6 +413,10 @@ export function StepCreateEntity({
         <button
           className="btn btn-primary btn-block btn-jelly"
           disabled={!canNext || saving}
+          // A press leaves focus where it is. Blurring the email on mousedown drew its message,
+          // pushed this button down under the pointer, and the click never landed; handleNext
+          // says what is wrong and moves focus itself.
+          onMouseDown={(e) => e.preventDefault()}
           onClick={handleNext}
         >
           {saving ? "Saving…" : "Save & Next"}

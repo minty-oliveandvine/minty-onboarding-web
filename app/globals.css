@@ -535,7 +535,7 @@ textarea {
   appearance: none;
   -webkit-appearance: none;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   padding: 11px 13px;
   font-size: 14px;
   background: var(--bg);
@@ -565,7 +565,7 @@ textarea {
   display: flex;
   align-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   background: var(--bg);
   overflow: hidden;
 }
@@ -582,6 +582,9 @@ textarea {
 .field .input-prefix input {
   border: 0;
   flex: 1;
+  /* An <input> is ~20 characters wide by default; without this it never shrinks below that,
+     and at 360px the box scrolled sideways under the code ("IKD"). */
+  min-width: 0;
   padding: 11px 13px;
   font-size: 14px;
   background: transparent;
@@ -629,7 +632,8 @@ textarea {
 /* Buttons */
 .btn {
   border: 0;
-  border-radius: var(--radius-sm);
+  /* Buttons are radius 12 and never pills (Part 14). */
+  border-radius: 12px;
   padding: 12px 20px;
   font-size: 14px;
   font-weight: 600;
@@ -674,7 +678,6 @@ textarea {
   width: 100%;
   padding: 15px 20px;
   font-size: 15px;
-  border-radius: 999px;
 }
 .btn-link-center {
   background: transparent;
@@ -701,7 +704,7 @@ textarea {
 .form-stack .field input,
 .form-stack .field select {
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
 }
 .form-stack .field label {
@@ -838,7 +841,7 @@ textarea {
 .mw-dialog-btn {
   height: 66px;
   flex: 1;
-  border-radius: 14px;
+  border-radius: 12px;
   border: 1px solid transparent;
   font-size: 18px;
   line-height: 1.25;
@@ -1030,7 +1033,7 @@ textarea {
   width: 100%;
   padding: 12px 14px;
   border: 1.5px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
 }
 .mselect-create-input:focus,
@@ -1051,7 +1054,7 @@ textarea {
 .mselect-create-btn {
   flex: 1;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -1088,7 +1091,7 @@ textarea {
 .pc-field select {
   appearance: none;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px 14px;
   font-size: 14px;
   background: var(--bg);
@@ -1379,7 +1382,7 @@ textarea {
   background: transparent;
   color: var(--accent-ink);
   border: 1.5px solid var(--accent);
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 13px 20px;
   font-size: 14.5px;
   font-weight: 600;
@@ -1394,7 +1397,7 @@ textarea {
   background: var(--accent);
   color: #fff;
   border: 1.5px solid var(--accent);
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 13px 20px;
   font-size: 14.5px;
   font-weight: 600;
@@ -1451,7 +1454,7 @@ textarea {
   font-size: 18px;
   letter-spacing: -0.005em;
   padding: 8px 22px;
-  border-radius: 999px;
+  border-radius: 12px;
   cursor: pointer;
   line-height: 1;
   color: var(--accent-ink);
@@ -1673,7 +1676,7 @@ textarea {
 .acc-search input {
   width: 100%;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 11px 38px 11px 14px;
   font-size: 14px;
   background: var(--bg);
@@ -2451,7 +2454,7 @@ textarea {
 /* Match the searchable trigger box to the sibling text inputs in form-stack. */
 .form-stack .field .mselect-trigger {
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 .mselect-empty {
   padding: 10px 12px;
@@ -3399,7 +3402,7 @@ textarea {
   width: 166px;
   height: 41px;
   margin: 0;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 .allset-skeleton .sk-btn.is-link {
   width: 132px;
@@ -3421,7 +3424,7 @@ textarea {
   border: 0;
   background: none;
   padding: 12px 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
   color: var(--pick-ink);
   cursor: pointer;
@@ -3928,7 +3931,7 @@ textarea {
   height: 44px;
   padding: 12px 14px;
   border: 1px solid #d7dee2;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--bg);
   font: inherit;
   font-size: 14px;
@@ -3975,7 +3978,7 @@ textarea {
      this form whose contents never reach this app. */
 .billing-stripe {
   border: 1px solid #d7dee2;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 16px;
 }
 /* Spacing only. The AddressElement themes itself from the appearance object, the same as
@@ -4055,7 +4058,7 @@ textarea {
 .billing-done-btn {
   min-width: 169px;
   height: 66px;
-  border-radius: 14px;
+  border-radius: 12px;
   font-size: 18px;
   font-weight: 700;
 }
@@ -4090,12 +4093,9 @@ textarea {
   gap: 14px;
   margin-top: 20px;
 }
-/* 8px rather than the app's 10px --radius-sm: the design draws these at the same radius
-     as the inputs above them, which is what makes the form read as one stack rather than a
-     form with a toolbar under it. */
+/* Radius 12 like every button (Part 14), no longer the inputs' 8px above them. */
 .billing-actions .btn {
   height: 44px;
-  border-radius: 8px;
   justify-content: center;
 }
 .billing-actions .btn-ghost {
@@ -4209,7 +4209,7 @@ textarea {
   min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--bg);
   color: var(--accent-ink);
   font: inherit;
