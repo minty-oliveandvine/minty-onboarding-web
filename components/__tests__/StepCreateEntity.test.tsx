@@ -200,3 +200,67 @@ describe("StepCreateEntity -- choosing a country", () => {
     await waitFor(() => expect(next).toHaveBeenCalledTimes(1));
   });
 });
+
+const EMAIL_MSG = "That email address doesn't look right.";
+const NAME_LONG_MSG = "Keep the company name to 100 characters or fewer.";
+const emailInput = () => screen.getByPlaceholderText("Please enter your business email");
+
+describe("StepCreateEntity -- a badly shaped business email", () => {
+  it("waits for the field to be left, then says so and gives Save & Next's reason", async () => {
+    const { container } = renderStep();
+    await userEvent.type(emailInput(), "bob@acme");
+    // Not finished yet: nothing said, nothing red, but the button is held.
+    expect(screen.queryByText(EMAIL_MSG)).not.toBeInTheDocument();
+    expect(container.querySelector(".field-error")).toBeNull();
+    expect(saveNext()).toBeDisabled();
+
+    await userEvent.tab();
+    expect(screen.getByText(EMAIL_MSG)).toBeInTheDocument();
+    expect(emailInput()).toHaveAttribute("aria-invalid", "true");
+    expect(saveNext()).toBeDisabled();
+    expect(screen.getByRole("note")).toHaveTextContent("Check the business email to continue.");
+  });
+
+  it("clears as soon as a valid address is typed", async () => {
+    renderStep();
+    await userEvent.type(emailInput(), "bob@acme");
+    await userEvent.tab();
+    expect(screen.getByText(EMAIL_MSG)).toBeInTheDocument();
+
+    await userEvent.type(emailInput(), ".com");
+    expect(screen.queryByText(EMAIL_MSG)).not.toBeInTheDocument();
+    expect(emailInput()).not.toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(saveNext()).toBeEnabled();
+  });
+
+  it("says nothing about an empty, optional email that was only visited", async () => {
+    renderStep();
+    await userEvent.click(emailInput());
+    await userEvent.tab();
+    expect(screen.queryByText(EMAIL_MSG)).not.toBeInTheDocument();
+    expect(saveNext()).toBeEnabled();
+  });
+});
+
+describe("StepCreateEntity -- the company name's length", () => {
+  it("says so as it is typed past 100, holds Save & Next, and clears at 100", async () => {
+    const { byId } = renderStep();
+    await userEvent.click(byId("entity-name"));
+    await userEvent.paste("a".repeat(100));
+    expect(screen.queryByText(NAME_LONG_MSG)).not.toBeInTheDocument();
+    expect(saveNext()).toBeEnabled();
+
+    await userEvent.type(byId("entity-name"), "b");
+    expect(byId("entity-name-error")).toHaveTextContent(NAME_LONG_MSG);
+    expect(byId("entity-name")).toHaveAttribute("aria-invalid", "true");
+    expect(byId("entity-name")).toHaveAttribute("aria-describedby", "entity-name-error");
+    expect(saveNext()).toBeDisabled();
+    expect(screen.getByRole("note")).toHaveTextContent("Shorten the company name to continue.");
+
+    await userEvent.type(byId("entity-name"), "{Backspace}");
+    expect(screen.queryByText(NAME_LONG_MSG)).not.toBeInTheDocument();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(saveNext()).toBeEnabled();
+  });
+});

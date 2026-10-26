@@ -25,7 +25,13 @@ release. Tick each box against a disposable test entity — never one you care a
 
 - [ ] Business email with non-ASCII characters (e.g. an IME composition) is dropped once
       composition ends, and the field explains why — never silently accepted.
-- [ ] A malformed business email (no dot in the domain, etc.) is refused before advancing.
+- [ ] A malformed business email (no dot in the domain, etc.) holds Save & Next: once the
+      field is left it says _That email address doesn't look right._ (nothing while still
+      typing), the button shows _Check the business email to continue._ beside it, and both
+      clear as a valid address is typed.
+- [ ] A company name of 101 characters says _Keep the company name to 100 characters or
+      fewer._ as it is typed and holds Save & Next (_Shorten the company name to continue._);
+      100 is fine.
 - [ ] The field is `type="text"`, not `type="email"` — confirm no browser email-validation
       UI appears (the English-only rule depends on this).
 - [ ] Editing step 1 after the first advance uses `PUT /entity/{id}`, not another `POST
@@ -104,6 +110,9 @@ last_connected_at FROM pettycashv3.entities WHERE id = '<id>';` — connect sets
       out again (Cash stays).
 - [ ] The opening balance (cash in the drawer on day one) saves and is reflected if you
       step back to this screen.
+- [ ] A new company's opening date defaults to the server's Hong Kong today (set the
+      machine's clock a day ahead: the default stays on Hong Kong's day, which the API
+      accepts); a resumed draft keeps its saved date.
 - [ ] Step 6's account-code mapping and step 7's three contacts (director, cash sale,
       discrepancy) list rows already synced from Xero — nothing here triggers a live Xero
       call.
