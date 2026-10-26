@@ -12,7 +12,8 @@ import { ModalFrame } from "./ModalFrame";
 import { useToast } from "./Toast";
 import { fetchCountries, fetchCurrencies } from "@/lib/refData";
 import { currencyForCountry } from "@/lib/countryCurrency";
-import { acceptAmountInput, formatAmount, toAmountEditString } from "@minty/shared/money";
+import { formatAmount } from "@minty/shared/money";
+import { useAmountInput } from "@minty/shared/amountInput";
 import { formatInstantDay, todayIso as todayInHongKong } from "@minty/shared/dates";
 import { fetchBillingStatus } from "@/lib/billing";
 import { urlFor } from "../lib/apiRoutes";
@@ -46,6 +47,9 @@ import type { PaymentMethod } from "../lib/billing";
 import type { ModuleId, Result, SetupGap } from "../lib/api";
 import { STEPS } from "../lib/wizardSteps";
 
+// entities.name's length, as the API's NAME_MAX (onboarding/api_entity.py).
+const NAME_MAX = 100;
+
 export function StepCreateEntity({
   state,
   set,
@@ -60,12 +64,24 @@ export function StepCreateEntity({
   // Phone and email are optional — but if the user does type something, it must
   // still be valid (the phone's length for its dial code; standard email shape).
   const emailOk = s.email.trim() === "" || isEmail(s.email);
+  // A half-typed address only means "not finished yet", so its message waits for the first
+  // blur (like the phone's); from then on it follows the typing.
+  const [emailTouched, setEmailTouched] = useState(false);
+  const emailShown = emailTouched && !emailOk;
+  // entities.name holds 100; the API refuses more (NAME_MAX). Said as it is typed.
+  const nameTooLong = s.name.trim().length > NAME_MAX;
   const [dial, setDial] = useState<DialCountry[]>([]);
   const phoneOk = phoneFieldError(s.phone, dial) === "";
-  // Name, Country and Currency never disable Save & Next: pressing it with one empty is a
-  // refused submit, which says what is missing (CLAUDE.md, "Validation while typing"). The
-  // phone and email keep gating it as they are typed.
-  const canNext = phoneOk && emailOk;
+  // Name, Country and Currency never disable Save & Next when EMPTY: pressing it with one empty
+  // is a refused submit, which says what is missing (CLAUDE.md, "Validation while typing"). The
+  // phone, the email and a too-long name gate it as they are typed.
+  const canNext = phoneOk && emailOk && !nameTooLong;
+  // A gated button shows its reason beside it (CLAUDE.md).
+  const gateReason = nameTooLong
+    ? "Shorten the company name to continue."
+    : emailShown
+      ? "Check the business email to continue."
+      : "";
   const [saving, setSaving] = useState(false);
   // Set by a refused Save & Next; the fields turn red and say so only from then on, and each
   // message clears the moment its field has a value. `attempt` re-focuses the summary.
@@ -246,7 +262,11 @@ export function StepCreateEntity({
       </div>
       <ErrorSummary items={shownMissing} attempt={attempt} />
       <div className="form-stack">
-        <div className={"field" + (nameTaken || messageFor("entity-name") ? " field-error" : "")}>
+        <div
+          className={
+            "field" + (nameTaken || nameTooLong || messageFor("entity-name") ? " field-error" : "")
+          }
+        >
           <label htmlFor="entity-name">
             Entity Name
             <span className="req" aria-hidden>
@@ -262,11 +282,11 @@ export function StepCreateEntity({
             placeholder="Please enter your company name"
             value={s.name}
             aria-required
-            aria-invalid={nameTaken || !!messageFor("entity-name")}
+            aria-invalid={nameTaken || nameTooLong || !!messageFor("entity-name")}
             aria-describedby={
               nameTaken
                 ? "entity-name-taken"
-                : messageFor("entity-name")
+                : nameTooLong || messageFor("entity-name")
                   ? "entity-name-error"
                   : undefined
             }
@@ -283,7 +303,12 @@ export function StepCreateEntity({
               Oh, someone got there first! Do you have another name in mind?
             </div>
           )}
-          {!nameTaken && messageFor("entity-name") && (
+          {!nameTaken && nameTooLong && (
+            <div className="field-required" id="entity-name-error">
+              Keep the company name to 100 characters or fewer.
+            </div>
+          )}
+          {!nameTaken && !nameTooLong && messageFor("entity-name") && (
             <div className="field-required" id="entity-name-error">
               {messageFor("entity-name")?.message}
             </div>
@@ -347,19 +372,28 @@ export function StepCreateEntity({
           dial={dial}
           onChange={(v) => set({ entity: { ...s, ...v } })}
         />
-        <div className="field">
-          <label>
+        <div className={"field" + (emailShown ? " field-error" : "")}>
+          <label htmlFor="entity-email">
             Business Email <span className="field-optional">(optional)</span>
           </label>
           <input
             {...businessEmail.props}
+            id="entity-email"
             name="email"
             placeholder="Please enter your business email"
             value={s.email}
+            aria-invalid={emailShown || undefined}
+            aria-describedby={emailShown ? "entity-email-error" : undefined}
+            onBlur={() => setEmailTouched(true)}
           />
           {businessEmail.rejected && (
             <div className="field-required" role="status">
               {EMAIL_ASCII_HINT}
+            </div>
+          )}
+          {emailShown && (
+            <div className="field-required" id="entity-email-error">
+              That email address doesn&apos;t look right.
             </div>
           )}
         </div>
@@ -368,10 +402,17 @@ export function StepCreateEntity({
         <button
           className="btn btn-primary btn-block btn-jelly"
           disabled={!canNext || saving}
+          aria-describedby={gateReason ? "entity-next-reason" : undefined}
           onClick={handleNext}
         >
           {saving ? "Saving…" : "Save & Next"}
         </button>
+        {gateReason ? (
+          <div className="step-reminder" role="note" id="entity-next-reason">
+            <Icon.Info />
+            {gateReason}
+          </div>
+        ) : null}
         <SaveExitLink
           saveAndExit={saveAndExit}
           submitFn={submitEntity}
@@ -1030,9 +1071,19 @@ export function StepSalesSetting({
     };
   }, []);
   const [showBalanceError, setShowBalanceError] = useState(false);
-  // While focused the field shows plain digits; commas and the trailing ".00"
-  // are applied on blur (and on any value rehydrated from the backend).
-  const [balanceFocused, setBalanceFocused] = useState(false);
+  // Commas as it is typed, the currency's places padded on blur
+  // (@minty/shared/amountInput); a number rehydrated from the backend shows padded.
+  const balanceInput = useAmountInput({
+    value:
+      typeof p.openingBalance === "number"
+        ? formatAmount(p.openingBalance, balanceDecimals)
+        : (p.openingBalance ?? ""),
+    decimals: balanceDecimals,
+    onValue: (v) => {
+      upd("openingBalance", v);
+      if (v !== "") setShowBalanceError(false);
+    },
+  });
   const [saving, setSaving] = useState(false);
   const toast = useToast();
   const balanceEmpty =
@@ -1046,6 +1097,7 @@ export function StepSalesSetting({
   // isn't trusted).
   const dateRef = useRef<HTMLDivElement>(null);
   const [serverToday, setServerToday] = useState("");
+  const [serverTimeSettled, setServerTimeSettled] = useState(false);
   const [showDateError, setShowDateError] = useState(false);
   const openingMaxDate = serverToday || todayInHongKong();
   const dateIsFuture = !!p.openingDate && p.openingDate > openingMaxDate;
@@ -1056,11 +1108,26 @@ export function StepSalesSetting({
       .then((d) => {
         if (!cancelled && d && d.today) setServerToday(d.today);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setServerTimeSettled(true);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
+  // The default opening date is the SERVER's today (the same day that caps it), never the
+  // browser's: it is filled once the server has answered (or failed, then Hong Kong's date
+  // from the browser), and only when no date is there yet -- one the user picked or a saved
+  // draft brought back is kept. Reads the latest state, so a resume that lands first wins.
+  useEffect(() => {
+    if (!serverTimeSettled) return;
+    set((prev) =>
+      prev.pettyCash.openingDate
+        ? {}
+        : { pettyCash: { ...prev.pettyCash, openingDate: openingMaxDate } },
+    );
+  }, [serverTimeSettled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onBlocked = () => {
@@ -1250,23 +1317,9 @@ export function StepSalesSetting({
                   {currencyCode(state.entity.currency, currencyRegistry)}
                 </div>
                 <input
-                  type="text"
-                  inputMode={balanceDecimals > 0 ? "decimal" : "numeric"}
                   placeholder={balanceDecimals > 0 ? `0.${"0".repeat(balanceDecimals)}` : "0"}
                   aria-required="true"
-                  value={
-                    balanceFocused
-                      ? toAmountEditString(p.openingBalance)
-                      : formatAmount(p.openingBalance, balanceDecimals)
-                  }
-                  onFocus={() => setBalanceFocused(true)}
-                  onChange={(e) => {
-                    const raw = acceptAmountInput(e.target.value, balanceDecimals);
-                    if (raw === null) return; // past the digit limits — refuse the keystroke
-                    upd("openingBalance", raw);
-                    if (raw !== "") setShowBalanceError(false);
-                  }}
-                  onBlur={() => setBalanceFocused(false)}
+                  {...balanceInput}
                 />
               </div>
             </div>

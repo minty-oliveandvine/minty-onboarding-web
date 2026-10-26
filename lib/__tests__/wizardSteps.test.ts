@@ -309,14 +309,10 @@ describe("initialState", () => {
     expect(s.xero.connected).toBe(false);
   });
 
-  it("defaults the petty-cash opening date to today's LOCAL calendar day", () => {
-    const d = new Date();
-    const expected = [
-      d.getFullYear(),
-      String(d.getMonth() + 1).padStart(2, "0"),
-      String(d.getDate()).padStart(2, "0"),
-    ].join("-");
-    expect(initialState().pettyCash.openingDate).toBe(expected);
+  it("leaves the petty-cash opening date empty: step 5 fills it from the server's today", () => {
+    // Never the browser's date: the limit is the server's Hong Kong "today", and a browser
+    // a day ahead defaulted to a date the API refused (StepSalesSetting.test.tsx).
+    expect(initialState().pettyCash.openingDate).toBe("");
   });
 
   it("does NOT define entity.id or pettyCash.openingBalance", () => {

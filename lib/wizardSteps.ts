@@ -13,7 +13,6 @@ import type { ModuleId } from "./api";
 import type { DisplayStep, ResumeDecision, WizardState } from "./types";
 import { isEmail } from "@minty/shared/emailInput";
 import { phoneOk } from "./validation";
-import { toIsoDate } from "./date";
 
 // Derive the frontend step id to land on from a backend /state payload. The
 // backend's own `current_step` is derived from a different ordering (modules →
@@ -159,7 +158,9 @@ export const initialState = (): WizardState => ({
     directorContact: "",
     cashSaleContact: "",
     discrepancyContact: "",
-    openingDate: toIsoDate(new Date()),
+    // Empty until step 5 fills it from the server's Hong Kong "today" -- the same day that
+    // caps it -- never the browser's clock (StepSalesSetting).
+    openingDate: "",
   },
   bills: {
     terms: "Net 30",
