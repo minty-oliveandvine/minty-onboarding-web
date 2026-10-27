@@ -159,7 +159,8 @@ summaries; change the two together.
 - Every advance and _Save & Exit_ post `saved_step` (`POST /saved-step`), so a resume
   lands where the person left off; the app also mirrors state and the furthest step
   reached into `sessionStorage`.
-- On launch with an `entity_id` (or after a reload) the app reads `GET /state` and
+- On launch with an `entity_id` (or after a reload - the tab keeps its company in
+  `sessionStorage`, `e2e/resume.spec.ts` "a plain reload…") the app reads `GET /state` and
   **trusts the database**: the saved step is where it lands; the backend's
   `current_step` / `max_reached` only raise the ceiling of unlocked steps — the backend
   derives its number from a different ordering (modules → Xero → petty cash → bills)

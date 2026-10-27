@@ -49,6 +49,48 @@ export function writeTabToken(token: string): void {
   }
 }
 
+// The company this tab is onboarding, beside its token. The launch params leave the address
+// bar on arrival (takeLaunchParams), so without this a plain reload had no id to ask GET
+// /state about and fell back to the localStorage cache - a blank step 1 when that was
+// missing or expired, or another company's blob (owner, 2026-10-27).
+export const TAB_ENTITY_KEY = "minty_onboarding_entity";
+
+/** Remember the company being onboarded in this tab. Empty ids are ignored (first render). */
+export function writeTabEntity(entityId: string | null | undefined): void {
+  if (!entityId) return;
+  try {
+    window.sessionStorage.setItem(TAB_ENTITY_KEY, entityId);
+  } catch {
+    /* storage blocked: a reload falls back to the cache */
+  }
+}
+
+/** Forget it - a fresh "+" launch must never resume the last company. */
+export function clearTabEntity(): void {
+  try {
+    window.sessionStorage.removeItem(TAB_ENTITY_KEY);
+  } catch {
+    /* nothing stored */
+  }
+}
+
+/** What a reload with nothing in the address bar resumes from: this tab's company and an
+ * unexpired token, so GET /state (the source of truth) can rebuild the wizard. Null when
+ * either is missing or the token has expired. */
+export function tabResume(): { entityId: string; token: string } | null {
+  let entityId = "";
+  try {
+    entityId = window.sessionStorage.getItem(TAB_ENTITY_KEY) || "";
+  } catch {
+    return null;
+  }
+  const token = readTabToken();
+  if (!entityId || !token) return null;
+  const claims = readJwtClaims(token);
+  if (!claims || (claims.exp && claims.exp <= Math.floor(Date.now() / 1000))) return null;
+  return { entityId, token };
+}
+
 // Everything a launch, resume or Xero return can put in the address bar.
 const LAUNCH_PARAMS = [
   "token",

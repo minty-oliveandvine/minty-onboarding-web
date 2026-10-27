@@ -18,11 +18,12 @@ the organisation's financial year end on the company (`entities.financial_year_e
 revoked and the wizard gets `?xero=cancelled` like any other failed connect), stores the token on the connecting person, starts the accounts/contacts
 sync and sends the browser back to the wizard root with one of:
 
-| Return                                                                                 | Meaning                                                        | What the step shows                                                     |
-| -------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `/?xero=connected&step=3&org=<tenant>`                                                 | connected; the tenant name                                     | _Connected to <org>_, the Save & Next unlocks                           |
-| `/?xero=mismatch&expected=<email>`                                                     | the person signed into Xero as somebody else                   | the mismatch notice with the expected email; the connection is not made |
-| `/?xero=conflict&conflict_entity=<name>[&conflict_entity_id=<id>&conflict_can_move=1]` | that Xero organisation is already connected to another company | the **"That Xero organisation is taken"** dialog — see below            |
+| Return                                                                                 | Meaning                                                                                                                      | What the step shows                                                                                 |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `/?xero=connected&step=3&org=<tenant>`                                                 | connected; the tenant name                                                                                                   | _Connected to <org>_, the Save & Next unlocks                                                       |
+| `/?xero=mismatch&expected=<email>`                                                     | the person signed into Xero as somebody else                                                                                 | the mismatch notice with the expected email; the connection is not made                             |
+| `/?xero=conflict&conflict_entity=<name>[&conflict_entity_id=<id>&conflict_can_move=1]` | that Xero organisation is already connected to another company                                                               | the **"That Xero organisation is taken"** dialog — see below                                        |
+| `/?xero=choose&step=3`                                                                 | Xero granted nothing and the login sees several organisations no company holds (2026-10-27; exactly one is simply connected) | a toast: disconnect Minty from the organisations this company won't use in Xero, then connect again |
 
 On every landing at step 4 or later the app re-reads `GET /state` and takes
 `xero.connected` / `xero.org` from the database, so a reload after the round-trip is

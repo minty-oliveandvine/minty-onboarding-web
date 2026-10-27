@@ -770,6 +770,8 @@ export function StepConnectXero({
   disconnectXero,
   xeroMismatch,
   clearXeroMismatch,
+  xeroChoose,
+  clearXeroChoose,
   xeroConflict,
   clearXeroConflict,
   releaseXeroConflict,
@@ -783,6 +785,8 @@ export function StepConnectXero({
   | "disconnectXero"
   | "xeroMismatch"
   | "clearXeroMismatch"
+  | "xeroChoose"
+  | "clearXeroChoose"
   | "xeroConflict"
   | "clearXeroConflict"
   | "releaseXeroConflict"
@@ -809,6 +813,18 @@ export function StepConnectXero({
     );
     if (typeof clearXeroMismatch === "function") clearXeroMismatch();
   }, [xeroMismatch, clearXeroMismatch, toast]);
+
+  // Several unclaimed organisations: nothing was connected and nothing guessed. Same
+  // fire-and-forget toast as the mismatch above; Flask's SEVERAL_UNCLAIMED_ORGS wording.
+  useEffect(() => {
+    if (!xeroChoose) return;
+    toast.error(
+      "Xero didn't say which organisation you picked, and this Xero login has more than one " +
+        "linked to Minty. In Xero, disconnect Minty from the organisations this company won't " +
+        "use, then connect again.",
+    );
+    if (typeof clearXeroChoose === "function") clearXeroChoose();
+  }, [xeroChoose, clearXeroChoose, toast]);
 
   // One-org-one-company block. NOT a toast like the mismatch above: the way on is to free
   // the organisation on the company holding it, which is a real disconnect, so it is asked

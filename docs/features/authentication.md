@@ -13,8 +13,12 @@ Minty's _Create company_ (and _resume_) send the browser to `/?token=<jwt>[&enti
 and the Xero-return parameters ONCE and clears them from the address bar before anything else
 runs - until 2026-10-05 a fresh launch left `?token=` there for the whole wizard, and Stripe's
 `return_url` carried it). The token lives in memory and in this tab's `sessionStorage`
-(`minty_onboarding_token`: survives a reload, not a new tab); the state and the step reached
-are cached in `localStorage` WITHOUT the token. The **database is the source of truth** for
+(`minty_onboarding_token`: survives a reload, not a new tab), beside the company it is
+onboarding (`minty_onboarding_entity`, since 2026-10-27): a plain reload, whose address bar is
+empty, uses the two to ask `GET /state` again (`wizardSession.tabResume`) instead of trusting
+the cache, which had landed reloads on a blank step 1 or on another company's blob. A fresh "+"
+launch and finishing clear it. The state and the step reached are cached in `localStorage`
+WITHOUT the token. The **database is the source of truth** for
 resume; the browser copy is a cache (`GET /api/onboarding/state`). `?profile_url=` is no longer
 read: Flask never sent it, and the avatar followed it into `location.href`, so a `javascript:`
 value ran on click. Stripe.js is imported from `@stripe/stripe-js/pure` and loads when the

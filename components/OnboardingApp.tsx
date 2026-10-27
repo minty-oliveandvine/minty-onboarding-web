@@ -26,12 +26,15 @@ import { MODULE_CODE_BY_ID, MODULE_ID_BY_CODE } from "../lib/modules";
 import {
   STORAGE_KEY,
   XERO_RESUME_KEY,
+  clearTabEntity,
   findLatestSession,
   readJwtClaims,
   TAB_TOKEN_KEY,
   readTabToken,
   sessionKey,
+  tabResume,
   takeLaunchParams,
+  writeTabEntity,
   writeTabToken,
 } from "../lib/wizardSession";
 import {
@@ -126,6 +129,7 @@ export default function OnboardingApp() {
   // (the initiator's, from the `expected` param) so the Accounting step can show
   // a specific "use the account for X" message. Empty string = no mismatch.
   const [xeroMismatch, setXeroMismatch] = useState("");
+  const [xeroChoose, setXeroChoose] = useState(false);
   // Set when the Xero OAuth round-trip returns `xero=conflict` — the chosen Xero
   // org is already linked to a different company, so the backend refused to
   // connect this one. Holds that company (name, id and whether this person may
@@ -275,8 +279,10 @@ export default function OnboardingApp() {
     if (!hydratedRef.current) return;
     try {
       const key = sessionKey(state.entity.id);
-      // The token goes to this tab's sessionStorage only, never into the localStorage blob.
+      // The token goes to this tab's sessionStorage only, never into the localStorage blob;
+      // the company beside it, so a plain reload can resume it from GET /state.
       writeTabToken(token);
+      writeTabEntity(state.entity.id);
       window.localStorage.setItem(
         key,
         JSON.stringify({
@@ -452,6 +458,7 @@ export default function OnboardingApp() {
       // in-progress entities keep their saved progress.
       const isFresh = p.get("fresh") === "1";
       if (isFresh) {
+        clearTabEntity();
         try {
           window.localStorage.removeItem(STORAGE_KEY);
         } catch {
@@ -487,6 +494,9 @@ export default function OnboardingApp() {
         } else {
           setXeroMismatch("");
         }
+        // Nothing connected: the Xero login sees several organisations no company holds,
+        // so Flask didn't guess which one was picked. The step says how to narrow it down.
+        setXeroChoose(xeroParam === "choose");
         // One-org-one-company block: the org the user picked is already linked to
         // another company. `conflict_entity` names it (URL-encoded; searchParams
         // decodes) so the step can say which one to disconnect first. It can be
@@ -565,6 +575,16 @@ export default function OnboardingApp() {
       }
 
       const urlToken = (p.get("token") || "").trim();
+      // A plain reload: nothing in the address bar (it was taken out on arrival), but this
+      // tab knows its company and holds an unexpired token. Ask the server, exactly as the
+      // resume redirect does, rather than trusting a cache that may be missing, expired or
+      // another company's (owner, 2026-10-27). resumeFromServer falls back to the cache.
+      const reload = !urlToken && !isFresh ? tabResume() : null;
+      if (reload) {
+        setToken(reload.token);
+        resumeFromServer(reload.entityId, reload.token);
+        return;
+      }
       // No URL entity_id reached here (the resume branch above returns early), so
       // this is the pre-id draft under the bare global key. On a fresh launch it
       // was just cleared, so `saved` will be null and we start clean.
@@ -1444,6 +1464,7 @@ export default function OnboardingApp() {
         window.localStorage.removeItem(sessionKey(state.entity.id));
         window.localStorage.removeItem(STORAGE_KEY);
         window.sessionStorage.removeItem(TAB_TOKEN_KEY);
+        clearTabEntity();
       } catch {
         /* storage unavailable — nothing saved to drop */
       }
@@ -1532,6 +1553,8 @@ export default function OnboardingApp() {
     disconnectXero,
     xeroMismatch,
     clearXeroMismatch: () => setXeroMismatch(""),
+    xeroChoose,
+    clearXeroChoose: () => setXeroChoose(false),
     xeroConflict,
     clearXeroConflict: () => setXeroConflict(null),
     releaseXeroConflict,
