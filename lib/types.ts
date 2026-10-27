@@ -249,6 +249,9 @@ export type StepProps = {
   /** Non-empty when Xero came back connected to a different org than expected. */
   xeroMismatch: string;
   clearXeroMismatch: () => void;
+  /** Flask's `xero=choose`: nothing connected, the login sees several unclaimed orgs. */
+  xeroChoose: boolean;
+  clearXeroChoose: () => void;
   /** Set when the Xero org the person picked is already connected to another company. */
   xeroConflict: XeroConflict | null;
   clearXeroConflict: () => void;

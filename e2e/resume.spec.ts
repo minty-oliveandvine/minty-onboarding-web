@@ -72,6 +72,27 @@ test("a valid launch token opens the wizard rather than the sign-in screen", asy
   }
 });
 
+test("a plain reload resumes the same company and step from the server", async ({
+  page,
+  request,
+}) => {
+  // 2026-10-27: the launch params leave the address bar on arrival, so a reload had no
+  // entity id and trusted the localStorage cache alone - a blank step 1 when it was missing
+  // or expired. The tab now remembers its company and asks GET /state again. The cache is
+  // emptied first so only the server can put the wizard back.
+  const original = await stashSavedStep(request);
+  try {
+    await land(page, request);
+    expect(await activeStep(page)).toBe(SAFE_STEP);
+    await page.evaluate(() => window.localStorage.clear());
+    await page.reload();
+    await expect(page.locator(".stepper")).toBeVisible();
+    expect(await activeStep(page)).toBe(SAFE_STEP);
+  } finally {
+    await restoreSavedStep(request, original);
+  }
+});
+
 test("the launch token is stripped from the address bar", async ({ page, request }) => {
   // It is a bearer credential. Leaving it in the URL puts it in history, in the
   // Referer header of every outbound link, and in any screenshot the user sends.
