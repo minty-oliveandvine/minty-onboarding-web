@@ -4,9 +4,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setSidebarSession } from "@/components/ui/sidebarHost";
+import { ONBOARDING_API_BASE } from "@/lib/apiRoutes";
 import { loadSubscriptions, profileApi } from "@/lib/profileApi";
 
-const API = "http://localhost:8030";
+// The configured onboarding API, as urlFor reads it (CI may set ONBOARDING_API_URL).
+const API = ONBOARDING_API_BASE;
 const fetchMock = vi.fn();
 
 const answer = (status: number, body: unknown) =>

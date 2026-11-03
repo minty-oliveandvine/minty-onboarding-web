@@ -7,6 +7,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ONBOARDING_API_BASE } from "../../lib/apiRoutes";
 import { ToastProvider } from "../Toast";
 import { NavMenu, ViewerBadge } from "../ui/NavMenu";
 import { SidebarShell } from "../ui/SidebarShell";
@@ -96,7 +97,7 @@ describe("My Profile opens in the sidebar", () => {
     const nav = await openMenu(false);
     await userEvent.click(within(nav).getByRole("button", { name: "Ann Lee, My Profile" }));
     expect(await screen.findByRole("region", { name: "My Profile" })).toBeInTheDocument();
-    expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:8030/api/onboarding/me/profile");
+    expect(fetchMock.mock.calls[0][0]).toBe(`${ONBOARDING_API_BASE}/api/onboarding/me/profile`);
   });
 
   it("from the header's initials", async () => {

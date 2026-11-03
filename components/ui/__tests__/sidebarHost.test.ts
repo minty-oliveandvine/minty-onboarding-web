@@ -4,9 +4,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { _setNavigateForTests, setSidebarSession, sidebarHost } from "@/components/ui/sidebarHost";
+import { FLASK_BASE } from "@/lib/flaskBase";
 
 const ENTITY = "360812e1-9f94-46a3-aa31-347e21afde8e";
-const FLASK = "http://localhost:8000";
+// The configured Flask, as the host reads it (CI sets PETTY_CASH_URL to its stack layout).
+const FLASK = FLASK_BASE;
 const HANDOFF = `${FLASK}/handoff/minty-web`;
 
 const session = (finished: boolean) =>
