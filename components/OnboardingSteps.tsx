@@ -833,8 +833,7 @@ export function StepConnectXero({
   // it connected and silently unlinked the other company.
   //
   // `name` is 'unknown' when Flask could not name the company; the copy then stays generic.
-  // `canMove` false (no permission there, no id came back, or not development - Flask offers
-  // the move only there; owner, 2026-11-03) leaves only "disconnect it there first".
+  // `canMove` false (no permission there, or no id came back) leaves only who to ask.
   const [moving, setMoving] = useState(false);
   const [moveError, setMoveError] = useState("");
   const conflictTitleId = "xero-conflict-title";
@@ -1024,7 +1023,7 @@ export function StepConnectXero({
           <p className="mw-dialog-body">
             {xeroConflict.canMove
               ? `I can disconnect it from ${xeroConflict.name === "unknown" ? "that company" : xeroConflict.name} and take you back to Xero to connect it to ${state.entity.name || "this company"} instead.`
-              : `Disconnect it from ${xeroConflict.name === "unknown" ? "that company" : xeroConflict.name} first (an accountant or admin there can do that in its settings), then connect ${state.entity.name || "this company"} again.`}
+              : `Ask an accountant or admin of ${xeroConflict.name === "unknown" ? "that company" : xeroConflict.name} to disconnect it from Xero there first, then connect again.`}
           </p>
           {moveError && (
             <p className="mw-dialog-error" role="alert">

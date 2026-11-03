@@ -104,8 +104,8 @@ test("an org already linked elsewhere asks in a dialog, and leaves the step disc
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("That Xero organisation is taken");
   await expect(dialog).toContainText("Another Entity Ltd");
-  // No id/permission came back, so there is nothing to offer - disconnect it there first.
-  await expect(dialog).toContainText("Disconnect it from");
+  // No id/permission came back, so there is nothing to offer - only who to ask.
+  await expect(dialog).toContainText("Ask an accountant or admin");
   await expect(dialog.getByRole("button", { name: "Move it here" })).toHaveCount(0);
 
   await dialog.getByRole("button", { name: "Close" }).click();

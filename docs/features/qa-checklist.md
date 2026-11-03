@@ -86,8 +86,7 @@ created_at DESC;` — a cancelled row reads `revoked`, still present (never dele
       the expected email, and leaves the connection unmade.
 - [ ] A conflict return (`?xero=conflict&conflict_entity=<name>`) raises the _That Xero
       organisation is taken_ dialog naming the other company, and the connection is not made.
-      Without `conflict_can_move=1` (always the case outside development) there is no
-      _Move it here_, only "disconnect it from <company> first, then connect again".
+      Without `conflict_can_move=1` there is no _Move it here_, only who to ask.
 - [ ] _Move it here_ disconnects the other company and comes back connected; _Go back_ and
       Escape change nothing on either company. A refused release stays in the dialog.
 - [ ] At 360px the step scrolls only downwards — the heading's info tooltip stays on screen
