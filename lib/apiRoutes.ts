@@ -79,6 +79,10 @@ const DJANGO_PATHS = [
   "/api/onboarding/finalize",
   "/api/onboarding/xero/disconnect",
   "/api/onboarding/xero/release",
+  // My Profile in the sidebar (lib/profileApi.ts) - proxies to /api/me/profile on Flask and
+  // /api/me/subscriptions on subscription-api, whose CORS does not admit this origin.
+  "/api/onboarding/me/profile",
+  "/api/onboarding/me/subscriptions",
 ];
 
 const DJANGO_PATTERNS = DJANGO_PATHS.map((p) => p.split("/"));

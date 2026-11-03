@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
+import { SidebarShell } from "@/components/ui/SidebarShell";
 
 // The faces, self-hosted through next/font as minty-web and minty-payment-request-web do
 // (2026-10-12). This replaced a Google Fonts <link>: next/font also generates a metric-matched
@@ -36,7 +37,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable} antialiased`}>
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {/* The shared sidebar (@minty/shared), classic look - components/ui/SidebarShell.tsx. */}
+          <SidebarShell>{children}</SidebarShell>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -1,18 +1,14 @@
 @import "tailwindcss";
-/* The icon font, self-hosted from npm as minty-web and minty-payment-request-web do
-   (2026-10-12) - this replaced a Google Fonts <link>. Deliberately NOT `layer(base)`: the
-   package's CSS is unlayered, so its `font-size: 24px` outranks any size utility and every glyph
-   renders at 24px in all three apps. That was already true here through the old <link> (also
-   unlayered, winning on document order), so nothing changed size - but it does mean the
-   `text-[26px]` / `text-[22px]` on the spans in components/NavMenu.tsx have no effect. */
-@import "material-symbols/outlined.css";
+/* No icon font (2026-11-03): its one user, the old components/NavMenu.tsx, became the shared
+   sidebar, which draws SVGs - so the `material-symbols` package went with it. */
 /* The faces, shared: @minty/shared/theme.css (--font-sans, --font-brand). Plain CSS resolved by
-   the bundler, exactly like the icon font above - misspell it and the build fails. This app takes
-   the TOKENS only: it consumes no packaged component, so it needs no `@source` line (that is what
-   makes Tailwind scan node_modules for classes) and no transpilePackages.
+   the bundler - misspell it and the build fails. The one
+   packaged component is the sidebar (@minty/shared/sidebar, 2026-11-03), in the classic look -
+   hex values, no tokens.css - so the `@source` line below makes Tailwind scan its classes.
    This app loads no Plus Jakarta Sans, so --font-brand falls through to Inter; its own topbar
    `.brand` keeps its three hand-written values (see minty-web's components/ui/Wordmark.tsx). */
 @import "@minty/shared/theme.css";
+@source "../node_modules/@minty/shared/src";
 
 /* Brand tokens shared with the payment-request module so Tailwind utilities
    like text-primary / bg-secondary resolve to the same colours. */
@@ -134,44 +130,6 @@ textarea {
     gap: 8px;
   }
 }
-.avatar {
-  width: 28px;
-  height: 28px;
-  border: 0;
-  padding: 0;
-  border-radius: 50%;
-  background: #ffe6b1;
-  color: #6b3a12;
-  display: grid;
-  place-items: center;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: normal;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-.avatar:hover {
-  opacity: 0.9;
-}
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: 0;
-  background: transparent;
-  display: grid;
-  place-items: center;
-  color: #656565;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-.icon-btn:hover {
-  background: color-mix(in oklab, #656565 10%, transparent);
-}
-.icon-btn svg {
-  display: block;
-}
-
 /* Stepper */
 .stepper {
   position: relative;

@@ -1,7 +1,7 @@
-// This app takes the TOKENS from @minty/shared and nothing else - no packaged component, so no
-// `@source` line and no transpilePackages. The import is loud if it breaks (a bad specifier fails
-// the build); what this pins is what the tokens come out AS, and that nothing local redeclares
-// them, which would win invisibly.
+// This app takes the TOKENS from @minty/shared and one packaged component, the sidebar (its classic
+// look needs no token sheet; globals.css's `@source` line scans it). The import is loud if it
+// breaks (a bad specifier fails the build); what this pins is what the tokens come out AS, and
+// that nothing local redeclares them, which would win invisibly.
 //
 // It compiles the app's REAL stylesheet with the app's REAL Tailwind plugin, so it tests what the
 // browser is served, not what the file says.
@@ -38,8 +38,12 @@ describe("@minty/shared's tokens reach the stylesheet", () => {
     expect(compiled).toMatch(/--font-brand:\s*var\(--font-jakarta\)/);
   });
 
-  it("still emits this app's own icon font and brand colours", () => {
+  it("still emits this app's brand colours", () => {
     expect(compiled).toMatch(/--color-secondary:\s*#54d3da/);
-    expect(compiled).toMatch(/material-symbols|Material Symbols/i);
+  });
+
+  it("loads no icon font - nothing draws a glyph since the side menu became the shared one", () => {
+    // (2026-11-03) The old components/NavMenu.tsx was its one user; the shared sidebar draws SVGs.
+    expect(compiled).not.toMatch(/material-symbols|Material Symbols/i);
   });
 });

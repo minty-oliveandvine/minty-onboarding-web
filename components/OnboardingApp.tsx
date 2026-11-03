@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
 import Icon from "./Icon";
 import { friendlyError } from "../lib/errorCopy";
-import NavMenu from "./NavMenu";
+import { NavMenu, ViewerBadge } from "./ui/NavMenu";
+import { setSidebarSession } from "./ui/sidebarHost";
 import {
   StepCreateEntity,
   StepSelectModule,
@@ -1522,7 +1523,32 @@ export default function OnboardingApp() {
       .toUpperCase();
     return fromWords || "DD";
   })();
-  const profileLabel = user.name || state.entity.name || "Your entity";
+
+  // The shared sidebar (components/ui/sidebarHost.ts) reads the wizard's token, company and person
+  // from here. The company is the menu's only once onboarding is finished ("All Set"), so its
+  // modules and Settings wait for step 9; the person is the signed-in user, never the company.
+  const viewerName = user.name || `${user.first} ${user.last}`.trim();
+  const viewer = useMemo(
+    () => (viewerName ? { name: viewerName, initials: profileInitials } : null),
+    [viewerName, profileInitials],
+  );
+  const menuModules = useMemo(
+    () => ({
+      pettyCash: state.modules.includes("pettyCash"),
+      billing: state.modules.includes("bills"),
+    }),
+    [state.modules],
+  );
+  useEffect(() => {
+    setSidebarSession({
+      token,
+      entityId: state.entity.id || "",
+      entityName: state.entity.name || "",
+      finished: current === 9,
+      viewer,
+    });
+  }, [token, state.entity.id, state.entity.name, current, viewer]);
+  useEffect(() => () => setSidebarSession(null), []);
 
   // Apply accent CSS vars from baked-in defaults
   useEffect(() => {
@@ -1583,13 +1609,10 @@ export default function OnboardingApp() {
           </div>
           <h1>Getting Started</h1>
           <div className="right pl-0.5 sm:pl-2">
-            {/* Initials only. It used to follow a `?profile_url=` from the address bar, which
-                Flask never sent and anyone else could (a `javascript:` URL ran on click). */}
-            <span className="avatar" title={profileLabel} role="img" aria-label={profileLabel}>
-              {profileInitials}
-            </span>
-            {/* Nav stays Logout-only through onboarding; full menu populates on the final "All Set" step. */}
-            <NavMenu companyName={state.entity.name || "Minty"} showFullMenu={current === 9} />
+            {/* The person's initials open My Profile in the sidebar, as the menu's name does. */}
+            <ViewerBadge viewer={viewer} />
+            {/* The shared sidebar: modules and Settings appear on "All Set" (sidebarHost.ts). */}
+            <NavMenu modules={menuModules} viewer={viewer} />
           </div>
         </div>
       </div>

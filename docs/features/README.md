@@ -33,10 +33,8 @@ point of the move is the metric-matched fallback `next/font` generates (`src: lo
 `docs/features/README.md` carries the reasoning — so change them together until `@minty/shared`
 takes the tokens at Part 3 step 4. Two tokens only, `--font-sans` and `--font-brand`: no
 `--font-mono` (nothing uses the mono utility, and Tailwind's own default keeps it monospace) and no
-emoji tail. The icon font is now the `material-symbols` npm package rather than a Google `<link>`,
-imported **without** `layer(base)`, so its unlayered `font-size: 24px` wins: every glyph renders at
-24px and the 26px / 22px font-size utilities on the spans in `components/NavMenu.tsx` do nothing.
-That was already the case through the old `<link>`, so no icon changed size. The one
+emoji tail. This app loads **no icon font** (2026-11-03): the `material-symbols` package's one user, the old
+side menu, became the shared sidebar, which draws SVGs ([wizard.md](wizard.md)). The one
 `fonts.googleapis.com` URL left is Stripe's `cssSrc` in `components/BillingSheet.tsx`, fetched
 inside Stripe's cross-origin iframe, which cannot see our `@font-face`. Do not write a bare
 Tailwind class name in prose here: v4's source detection scans Markdown and CSS too, so naming a

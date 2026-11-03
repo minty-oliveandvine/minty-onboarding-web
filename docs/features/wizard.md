@@ -134,6 +134,41 @@ _Go to entity list_ stays available (disabled while a retry is in flight).
 (`e2e/README.md`, `land()` in `e2e/onboardingApi.ts` refuses it); `walk.spec.ts` reaches it
 by clicking _Complete_ on step 8 against the disposable entity.
 
+## The side menu (the header's ≡, 2026-11-03)
+
+The packaged sidebar, `@minty/shared/sidebar`, in the classic look every `development` branch
+draws: the same menu as minty-web, minty-payment-request-web and minty-petty-cash-web. It replaced
+this app's own drawer (`components/NavMenu.tsx`, a copy of the payments app's old one).
+`components/ui/` holds this app's part:
+
+- `sidebarHost.ts` is the host the package reads;
+- `NavMenu.tsx` and `Sidebar.tsx` are shims that register the host first;
+- `SidebarShell.tsx` is the provider, mounted in `app/layout.tsx`.
+
+The menu's files are copied into `public/menu/`; `app/__tests__/packagedAssets.test.ts` holds
+that contract.
+
+- **Where it gets its answers.** The token, the company and the person are React state in
+  `OnboardingApp`, not a cookie, so the wizard hands them to the host (`setSidebarSession`)
+  whenever they change. The person is the signed-in user, never the company.
+- **Modules and Settings wait for All Set.** The host reports no company until step 9. The
+  package draws the module sections and Settings only inside a company, so through onboarding the
+  menu shows only:
+  - the person, Select Entity and Manage subscriptions;
+  - Logout.
+    On All Set the chosen modules appear (the wizard's `modules`, not the token's claims). The
+    module links enter through Flask's `/entity/<id>/enter` with the wizard's token. Settings goes
+    to minty-web's module settings for the new company.
+- **My Profile opens in the sidebar only** (owner, 2026-11-03): the header's initials (the
+  shared `ViewerBadge`) and the menu's name both switch the sidebar to My Profile, the shared panel
+  (`components/ui/SidebarShell.tsx`). There is no profile page here or in minty-web. Its reads go
+  through minty-onboarding-api's proxies, `/api/onboarding/me/profile` (GET and PATCH, to
+  Flask's `/api/me/profile`) and `/api/onboarding/me/subscriptions` (to subscription-api's
+  `/api/me/subscriptions`), in `lib/profileApi.ts`, because neither backend's CORS admits this
+  origin. The panel's files are copied into `public/profile/`.
+- **Logout** goes to Flask's `/logout`, as the old drawer's did, which ends the session
+  everywhere.
+
 ## Copy and errors
 
 `lib/errorCopy.ts` and `docs/ERROR_COPY.md`: the backends answer `{"error": "…"}` in the
@@ -142,7 +177,7 @@ words the wizard shows; the app never invents a message for a status it does not
 ## Tests
 
 Unit (`npm test`): `lib/__tests__/wizardSteps.test.ts`, `validation.test.ts`, `invites.test.ts`,
-`components/__tests__/Stepper.test.tsx`, `StepChrome.test.tsx`, `StepInvite.test.tsx` (the arrival prompt's Ok / Skip), `MintySelect.test.tsx` (the type-to-add hint), `pettyCashFields.test.tsx`,
+`components/__tests__/Stepper.test.tsx`, `HeaderMenu.test.tsx`, `components/ui/__tests__/sidebarHost.test.ts` and `lib/__tests__/profileApi.test.ts` (the side menu and My Profile), `StepChrome.test.tsx`, `StepInvite.test.tsx` (the arrival prompt's Ok / Skip), `MintySelect.test.tsx` (the type-to-add hint), `pettyCashFields.test.tsx`,
 `MethodList.test.tsx`, `CardBrand.test.tsx` (the two fits and their crops). Browser (`npm run test:e2e`): `e2e/stack.spec.ts` (the two backends
 answer), `resume.spec.ts` (the database decides the landing step; `saved_step` and
 `current_step` may disagree; an out-of-range step is refused), `xero.spec.ts`,

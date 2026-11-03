@@ -74,6 +74,8 @@ const TO_DJANGO = [
   "/api/onboarding/finalize",
   "/api/onboarding/xero/disconnect",
   "/api/onboarding/xero/release",
+  "/api/onboarding/me/profile?entity=abc",
+  "/api/onboarding/me/subscriptions?page=1&per_page=100",
 ];
 
 // Flask pages and Flask auth -- not part of the extraction.
