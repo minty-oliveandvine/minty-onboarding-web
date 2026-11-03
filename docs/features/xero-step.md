@@ -41,8 +41,10 @@ disconnect of another company and that has to be asked for. It is minty-web's
 `ConfirmDialog` as this app draws it (`.mw-dialog*` in `app/globals.css`), Minty's picture
 beside the title included — `public/assets/minty-dont.png`, the same art and the same
 100×130 as the Entity & Integration tab's, since the two dialogs say the same thing. `conflict_entity_id` and
-`conflict_can_move=1` are what make the offer possible; without them (no permission there, or
-Minty could not say) the dialog only names the company to ask, with one _Close_.
+`conflict_can_move=1` are what make the offer possible; without them (no permission there,
+not development - Minty offers the move only when `APP_ENV=development` and refuses the release
+elsewhere, owner 2026-11-03 - or Minty could not say) the dialog only says to disconnect it from
+that company first, then connect again, with one _Close_.
 
 _Move it here_ does it in two steps, since the grant the refused attempt created was handed
 back to Xero and there is no token left to reuse:
