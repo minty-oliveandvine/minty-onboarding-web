@@ -77,7 +77,7 @@ import type {
   XeroConflict,
 } from "../lib/types";
 import { inviteRows } from "../lib/invites";
-import { phoneForApi } from "../lib/validation";
+import { nameTakenMessage, phoneForApi } from "../lib/validation";
 import { useMounted } from "../lib/useMounted";
 
 // Baked-in defaults that used to live in TWEAK_DEFAULTS (tweaks-panel removed from prod build)
@@ -920,7 +920,7 @@ export default function OnboardingApp() {
             return {
               ok: false,
               duplicate: true,
-              error: `Oh, “${state.entity.name.trim()}” is taken already! Do you have another name in mind?`,
+              error: nameTakenMessage(state.entity.name),
             };
           }
           return { ok: false, error: backendMsg };
@@ -941,11 +941,11 @@ export default function OnboardingApp() {
       });
       const data: Partial<CreateEntityResponse> & ApiErrorBody = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // The backend returns 409 only for a name collision (uniqueness is
-        // GLOBAL across all users — see /api/onboarding/create). Key off the
-        // status, not the message: the body is {"error": "Entity name already
-        // exist"} with no machine code, and the wording could change. A 400 is
-        // a different validation failure (e.g. empty name), so pass it through.
+        // The backend returns 409 only for a name collision (unique per person
+        // since 2026-11-03: a name this user already has — see /api/onboarding/create).
+        // Key off the status, not the message: the body is a sentence with no
+        // machine code, and the wording could change. A 400 is a different
+        // validation failure (e.g. empty name), so pass it through.
         const backendMsg = friendlyError(
           data,
           "I couldn't create that company. Mind trying again?",
@@ -954,7 +954,7 @@ export default function OnboardingApp() {
           return {
             ok: false,
             duplicate: true,
-            error: `Oh, “${state.entity.name.trim()}” is taken already! Do you have another name in mind?`,
+            error: nameTakenMessage(state.entity.name),
           };
         }
         return { ok: false, error: backendMsg };

@@ -212,3 +212,11 @@ export function splitStoredPhone(
       : digits;
   return { phone: composeWizardPhone(pref.code, national), iso: pref.iso };
 }
+
+/**
+ * Step 1's sentence for a 409 from create or rename: the name is one this person already has
+ * (unique per person since 2026-11-03, the APIs' own wording; it used to say "is taken already!").
+ */
+export function nameTakenMessage(name: string): string {
+  return `You already have a company called “${name.trim()}”. Choose another name.`;
+}

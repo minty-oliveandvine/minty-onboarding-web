@@ -231,3 +231,14 @@ describe("splitStoredPhone", () => {
     expect(splitStoredPhone("91234567", DIAL, "AF")).toBeNull();
   });
 });
+
+// 2026-11-03 (owner): a company name is unique per person, not across customers, so a 409 on
+// Step 1 means THIS person already has one by that name - never "taken" by someone else.
+describe("nameTakenMessage", () => {
+  it("says the person already has a company of that name, and what to do", async () => {
+    const { nameTakenMessage } = await import("@/lib/validation");
+    expect(nameTakenMessage("  DB Test Co ")).toBe(
+      "You already have a company called “DB Test Co”. Choose another name.",
+    );
+  });
+});
