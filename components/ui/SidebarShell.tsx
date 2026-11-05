@@ -1,16 +1,20 @@
 "use client";
 
+import { ContactLauncher } from "@minty/shared/contact";
 import { ProfilePanel, SubscriptionsOverviewCard } from "@minty/shared/profile";
 import type { ReactNode } from "react";
 
 import { useToast } from "@/components/Toast";
 import { SidebarProvider } from "@/components/ui/Sidebar";
-import { loadSubscriptions, profileApi } from "@/lib/profileApi";
+import { loadContactEmail, loadSubscriptions, profileApi, sendContact } from "@/lib/profileApi";
 
 /**
  * The shared sidebar around the wizard, in the classic look every `development` branch draws (the
  * owner, 2026-10-20). My Profile is its second view - the shared panel over the page, never a page
  * of its own (owner, 2026-11-03) - reading through minty-onboarding-api (lib/profileApi.ts).
+ * The Minty cat at the bottom right (`@minty/shared/contact`, owner 2026-11-05) sends its
+ * "Talk to Minty" message the same way, and reads the person's email for its one-tap answer only
+ * when Contact Support opens (`loadContactEmail`).
  */
 export function SidebarShell({ children }: { children: ReactNode }) {
   const toast = useToast();
@@ -24,6 +28,11 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider look="classic" profile={profile}>
       {children}
+      <ContactLauncher
+        send={sendContact}
+        notify={(message, kind) => toast.show(message, kind)}
+        loadEmail={loadContactEmail}
+      />
     </SidebarProvider>
   );
 }

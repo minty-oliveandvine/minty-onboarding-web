@@ -261,3 +261,12 @@ the marker work.
 `.billing-label .req` mirrors minty-web's `SHEET_REQUIRED`; the note at the top of
 `minty-web/components/ui/sheetClasses.ts` applies - the same dialog in two apps must be the
 same dialog, so change both or neither.
+
+## The Minty cat (`@minty/shared/contact`, v0.14)
+
+The cat at the bottom right of the wizard (owner, 2026-11-05), mounted in
+`components/ui/SidebarShell.tsx`. Its "Talk to Minty" chat posts through minty-onboarding-api's
+`POST /api/onboarding/me/contact` proxy (`lib/profileApi.ts` `sendContact`; Flask's CORS does not
+admit this origin) to Flask's `/api/me/contact`, which mails `CONTACT_EMAIL` with the person as
+Reply-To. Before "All Set" no company is sent (the host names none). Tested in
+`components/ui/__tests__/ContactLauncher.test.tsx`; `/contact/minty-cat.webp` is in `public/`.

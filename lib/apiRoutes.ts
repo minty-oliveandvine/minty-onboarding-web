@@ -83,6 +83,9 @@ const DJANGO_PATHS = [
   // /api/me/subscriptions on subscription-api, whose CORS does not admit this origin.
   "/api/onboarding/me/profile",
   "/api/onboarding/me/subscriptions",
+  // The Minty cat and its chat (lib/profileApi.ts) - proxies to /api/me/contact on
+  // Flask, which mails the team; its CORS does not admit this origin either.
+  "/api/onboarding/me/contact",
 ];
 
 const DJANGO_PATTERNS = DJANGO_PATHS.map((p) => p.split("/"));

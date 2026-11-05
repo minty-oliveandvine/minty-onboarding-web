@@ -1,7 +1,8 @@
 /**
  * The sidebar's My Profile, for the packaged panel and card (`@minty/shared/profile`): the
  * person's profile (Flask's `GET` / `PATCH /api/me/profile`) and their Subscriptions Overview
- * (subscription-api's `GET /api/me/subscriptions`, every page walked).
+ * (subscription-api's `GET /api/me/subscriptions`, every page walked) - and the Minty cat's
+ * "Talk to Minty" message (Flask's `POST /api/me/contact`, `@minty/shared/contact`).
  *
  * Both go through minty-onboarding-api's proxies (`/api/onboarding/me/*`), not to Flask or
  * subscription-api directly: their CORS does not admit this origin, and the browser talks to one
@@ -13,6 +14,7 @@
  * whenever `api` / `load` change identity.
  */
 
+import type { ContactMessage, ContactReceipt } from "@minty/shared/contact";
 import type { Profile, ProfileApi, ProfileChanges, SubscriptionsList } from "@minty/shared/profile";
 
 import { sidebarHost } from "@/components/ui/sidebarHost";
@@ -21,6 +23,7 @@ import { urlFor } from "@/lib/apiRoutes";
 
 const PROFILE = "/api/onboarding/me/profile";
 const SUBSCRIPTIONS = "/api/onboarding/me/subscriptions";
+const CONTACT = "/api/onboarding/me/contact";
 
 /** The most subscription-api answers in one page (minty-web's `MAX_PER_PAGE`). */
 const PER_PAGE = 100;
@@ -66,3 +69,14 @@ export async function loadSubscriptions(signal: AbortSignal): Promise<Subscripti
   for (let n = 2; n <= first.pages; n++) entities.push(...(await page(n, signal)).entities);
   return { entities };
 }
+
+/**
+ * The chat's one-tap email (`ContactLauncher`'s `loadEmail`): the wizard's hand-off carries no
+ * email, so the person's own profile is read - once a page, and only when Contact Support opens.
+ */
+export const loadContactEmail = async (): Promise<string | null> =>
+  (await call<Profile>(PROFILE)).user.email || null;
+
+/** The chat's message; Flask checks it and answers `{sent, reply_to}`. */
+export const sendContact = (message: ContactMessage): Promise<ContactReceipt> =>
+  call<ContactReceipt>(CONTACT, { method: "POST", body: JSON.stringify(message) });
