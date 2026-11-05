@@ -18,7 +18,6 @@ import {
   StepAllSet,
 } from "./OnboardingSteps";
 import { toAmountString } from "@/lib/amount";
-import { browserTimezone } from "@/lib/browserTimezone";
 import { fetchCurrencies } from "@/lib/refData";
 import { currencyDecimals } from "./steps/pettyCashFields";
 import { formatToday } from "@/lib/date";
@@ -877,8 +876,6 @@ export default function OnboardingApp() {
       // on revisit actually gets it removed.
       business_email: (state.entity.email || "").trim(),
       contact_phone: phoneForApi(state.entity.phone || ""),
-      // The browser's zone, with no field on screen: the company's emails are dated in it.
-      timezone: browserTimezone(),
     };
 
     // --- Revisit: entity already exists, so this is an EDIT, not a create. ---

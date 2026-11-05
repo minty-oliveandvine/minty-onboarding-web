@@ -131,7 +131,8 @@ discrepancy_contact_id FROM pettycashv3.entity_pettycash_settings WHERE entity_i
 '<id>';` — one row per entity; step 5 fills `opening_balance`/`start_date`, step 6
       the four account columns, step 7 the three contact columns.
 - [ ] Step 1: picking a country fills an EMPTY Currency with that country's currency and
-      never replaces one already chosen; `entities.timezone` holds the browser's zone.
+      never replaces one already chosen; `entities.timezone` holds the
+      country's zone (Philippines -> `Asia/Manila`), whatever the browser's.
 - [ ] Step 5's amount follows the currency: two decimals for HKD, whole numbers for a
       zero-decimal currency (a "." is refused while typing).
 - [ ] Step 3: each pending invite says "Expires in N days" / "Expires within a day" / "Expired"; Resend
