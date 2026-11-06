@@ -3,7 +3,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { _setNavigateForTests, setSidebarSession, sidebarHost } from "@/components/ui/sidebarHost";
+import { postNavigate, setSidebarSession, sidebarHost } from "@/components/ui/sidebarHost";
 import { FLASK_BASE } from "@/lib/flaskBase";
 
 const ENTITY = "360812e1-9f94-46a3-aa31-347e21afde8e";
@@ -22,7 +22,6 @@ const session = (finished: boolean) =>
 
 afterEach(() => {
   setSidebarSession(null);
-  _setNavigateForTests(null);
 });
 
 describe("the company the menu sees", () => {
@@ -87,15 +86,44 @@ describe("the person", () => {
   });
 });
 
+// Minty's /logout takes a POST only (a GET answers 405), from a front end's Origin: a top-level
+// form POST, never fetch and never location.
+const watchSubmits = () => {
+  const submitted: HTMLFormElement[] = [];
+  vi.spyOn(HTMLFormElement.prototype, "submit").mockImplementation(function (
+    this: HTMLFormElement,
+  ) {
+    submitted.push(this);
+  });
+  return submitted;
+};
+
+describe("postNavigate", () => {
+  it("submits a hidden, empty POST form to the address, with a referrer policy that keeps Origin", () => {
+    const submitted = watchSubmits();
+    postNavigate(`${FLASK}/logout`);
+    expect(submitted).toHaveLength(1);
+    const [form] = submitted;
+    expect(form.getAttribute("method")).toBe("POST");
+    expect(form.getAttribute("action")).toBe(`${FLASK}/logout`);
+    expect(form.hidden).toBe(true);
+    expect(form.elements).toHaveLength(0);
+    expect(form.isConnected).toBe(true);
+    const meta = document.head.querySelector('meta[name="referrer"]');
+    expect(meta?.getAttribute("content")).toBe("strict-origin");
+  });
+});
+
 describe("logging out", () => {
-  it("closes the menu, forgets the session and ends it at Flask", () => {
+  it("closes the menu, forgets the session and ends it at Flask with a POST", () => {
     session(true);
-    const go = vi.fn();
+    const submitted = watchSubmits();
     const leaving = vi.fn();
-    _setNavigateForTests(go);
     sidebarHost.logOut(leaving);
     expect(leaving).toHaveBeenCalledOnce();
     expect(sidebarHost.currentToken()).toBe("");
-    expect(go).toHaveBeenCalledWith(`${FLASK}/logout`);
+    expect(submitted).toHaveLength(1);
+    expect(submitted[0].getAttribute("method")).toBe("POST");
+    expect(submitted[0].getAttribute("action")).toBe(`${FLASK}/logout`);
   });
 });

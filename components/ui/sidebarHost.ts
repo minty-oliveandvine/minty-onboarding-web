@@ -42,17 +42,24 @@ export function setSidebarSession(next: SidebarSession | null): void {
   session = next;
 }
 
-let navigate = (url: string) => {
-  window.location.href = url;
-};
-
-/** Test seam: jsdom cannot follow a navigation, so a test watches it instead. Null restores. */
-export function _setNavigateForTests(fn: ((url: string) => void) | null): void {
-  navigate =
-    fn ??
-    ((url: string) => {
-      window.location.href = url;
-    });
+/**
+ * Leave by a top-level form POST (no body) - Minty's `/logout` answers a GET with 405 and takes a
+ * POST only from a front end's `Origin`. Never `fetch` (the session cookie and the 302 belong to
+ * the browser's navigation). The meta first: this app's `Referrer-Policy: same-origin` makes the
+ * browser send `Origin: null` on a cross-origin POST, and `strict-origin` names only the origin -
+ * what `Origin` says anyway, never a path or query. The page is leaving, so it stays.
+ */
+export function postNavigate(url: string): void {
+  const meta = document.createElement("meta");
+  meta.name = "referrer";
+  meta.content = "strict-origin";
+  document.head.appendChild(meta);
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = url;
+  form.hidden = true;
+  document.body.appendChild(form);
+  form.submit();
 }
 
 const companyId = () => (session?.finished ? session.entityId : "");
@@ -91,11 +98,11 @@ export const sidebarHost: SidebarHost = {
       document.body.style.overflow = previous;
     };
   },
-  /** Flask's `/logout` ends the session everywhere, as the old drawer's Logout did. */
+  /** Flask's `/logout` ends the session everywhere, as the old drawer's Logout did - a POST. */
   logOut: (onLeaving) => {
     onLeaving?.();
     session = null;
-    navigate(logoutUrl(FLASK_BASE));
+    postNavigate(logoutUrl(FLASK_BASE));
   },
   currentToken: () => session?.token ?? "",
   loadViewer: async () => session?.viewer ?? null,

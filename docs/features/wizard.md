@@ -168,7 +168,9 @@ that contract.
   `/api/me/subscriptions`), in `lib/profileApi.ts`, because neither backend's CORS admits this
   origin. The panel's files are copied into `public/profile/`.
 - **Logout** goes to Flask's `/logout`, as the old drawer's did, which ends the session
-  everywhere.
+  everywhere - by a top-level form POST (`postNavigate` in `components/ui/sidebarHost.ts`):
+  `/logout` answers a GET with 405 and checks the POST's `Origin`, which a `strict-origin`
+  referrer meta keeps (this app's `Referrer-Policy: same-origin` would send `null`).
 
 ## Copy and errors
 
