@@ -3,7 +3,7 @@
 The wizard is entered one way: Minty launches it with a Minty-minted JWT in the URL. Nothing
 is verified here: every call carries the token to a backend that checks it
 (`minty-onboarding-api/docs/features/authentication.md`). Signing in happens before, on
-minty-web's `/login` (§2; the system-wide picture is `Minty/docs/features/authentication.md`).
+minty-web's `/login` (§2; the system-wide picture is `minty-accounts-api/docs/features/authentication.md`).
 
 ## 1. Launched from Minty
 
@@ -40,7 +40,7 @@ Flask's `/` (log in). Deleted with the pages:
 
 On `pr-<branch>-onboarding.dailyminty.com` this app has no sign-in page and no token of its own:
 sign in on the set's `my` host, and Flask launches the wizard (and returns the Xero step) into the
-same set - it remembers the set for 30 minutes from any same-site trip (Minty
+same set - it remembers the set for 30 minutes from any same-site trip (minty-accounts-api
 `docs/features/authentication.md` 6.1). No code here changed for it.
 
 ## Where the calls go
