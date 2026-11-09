@@ -21,7 +21,7 @@ House fallback: `Something went wrong on my end. Mind trying again?`
 
 ## The mechanism
 
-This app talks to **two** backends: the Minty Flask app (`PETTY_CASH_URL`)
+This app talks to **two** backends: the Minty Flask app (`ACCOUNTS_API_URL`)
 for auth, legal and the Xero hand-off, and the extracted onboarding service
 (`ONBOARDING_API_URL`) for `/api/onboarding/*`. Which one answers a given path
 is decided in `lib/apiRoutes.ts`. Both speak the same `{error}` shape, so the copy rules

@@ -13,7 +13,7 @@ services:
       # Backend URLs the frontend calls. These MUST come from the environment
       # (never hardcoded) so the orchestrator can inject shared values later.
       # Petty Cash (the Minty Flask app). See lib/flaskBase.ts.
-      - PETTY_CASH_URL=${PETTY_CASH_URL}
+      - ACCOUNTS_API_URL=${ACCOUNTS_API_URL}
       # The extracted onboarding API. See lib/apiRoutes.ts.
       - ONBOARDING_API_URL=${ONBOARDING_API_URL}
       # Improves file-watching reliability for hot-reload inside containers.
@@ -27,6 +27,6 @@ services:
       - /app/node_modules
       # Don't leak the host's build cache into the container.
       - /app/.next
-    # Load PETTY_CASH_URL / ONBOARDING_API_URL (and any future shared values) from docker/.env.
+    # Load ACCOUNTS_API_URL / ONBOARDING_API_URL (and any future shared values) from docker/.env.
     env_file:
       - .env

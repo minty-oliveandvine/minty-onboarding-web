@@ -7,7 +7,7 @@ import { postNavigate, setSidebarSession, sidebarHost } from "@/components/ui/si
 import { FLASK_BASE } from "@/lib/flaskBase";
 
 const ENTITY = "360812e1-9f94-46a3-aa31-347e21afde8e";
-// The configured Flask, as the host reads it (CI sets PETTY_CASH_URL to its stack layout).
+// The configured Flask, as the host reads it (CI sets ACCOUNTS_API_URL to its stack layout).
 const FLASK = FLASK_BASE;
 const HANDOFF = `${FLASK}/handoff/minty-web`;
 

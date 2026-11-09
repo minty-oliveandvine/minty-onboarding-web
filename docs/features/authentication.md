@@ -30,7 +30,7 @@ Log in, sign up and invitations were this app's `/auth` and `/auth/confirm` unti
 They are minty-web's `/login` and `/login/confirm` now (`minty-web/features/auth`, its
 `docs/features/authentication.md`): sign-in is person-level, and each app holds only its own
 app - this one is the wizard. Nothing links to the old addresses any more; `next.config.ts`
-`redirects()` sends a bookmark of them through Flask (`PETTY_CASH_URL`), which knows where sign-in
+`redirects()` sends a bookmark of them through Flask (`ACCOUNTS_API_URL`), which knows where sign-in
 lives: `/auth?mode=signup` to Flask's `/register` (sign-up), any other `/auth` or `/auth/confirm` to
 Flask's `/` (log in). Deleted with the pages:
 `lib/authHandover.ts`, `lib/pendingInvite.ts`, `components/AuthTopbar.tsx`,
@@ -45,11 +45,12 @@ same set - it remembers the set for 30 minutes from any same-site trip (Minty
 
 ## Where the calls go
 
-`lib/flaskBase.ts`: `PETTY_CASH_URL` — Minty; `lib/apiRoutes.ts`:
+`lib/flaskBase.ts`: `ACCOUNTS_API_URL` — Minty; `lib/apiRoutes.ts`:
 `ONBOARDING_API_URL` — minty-onboarding-api, for the paths listed in
 `DJANGO_PATHS`; everything else (`/xero_connect`, `/logout`, `/entity`, and the old `/auth*`
 forwards) is Minty. Both are inlined at build time (`next.config.ts` `env`) — an unset
 value silently means `localhost` and breaks the OTP and Xero calls in a deployment.
+`ACCOUNTS_API_URL` was named `PETTY_CASH_URL` until 2026-11-06.
 
 ## Tests
 

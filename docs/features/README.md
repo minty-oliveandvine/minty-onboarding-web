@@ -40,7 +40,7 @@ inside Stripe's cross-origin iframe, which cannot see our `@font-face`. Do not w
 Tailwind class name in prose here: v4's source detection scans Markdown and CSS too, so naming a
 class is enough to generate it.
 
-Running it and the two variables (`PETTY_CASH_URL`, `ONBOARDING_API_URL`): the repo `README.md` (port 3030). Tests:
+Running it and the two variables (`ACCOUNTS_API_URL`, `ONBOARDING_API_URL`): the repo `README.md` (port 3030). Tests:
 `npm test` (Vitest) and `npm run test:e2e` (Playwright against a running stack —
 `e2e/README.md`; 23 on 2026-09-18 against the deployed hosts, Xero faked at the browser).
 The cleanse log is in `../code_cleanse/`.

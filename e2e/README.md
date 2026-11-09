@@ -20,7 +20,7 @@ never as _passed_.
 | Subscription API (Django) | 8000                                        | `C:\Github\minty-subscription-api` — finalize's trial start (2026-10-06) |
 | PostgreSQL                | 5432                                        | —                                                                        |
 
-Override any of them with `E2E_BASE_URL`, `E2E_PETTY_CASH_URL`, `E2E_ONBOARDING_API_URL`.
+Override any of them with `E2E_BASE_URL`, `E2E_ACCOUNTS_API_URL`, `E2E_ONBOARDING_API_URL`.
 
 ## The authenticated specs
 
