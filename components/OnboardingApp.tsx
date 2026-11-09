@@ -673,7 +673,7 @@ export default function OnboardingApp() {
       set({
         xero: {
           connected: true,
-          org: state.entity.name || "Olive & Vine Inc",
+          org: state.entity.name || "Your company",
           lastConnected: today,
         },
       });

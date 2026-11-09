@@ -784,7 +784,7 @@ export function StepConnectXero({
 >) {
   const connected = state.xero.connected;
   const lastConnected = state.xero.lastConnected || "07 May 2026";
-  const xeroEntity = state.xero.org || state.entity.name || "Olive & Vine Inc";
+  const xeroEntity = state.xero.org || state.entity.name || "Your company";
   const [disconnecting, setDisconnecting] = useState(false);
   const toast = useToast();
 

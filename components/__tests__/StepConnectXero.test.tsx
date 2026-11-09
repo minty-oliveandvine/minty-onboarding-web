@@ -8,17 +8,18 @@ import { StepConnectXero } from "../OnboardingSteps";
 import { ToastProvider } from "../Toast";
 import type { StepProps } from "../../lib/types";
 
-function renderStep(xeroChoose: boolean) {
+function renderStep(
+  xeroChoose: boolean,
+  state: { xero: { connected: boolean; org: string }; entity: { name: string } } = {
+    xero: { connected: false, org: "" },
+    entity: { name: "Shop" },
+  },
+) {
   const clearXeroChoose = vi.fn();
   render(
     <ToastProvider>
       <StepConnectXero
-        state={
-          {
-            xero: { connected: false, org: "" },
-            entity: { name: "Shop" },
-          } as unknown as StepProps["state"]
-        }
+        state={state as unknown as StepProps["state"]}
         next={vi.fn()}
         back={vi.fn()}
         connectXero={vi.fn()}
@@ -48,5 +49,22 @@ describe("StepConnectXero, several unclaimed organisations", () => {
     const { clearXeroChoose } = renderStep(false);
     expect(screen.queryByText(/more than one linked to Minty/)).not.toBeInTheDocument();
     expect(clearXeroChoose).not.toHaveBeenCalled();
+  });
+});
+
+describe("StepConnectXero, the connected card's Xero Entity", () => {
+  it("names the Xero organisation", () => {
+    renderStep(false, { xero: { connected: true, org: "Xero Org" }, entity: { name: "Shop" } });
+    expect(screen.getByText("Xero Org")).toBeInTheDocument();
+  });
+
+  it("falls back to the company's name", () => {
+    renderStep(false, { xero: { connected: true, org: "" }, entity: { name: "Shop" } });
+    expect(screen.getByText("Shop")).toBeInTheDocument();
+  });
+
+  it("with no name at all, shows a neutral placeholder, never a real company's name", () => {
+    renderStep(false, { xero: { connected: true, org: "" }, entity: { name: "" } });
+    expect(screen.getByText("Your company")).toBeInTheDocument();
   });
 });
