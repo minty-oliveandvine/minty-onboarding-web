@@ -18,7 +18,8 @@ describe("takeLaunchParams", () => {
 
     const params = takeLaunchParams();
 
-    expect(params.get("token")).toBe("abc.def.ghi");
+    // gap 4: a token in the address is taken out and never used
+    expect(params.get("token")).toBeNull();
     expect(params.get("entity_id")).toBe("e1");
     expect(window.location.search).toBe("?keep=1");
     expect(window.location.hash).toBe("#top");
@@ -39,7 +40,7 @@ describe("takeLaunchParams", () => {
     takeLaunchParams();
     const again = takeLaunchParams();
 
-    expect(again.get("token")).toBe("t1");
+    expect(again.get("token")).toBeNull();
     expect(again.get("org")).toBe("Acme");
     expect(window.location.search).toBe("");
   });

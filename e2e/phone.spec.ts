@@ -101,7 +101,9 @@ test("a new company starts empty; choosing Hong Kong sets the currency and the p
 }) => {
   // fresh=1 starts a brand-new company; nothing here presses Save, so nothing is created.
   await page.setViewportSize({ width: 360, height: 800 });
-  await page.goto(`/?token=${creds.token}&fresh=1`);
+  await page.goto(
+    `/?${new URLSearchParams({ code: await api.codeFor(page, creds.token), fresh: "1" })}`,
+  );
   const picker = page.getByLabel("Country code");
   const country = page.locator("#entity-country");
   const currency = page.locator("#entity-currency");

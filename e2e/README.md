@@ -44,7 +44,9 @@ npm run test:e2e
 
 ### Why the tests mint their own token
 
-In production the wizard is entered from Minty with `?token=<jwt>`, minted after the user
+In production the wizard is entered from Minty with `?code=<one-time code>` (gap 4), swapped
+for the JWT at accounts-api's `POST /api/handoff/redeem` (`onboardingApi.codeFor` answers it in
+the specs), the JWT minted after the user
 signs in through the email OTP flow. A test cannot walk that flow — it ends at a real
 inbox. But the token is an ordinary HS256 JWT over the secret both services already
 share, so a test holding that secret can mint an equivalent one. **Nothing is bypassed:**

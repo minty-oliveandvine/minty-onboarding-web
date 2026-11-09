@@ -445,9 +445,10 @@ export default function OnboardingApp() {
   // nothing if absent, so running the app standalone still works.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // Gap 4 (2026-11-09): accounts-api launches with a one-time `code`, not the token. Swap it
-    // first (once per code - Strict Mode runs this effect twice), then start as a token launch
-    // would; the launch params are cached (takeLaunchParams), so the swapped token joins them.
+    // Gap 4 (2026-11-09): accounts-api launches with a one-time `code`, never the token (one in
+    // the address is dropped by takeLaunchParams). Swap it first (once per code - Strict Mode runs
+    // this effect twice), then start as a token launch would: the launch params are cached, so
+    // the swapped token joins them.
     const launch = takeLaunchParams();
     const code = (launch.get("code") || "").trim();
     if (code && !launch.get("token")) {

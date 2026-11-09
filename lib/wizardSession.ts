@@ -92,8 +92,8 @@ export function tabResume(): { entityId: string; token: string } | null {
 }
 
 // Everything a launch, resume or Xero return can put in the address bar. `code` is the one-time
-// code accounts-api hands over instead of the token (gap 4, 2026-11-09); `token` is still read
-// until accounts-api stops sending it.
+// code accounts-api hands over instead of the token (gap 4, 2026-11-09); a `token` is still taken
+// out of the bar but never used - an address is not a way to hand anyone a session.
 const LAUNCH_PARAMS = [
   "code",
   "token",
@@ -127,6 +127,8 @@ export function takeLaunchParams(): URLSearchParams {
   // first one took out of the address bar.
   if (launchParams) return launchParams;
   const params = new URLSearchParams(window.location.search);
+  // gap 4: only a swapped code gives this tab a token (OnboardingApp sets it on these params)
+  params.delete("token");
   launchParams = params;
   if (LAUNCH_PARAMS.some((key) => params.has(key))) {
     const url = new URL(window.location.href);

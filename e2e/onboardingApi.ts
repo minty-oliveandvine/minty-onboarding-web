@@ -18,6 +18,7 @@
 
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import type { Credentials } from "./helpers";
+import { ACCOUNTS_API_URL } from "./urls";
 import { ONBOARDING_API_URL } from "./urls";
 
 const auth = (creds: Credentials) => ({ Authorization: `Bearer ${creds.token}` });
@@ -44,7 +45,8 @@ export async function writeSavedStep(request: APIRequestContext, creds: Credenti
 export const SAFE_STEP = 2;
 
 /**
- * Land on the wizard the way Minty does: token in the query string.
+ * Land on the wizard the way Minty does: a one-time code in the query string (gap 4), swapped for
+ * the token by the wizard (`codeFor` answers the swap here).
  *
  * `step` is PINNED through the API first, so the browser can never arrive at whatever
  * the row currently holds. That is not tidiness -- landing on 9 finalizes the entity.
@@ -57,7 +59,8 @@ export async function land(
 ) {
   if (step === 9) throw new Error("refusing to land on step 9: arrival there finalizes the entity");
   await writeSavedStep(request, creds, step);
-  await page.goto(`/?token=${creds.token}&entity_id=${creds.entityId}`);
+  const code = await codeFor(page, creds.token);
+  await page.goto(`/?${new URLSearchParams({ code, entity_id: creds.entityId })}`);
   await expect(page.locator(".stepper")).toBeVisible();
   await page.waitForLoadState("networkidle");
   // The wizard has ADOPTED the entity, not just rendered: it writes its session under a
@@ -127,4 +130,40 @@ export async function resetEntity(
   const after = await readState(request, creds);
   expect(after.status, "the entity is back in onboarding").toBe("onboarding");
   expect(after.xero?.connected, "the entity has no Xero org").toBe(false);
+}
+
+/**
+ * Gap 4 (2026-11-09): accounts-api hands an app a one-time code, which the landing swaps for the
+ * token at `POST /api/handoff/redeem`. Here the test is accounts-api: a fresh code for `token`,
+ * answered once by its own route (with CORS and its preflight, as accounts-api does). Each code
+ * brings its own handler, so a test's `page.unrouteAll()` between landings is harmless; a code a
+ * handler does not own falls back to the next one, and in the end to the real accounts-api (the
+ * stack e2e's own hand-offs).
+ */
+let codeCount = 0;
+
+export async function codeFor(page: Page, token: string): Promise<string> {
+  codeCount += 1;
+  const code = `e2e-${codeCount}-${Date.now().toString(36)}`;
+  let spent = false;
+  await page.route(`${ACCOUNTS_API_URL}/api/handoff/redeem`, (route) => {
+    const request = route.request();
+    const headers = {
+      "Access-Control-Allow-Origin": request.headers()["origin"] ?? "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      Vary: "Origin",
+    };
+    if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    const asked = (request.postDataJSON() as { code?: unknown } | null)?.code;
+    if (asked !== code || spent) return route.fallback();
+    spent = true;
+    return route.fulfill({
+      status: 200,
+      headers,
+      contentType: "application/json",
+      body: JSON.stringify({ token }),
+    });
+  });
+  return code;
 }

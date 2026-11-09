@@ -3,8 +3,9 @@
 //
 // WHY THIS MINTS ITS OWN TOKEN
 //
-// In production the wizard is entered from Minty with `?token=<jwt>` in the URL --
-// Flask mints it after the user signs in through the email OTP flow. A test cannot
+// In production the wizard is entered from Minty with `?code=<one-time code>` in the URL (gap 4),
+// which the wizard swaps for the token accounts-api minted after the user signed in through the
+// email OTP flow (`onboardingApi.codeFor` answers that swap here). A test cannot
 // go through that flow, because it ends at a real inbox. But the token is an ordinary
 // HS256 JWT over the SECRET_KEY that Minty and the Django service already share, so a
 // test that holds the same secret can mint an equivalent one. Nothing is bypassed:
