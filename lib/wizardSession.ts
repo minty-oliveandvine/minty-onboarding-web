@@ -91,8 +91,11 @@ export function tabResume(): { entityId: string; token: string } | null {
   return { entityId, token };
 }
 
-// Everything a launch, resume or Xero return can put in the address bar.
+// Everything a launch, resume or Xero return can put in the address bar. `code` is the one-time
+// code accounts-api hands over instead of the token (gap 4, 2026-11-09); `token` is still read
+// until accounts-api stops sending it.
 const LAUNCH_PARAMS = [
+  "code",
   "token",
   "entity_id",
   "entity_name",

@@ -24,6 +24,14 @@ describe("takeLaunchParams", () => {
     expect(window.location.hash).toBe("#top");
   });
 
+  it("takes the one-time launch code out of the address bar too (gap 4)", async () => {
+    window.history.replaceState(null, "", "/?code=c0de.sig&entity_id=e1");
+    const { takeLaunchParams } = await import("@/lib/wizardSession");
+
+    expect(takeLaunchParams().get("code")).toBe("c0de.sig");
+    expect(window.location.search).toBe("");
+  });
+
   it("answers the same on a second call (StrictMode runs the init effect twice)", async () => {
     window.history.replaceState(null, "", "/?token=t1&xero=connected&org=Acme");
     const { takeLaunchParams } = await import("@/lib/wizardSession");

@@ -56,11 +56,11 @@ describe("the menu's links", () => {
     expect("profile" in sidebarHost.links).toBe(false);
   });
 
-  it("enters the finished company's modules with the token it holds", () => {
+  it("enters the finished company's modules on the session, never with the token", () => {
     session(true);
     const dashboard = new URL(sidebarHost.links.pettyCashDashboard());
     expect(dashboard.pathname).toBe(`/entity/${ENTITY}/enter`);
-    expect(dashboard.searchParams.get("token")).toBe("tok");
+    expect(dashboard.searchParams.has("token")).toBe(false); // gap 4: on the session
     expect(dashboard.searchParams.get("next")).toBeNull();
     const reports = new URL(sidebarHost.links.pettyCashReports(ENTITY));
     expect(reports.pathname).toBe(`/entity/${ENTITY}/enter`);

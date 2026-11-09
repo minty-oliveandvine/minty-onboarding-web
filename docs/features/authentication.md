@@ -7,8 +7,12 @@ minty-web's `/login` (§2; the system-wide picture is `minty-accounts-api/docs/f
 
 ## 1. Launched from Minty
 
-Minty's _Create company_ (and _resume_) send the browser to `/?token=<jwt>[&entity_id=…]
-[&entity_name=…][&fresh=1]` — the 60-minute `scope: "onboarding"` token
+Minty's _Create company_ (and _resume_) send the browser to `/?code=<one-time code>
+[&entity_id=…][&entity_name=…][&fresh=1]` (gap 4, 2026-11-09: a code, never the token; the
+wizard swaps it at accounts-api's `POST /api/handoff/redeem` - once, 2 minutes, from this origin
+only - before it starts, and a used or lapsed code says so with a Continue to the company list; a
+legacy `?token=` is still taken until accounts-api stops sending it) for the 60-minute
+`scope: "onboarding"` token
 (`lib/wizardSession.ts::takeLaunchParams` reads `token`, `entity_id`, `entity_name`, `fresh`
 and the Xero-return parameters ONCE and clears them from the address bar before anything else
 runs - until 2026-10-05 a fresh launch left `?token=` there for the whole wizard, and Stripe's

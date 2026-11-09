@@ -22,6 +22,8 @@ import { fetchCurrencies } from "@/lib/refData";
 import { currencyDecimals } from "./steps/pettyCashFields";
 import { formatToday } from "@/lib/date";
 import { urlFor } from "../lib/apiRoutes";
+import { FLASK_BASE } from "../lib/flaskBase";
+import { HANDOFF_CODE_REFUSED, redeemHandoffCodeOnce } from "@minty/shared/handoff";
 import { MODULE_CODE_BY_ID, MODULE_ID_BY_CODE } from "../lib/modules";
 import {
   STORAGE_KEY,
@@ -100,6 +102,8 @@ export default function OnboardingApp() {
   });
   // Short-lived JWT from Module 1 used to create the entity on Step 1.
   const [token, setToken] = useState("");
+  // A launch whose one-time code could not be swapped for the token (gap 4): the sentence to show.
+  const [launchRefused, setLaunchRefused] = useState<string | null>(null);
   const [accountOptions, setAccountOptions] = useState<AccountOptions>({
     bank: [],
     cashSale: [],
@@ -441,10 +445,38 @@ export default function OnboardingApp() {
   // nothing if absent, so running the app standalone still works.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      hydrateOnce();
-    } finally {
-      hydratedRef.current = true;
+    // Gap 4 (2026-11-09): accounts-api launches with a one-time `code`, not the token. Swap it
+    // first (once per code - Strict Mode runs this effect twice), then start as a token launch
+    // would; the launch params are cached (takeLaunchParams), so the swapped token joins them.
+    const launch = takeLaunchParams();
+    const code = (launch.get("code") || "").trim();
+    if (code && !launch.get("token")) {
+      let live = true;
+      redeemHandoffCodeOnce(FLASK_BASE, code).then(
+        (swapped) => {
+          if (!live) return;
+          launch.set("token", swapped);
+          hydrate();
+        },
+        (err: unknown) => {
+          if (!live) return;
+          setLaunchRefused(
+            err instanceof Error && err.message ? err.message : HANDOFF_CODE_REFUSED,
+          );
+        },
+      );
+      return () => {
+        live = false;
+      };
+    }
+    hydrate();
+
+    function hydrate() {
+      try {
+        hydrateOnce();
+      } finally {
+        hydratedRef.current = true;
+      }
     }
     function hydrateOnce() {
       // Read once, and out of the address bar before anything else runs (lib/wizardSession).
@@ -1595,6 +1627,25 @@ export default function OnboardingApp() {
     saveAndExit,
     isLastContentStep,
   };
+
+  if (launchRefused) {
+    // The launch's code was used or ran out: say so, and go back to the company list for a new one.
+    return (
+      <main className="flex min-h-dvh items-center justify-center px-4">
+        <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
+          <p role="alert" className="text-sm text-[#2B2B2B]">
+            {launchRefused}
+          </p>
+          <a
+            href={`${FLASK_BASE}/entity`}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#3CBCC3] px-5 text-sm font-semibold text-white no-underline hover:bg-[#35B2B9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2FA4AB] active:bg-[#2FA4AB]"
+          >
+            Continue
+          </a>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>

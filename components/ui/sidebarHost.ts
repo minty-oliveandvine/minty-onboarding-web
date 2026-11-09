@@ -65,10 +65,12 @@ export function postNavigate(url: string): void {
 const companyId = () => (session?.finished ? session.entityId : "");
 const companyName = () => (session?.finished ? session.entityName : "");
 
-/** Into Minty for the company with the token the wizard holds; Flask's entity list without one. */
+/**
+ * Into Minty for the company, on the person's accounts-api session (gap 4: no token in the
+ * address); accounts-api's entity list before there is a company.
+ */
 const enter = (next?: string) =>
-  mintyEntryUrl({ mintyBase: FLASK_BASE, entityId: companyId(), token: session?.token, next }) ??
-  `${FLASK_BASE}/entity`;
+  mintyEntryUrl({ mintyBase: FLASK_BASE, entityId: companyId(), next }) ?? `${FLASK_BASE}/entity`;
 
 export const sidebarHost: SidebarHost = {
   app: "minty-onboarding-web",
