@@ -6,5 +6,5 @@
 // than a module-format problem.
 
 export const BASE_URL = process.env.E2E_BASE_URL || "http://localhost:3030";
-export const ACCOUNTS_API_URL = process.env.E2E_ACCOUNTS_API_URL || "http://localhost:8002";
+export const ACCOUNTS_API_URL = process.env.E2E_ACCOUNTS_API_URL || "http://localhost:8000";
 export const ONBOARDING_API_URL = process.env.E2E_ONBOARDING_API_URL || "http://localhost:8030";

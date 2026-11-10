@@ -11,7 +11,7 @@
 // `process.env.ACCOUNTS_API_URL` is inlined at build time: in a deployed environment it
 // MUST be set before building — an unset value silently falls back to localhost and
 // breaks the Xero and OTP request/verify calls. A trailing slash is stripped.
-export const FLASK_BASE = (process.env.ACCOUNTS_API_URL || "http://localhost:8002").replace(
+export const FLASK_BASE = (process.env.ACCOUNTS_API_URL || "http://localhost:8000").replace(
   /\/+$/,
   "",
 );

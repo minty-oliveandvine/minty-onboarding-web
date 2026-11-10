@@ -30,7 +30,7 @@ point the frontend at a different backend:
 
 | Variable             | Default                 | Purpose                                                                |
 | -------------------- | ----------------------- | ---------------------------------------------------------------------- |
-| `ACCOUNTS_API_URL`   | `http://localhost:8002` | The accounts service (minty-accounts-api), read by `lib/flaskBase.ts`. |
+| `ACCOUNTS_API_URL`   | `http://localhost:8000` | The accounts service (minty-accounts-api), read by `lib/flaskBase.ts`. |
 | `ONBOARDING_API_URL` | `http://localhost:8030` | minty-onboarding-api (Django). Routing lives in `lib/apiRoutes.ts`.    |
 
 `.env.example` ships with safe local defaults — a new dev just copies it.

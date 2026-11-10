@@ -186,13 +186,13 @@ describe("the properties the list alone does not show", () => {
     expect(ONBOARDING_API_BASE).toBe("http://localhost:8030");
   });
 
-  it("defaults the accounts base to localhost:8002 when unset", async () => {
+  it("defaults the accounts base to localhost:8000 when unset", async () => {
     vi.resetModules();
     vi.stubEnv("ACCOUNTS_API_URL", "");
     vi.stubEnv("ONBOARDING_API_URL", DJANGO);
     const { urlFor } = await import("../apiRoutes");
     // minty-accounts-api's local port.
-    expect(urlFor("/entity")).toBe("http://localhost:8002/entity");
+    expect(urlFor("/entity")).toBe("http://localhost:8000/entity");
   });
 
   it("inserts a slash for a path given without a leading one", async () => {

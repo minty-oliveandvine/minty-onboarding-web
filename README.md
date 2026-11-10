@@ -14,7 +14,7 @@ npm run dev                          # http://localhost:3030
 | Paths                                 | Service                                  | Base URL (default)                             |
 | ------------------------------------- | ---------------------------------------- | ---------------------------------------------- |
 | `/api/onboarding/*`                   | minty-onboarding-api (Django, port 8030) | `ONBOARDING_API_URL` (`http://localhost:8030`) |
-| `/xero_connect`, `/logout`, `/entity` | minty-accounts-api (Django, port 8002)   | `ACCOUNTS_API_URL` (`http://localhost:8002`)   |
+| `/xero_connect`, `/logout`, `/entity` | minty-accounts-api (Django, port 8000)   | `ACCOUNTS_API_URL` (`http://localhost:8000`)   |
 
 **Which service answers a path is decided in exactly one place — [`lib/apiRoutes.ts`](lib/apiRoutes.ts).**
 Nothing else reads a base URL. Moving an endpoint between the two is adding or deleting one line
