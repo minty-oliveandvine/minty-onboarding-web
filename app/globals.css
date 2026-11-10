@@ -4237,11 +4237,12 @@ textarea {
   max-width: none;
   margin-bottom: 18px;
 }
-.acs-kicker {
-  margin: 0 0 6px;
-  font-size: 12px;
+.acs-kicker,
+.page-head .acs-kicker {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
   font-weight: 600;
-  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--accent-ink);
 }
@@ -4332,6 +4333,337 @@ textarea {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 4px var(--bg);
   background: var(--accent);
+}
+/* 4.2 - business type (Figma 348:1135): a tinted picture card per type, "None of these" below */
+/* 4.1 and 4.2 are wider than the page's 664px column (720px and 904px in the design): they step
+   out of it, centred, the way the Modules step does, once the window has room. */
+.acs-mode,
+.acs-business {
+  width: var(--step-col, 100%);
+  max-width: none;
+  margin-left: calc((100% - var(--step-col, 100%)) / 2);
+  margin-right: 0;
+}
+@media (min-width: 840px) {
+  .acs-mode {
+    --step-col: 720px;
+  }
+}
+@media (min-width: 1024px) {
+  .acs-business {
+    --step-col: 904px;
+  }
+}
+.acs-biz-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px 24px;
+  padding-top: 8px;
+}
+.acs-biz {
+  --biz-bg: #ffffff;
+  --biz-line: #d5dada;
+  --biz-ink: #6b7373;
+  --biz-art: 178px;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+  min-height: 188px;
+  padding: 0 20px 0 0;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--biz-bg);
+  border: 1px solid var(--biz-line);
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.acs-biz.is-fnb {
+  --biz-bg: #fbf1e8;
+  --biz-line: #f1dfcf;
+  --biz-ink: #e8833a;
+}
+.acs-biz.is-retail {
+  --biz-bg: #e9f5f1;
+  --biz-line: #cfe7df;
+  --biz-ink: #14a08f;
+  --biz-art: 189px;
+}
+.acs-biz.is-service {
+  --biz-bg: #f0edf8;
+  --biz-line: #ddd7ef;
+  --biz-ink: #7b61c9;
+  --biz-art: 181px;
+}
+.acs-biz.is-general {
+  --biz-bg: #eaf1f8;
+  --biz-line: #d3e2f0;
+  --biz-ink: #3b7dd8;
+  --biz-art: 185px;
+}
+.acs-biz:hover {
+  border-color: var(--line-strong);
+}
+.acs-biz.is-on {
+  /* the design's 2.5px edge: the 1px border plus an inner ring, so nothing moves */
+  border-color: #14a08f;
+  box-shadow:
+    inset 0 0 0 1.5px #14a08f,
+    0 6px 18px rgba(0, 0, 0, 0.1);
+}
+.acs-biz:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 3px;
+}
+.acs-biz-art {
+  position: relative;
+  flex: 0 0 min(var(--biz-art), 36%);
+  align-self: stretch;
+}
+.acs-biz-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.acs-biz-text {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 22px 0 18px 12px;
+}
+.acs-biz-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.acs-biz-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: #ffffff;
+}
+.acs-biz-icon img {
+  display: block;
+  width: 25px;
+  height: 25px;
+}
+.acs-biz-title {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2424;
+  overflow-wrap: anywhere;
+}
+.acs-biz-body {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #4f5757;
+  overflow-wrap: anywhere;
+}
+.acs-biz-go {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-top: auto;
+  align-self: flex-end;
+  border-radius: 20px;
+  background: #ffffff;
+  color: var(--biz-ink);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.acs-biz.is-on .acs-biz-go {
+  background: #14a08f;
+  color: #ffffff;
+}
+.acs-biz.is-none {
+  align-items: center;
+  gap: 16px;
+  min-height: 0;
+  padding: 18px 20px 18px 22px;
+  border-style: dashed;
+  box-shadow: none;
+}
+.acs-biz.is-none .acs-biz-text {
+  gap: 4px;
+  padding: 0;
+}
+.acs-biz.is-none .acs-biz-title {
+  font-size: 16px;
+}
+.acs-biz.is-none .acs-biz-body {
+  line-height: normal;
+  color: #6b7373;
+}
+.acs-biz.is-none .acs-biz-go {
+  margin-top: 0;
+  align-self: center;
+  background: #f2f4f4;
+}
+.acs-biz.is-none.is-on .acs-biz-go {
+  background: #14a08f;
+}
+.acs-business .acs-note {
+  padding-top: 22px;
+  margin-top: 0;
+  font-size: 12px; /* the design's 11.5px is under the 12px floor */
+  line-height: 1.55;
+}
+@media (min-width: 1024px) {
+  .acs-biz-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .acs-biz.is-none {
+    grid-column: 1 / -1;
+  }
+}
+.field-error .acs-biz-grid {
+  outline: 1px solid var(--danger);
+  outline-offset: 4px;
+}
+
+/* 4.1 - how Minty works (Figma 348:1018): two picture cards, the design's radio at the foot */
+.acs-mode-head {
+  margin-bottom: 36px;
+}
+.acs-mode-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start; /* each card its own height, as drawn */
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 8px;
+}
+.acs-mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 28px;
+  text-align: center;
+  font: inherit;
+  color: inherit;
+  background: #ffffff;
+  border: 1px solid #e3e7e7;
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.acs-mode-card:hover {
+  border-color: var(--line-strong);
+}
+.acs-mode-card.is-on {
+  /* 2px without moving the content: one pixel of padding gives way */
+  padding: 27px;
+  border: 2px solid #3ebbb1;
+  box-shadow: 0 10px 28px rgba(15, 163, 145, 0.14);
+}
+.acs-mode-card:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 3px;
+}
+.acs-mode-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 290px;
+  height: 190px;
+}
+.acs-mode-crop {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 18px;
+}
+.acs-mode-crop img {
+  position: absolute;
+  max-width: none;
+}
+.acs-mode-crop.is-minty {
+  width: 186px;
+  height: 184px;
+}
+.acs-mode-crop.is-minty img {
+  width: 571.43%;
+  height: 416.67%;
+  left: -145.71%;
+  top: -150%;
+}
+.acs-mode-crop.is-xero {
+  width: 256px;
+  height: 146px;
+}
+.acs-mode-crop.is-xero img {
+  width: 454.55%;
+  height: 526.32%;
+  left: -247.73%;
+  top: -202.63%;
+}
+.acs-mode-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2424;
+  overflow-wrap: anywhere;
+}
+.acs-mode-body {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #6b7373;
+  overflow-wrap: anywhere;
+}
+.acs-mode-radio {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+.acs-mode-note {
+  margin: 0 auto;
+  max-width: 720px;
+  padding-top: 22px;
+  font-size: 12px; /* the design's 11.5px is under the 12px floor */
+  line-height: 1.55;
+}
+.acs-mode-grid ~ .step-nav {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 768px) {
+  .acs-mode-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+.field-error .acs-mode-grid {
+  outline: 1px solid var(--danger);
+  outline-offset: 4px;
 }
 .field-error .acs-choice-grid {
   outline: 1px solid var(--danger);

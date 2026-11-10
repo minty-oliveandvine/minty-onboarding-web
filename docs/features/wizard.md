@@ -90,8 +90,18 @@ so Save & Next only moves on; the kicker counts them (_Accounting setup · 3 of 
 
 - **4.1** _Use Minty independently_ or _Connect with Xero_ (`POST /accounting/mode`). Xero opens
   today's Connect to Xero screen (its Back returns to 4.1), and the wizard goes on as before. A
-  return from Xero (`?xero=…`) opens step 4 on Connect to Xero.
-- **4.2** the business type (Restaurant & Food, Retail, Service, General, or _None of these_) and
+  return from Xero (`?xero=…`) opens step 4 on Connect to Xero. Drawn as Figma 348:1018: two
+  picture cards (`.acs-mode-*`), each its own crop of `public/accounting/mode-art.jpg` (the
+  design's sheet, placed as the design places it), the design's radios (`radio-on/off.svg`) at the
+  foot; one column on phones, two from 768px; the footnote at 12px (the design's 11.5px is under
+  the floor) and the body in Inter (the design's Plus Jakarta Sans is the wordmark's only). Like
+  the Modules step it steps out of the page's 664px column, centred: 720px from an 840px window.
+- **4.2** is drawn as Figma 348:1135: a tinted picture card per business type (`.acs-biz.is-<type>`;
+  `public/accounting/business-<type>.png` and `glyph-<type>.svg` from the design, the project's
+  `Icon.Arrow` / `Icon.CheckSm` in each card's colour), "None of these" as the dashed full-width
+  card; one column up to 1024px (the picture narrows on phones), two 440px columns in a 904px
+  column from there. The cash question below it keeps its own cards (the frame does not draw it).
+  It asks the business type (Restaurant & Food, Retail, Service, General, or _None of these_) and
   the cash question, asked of every company (owner, 2026-11-10): _We pay expenses from sales
   cash_, _We bank all sales_, _Not sure_ (stored as with cash sales). Both required: a refused
   Save & Next names them, with the error summary for two.

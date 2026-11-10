@@ -49,7 +49,7 @@ type Props = Pick<
   | "releaseXeroConflict"
 >;
 
-const BUSINESSES: { value: BusinessType | "none"; title: string; body: string }[] = [
+const BUSINESSES: { value: BusinessType; title: string; body: string }[] = [
   {
     value: "fnb",
     title: "Restaurant & Food",
@@ -369,27 +369,31 @@ function ModeScreen({
   const [mode, setMode] = useState<"minty" | "xero" | null>(initial ?? (connected ? "xero" : null));
   const [refused, setRefused] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Each card's picture is its own crop of one artwork sheet, as the design places it (Figma
+  // 348:1018): a fixed box, the sheet sized and offset inside it.
   const choices = [
     {
       value: "minty" as const,
       title: "Use Minty independently",
       body: "Record and manage your books directly in Minty.",
+      art: "is-minty",
     },
     {
       value: "xero" as const,
       title: "Connect with Xero",
       body: "Automatically send your records to Xero and keep your books up to date there.",
+      art: "is-xero",
     },
   ];
   return (
-    <div className="acs">
-      <div className="page-head acs-head">
+    <div className="acs acs-mode">
+      <div className="page-head acs-head acs-mode-head">
         <p className="acs-kicker">{kicker}</p>
         <h2 id="acs-mode-title">How would you like Minty to work?</h2>
         <p>Choose how Minty keeps your books.</p>
       </div>
       <div
-        className="acs-choice-grid"
+        className="acs-mode-grid"
         role="radiogroup"
         aria-labelledby="acs-mode-title"
         aria-required
@@ -400,15 +404,29 @@ function ModeScreen({
             type="button"
             role="radio"
             aria-checked={mode === c.value}
-            className={"acs-choice" + (mode === c.value ? " is-on" : "")}
+            className={"acs-mode-card" + (mode === c.value ? " is-on" : "")}
             onClick={() => {
               setMode(c.value);
               setRefused(false);
             }}
           >
-            <span className="acs-choice-title">{c.title}</span>
-            <span className="acs-choice-body">{c.body}</span>
-            <span className="acs-radio" aria-hidden />
+            <span className="acs-mode-art" aria-hidden>
+              <span className={"acs-mode-crop " + c.art}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/accounting/mode-art.jpg" alt="" />
+              </span>
+            </span>
+            <span className="acs-mode-title">{c.title}</span>
+            <span className="acs-mode-body">{c.body}</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="acs-mode-radio"
+              src={mode === c.value ? "/accounting/radio-on.svg" : "/accounting/radio-off.svg"}
+              width={24}
+              height={24}
+              alt=""
+              aria-hidden
+            />
           </button>
         ))}
       </div>
@@ -417,8 +435,8 @@ function ModeScreen({
           Choose how Minty should work to continue.
         </p>
       )}
-      <p className="acs-note">
-        Not sure? Start with Minty only - you can connect Xero later in Settings.
+      <p className="acs-note acs-mode-note">
+        Not sure? Start with Minty only — you can connect Xero later in Settings.
       </p>
       {nav(async () => {
         if (!mode) {
@@ -487,63 +505,87 @@ function BusinessScreen({
   };
 
   return (
-    <div className="acs">
-      <div className="page-head acs-head">
+    <div className="acs acs-business">
+      <div className="page-head acs-head acs-mode-head">
         <p className="acs-kicker">{kicker}</p>
         <h2>What best describes your business?</h2>
         <p>
-          We&apos;ll suggest accounts that fit on the next two screens. Nothing is added until you
-          press Auto Fill there.
+          We&apos;ll suggest accounts that fit your industry on the next two screens. Nothing is
+          added until you press Auto Fill there.
         </p>
       </div>
       <ErrorSummary items={shown} attempt={attempt} />
 
+      {/* Figma 348:1135: a picture card per business type, the heading asks the question */}
       <fieldset className={"acs-fieldset" + (messageFor("acs-business") ? " field-error" : "")}>
-        <legend className="acs-legend">
-          Business type
-          <span className="req" aria-hidden>
-            *
-          </span>
-          <span className="sr-only"> (required)</span>
-        </legend>
+        <legend className="sr-only">Business type (required)</legend>
         <div
           id="acs-business"
           tabIndex={-1}
-          className="acs-choice-grid is-business"
+          className="acs-biz-grid"
           role="radiogroup"
           aria-label="Business type"
           aria-required
           aria-invalid={!!messageFor("acs-business")}
           aria-describedby={messageFor("acs-business") ? "acs-business-error" : undefined}
         >
-          {BUSINESSES.map((b) => (
-            <button
-              key={b.value}
-              type="button"
-              role="radio"
-              aria-checked={business === b.value}
-              className={"acs-choice" + (business === b.value ? " is-on" : "")}
-              onClick={() => setBusiness(b.value)}
-            >
-              <span className="acs-choice-title">{b.title}</span>
-              <span className="acs-choice-body">{b.body}</span>
-              <span className="acs-radio" aria-hidden />
-            </button>
-          ))}
+          {BUSINESSES.map((b) => {
+            const on = business === b.value;
+            return (
+              <button
+                key={b.value}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                className={`acs-biz is-${b.value}` + (on ? " is-on" : "")}
+                onClick={() => setBusiness(b.value)}
+              >
+                <span className="acs-biz-art" aria-hidden>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/accounting/business-${b.value}.png`} alt="" />
+                </span>
+                <span className="acs-biz-text">
+                  <span className="acs-biz-title-row">
+                    <span className="acs-biz-icon" aria-hidden>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/accounting/glyph-${b.value}.svg`} width={25} height={25} alt="" />
+                    </span>
+                    <span className="acs-biz-title">{b.title}</span>
+                  </span>
+                  <span className="acs-biz-body">{b.body}</span>
+                  <span className="acs-biz-go" aria-hidden>
+                    {on ? (
+                      <Icon.CheckSm width={18} height={18} />
+                    ) : (
+                      <Icon.Arrow width={18} height={18} />
+                    )}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
           <button
             type="button"
             role="radio"
             aria-checked={business === "none"}
-            className={"acs-choice is-wide is-dashed" + (business === "none" ? " is-on" : "")}
+            className={"acs-biz is-none" + (business === "none" ? " is-on" : "")}
             onClick={() => setBusiness("none")}
           >
-            <span className="acs-choice-title">
-              None of these - I&apos;ll set up my own accounts
+            <span className="acs-biz-text">
+              <span className="acs-biz-title">
+                None of these — I&apos;ll set up my own accounts
+              </span>
+              <span className="acs-biz-body">
+                No suggestions. The account lists on the next screens start empty.
+              </span>
             </span>
-            <span className="acs-choice-body">
-              No suggestions to start with. The account lists on the next screens start empty.
+            <span className="acs-biz-go" aria-hidden>
+              {business === "none" ? (
+                <Icon.CheckSm width={18} height={18} />
+              ) : (
+                <Icon.Arrow width={18} height={18} />
+              )}
             </span>
-            <span className="acs-radio" aria-hidden />
           </button>
         </div>
         {messageFor("acs-business") && (
