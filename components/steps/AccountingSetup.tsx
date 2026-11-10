@@ -1256,7 +1256,10 @@ function AccountsScreen({
                     </span>
                     <span className="acs-exp-name">{it.account?.name ?? it.suggestion!.name}</span>
                     {(it.account?.description || it.suggestion?.description) && (
-                      <span className="acs-exp-body">
+                      <span
+                        className="acs-exp-body"
+                        title={it.account?.description || it.suggestion?.description}
+                      >
                         {it.account?.description || it.suggestion?.description}
                       </span>
                     )}
