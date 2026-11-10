@@ -9,7 +9,6 @@ import { setSidebarSession } from "./ui/sidebarHost";
 import {
   StepCreateEntity,
   StepSelectModule,
-  StepConnectXero,
   StepSalesSetting,
   StepAccountCode,
   StepOthers,
@@ -20,6 +19,7 @@ import {
 import { toAmountString } from "@/lib/amount";
 import { fetchCurrencies } from "@/lib/refData";
 import { currencyDecimals } from "./steps/pettyCashFields";
+import { StepAccountingSetup } from "./steps/AccountingSetup";
 import { formatToday } from "@/lib/date";
 import { urlFor } from "../lib/apiRoutes";
 import { FLASK_BASE } from "../lib/flaskBase";
@@ -41,11 +41,13 @@ import {
 } from "../lib/wizardSession";
 import {
   STEPS,
+  accountingOf,
   deriveResumeStep,
   getActiveStepIds,
   getDisplaySteps,
   initialState,
   isStepComplete,
+  mintyOnItsOwn,
 } from "../lib/wizardSteps";
 import Stepper from "./Stepper";
 import { useToast } from "./Toast";
@@ -177,8 +179,15 @@ export default function OnboardingApp() {
    * authorised.
    */
 
-  const activeIds = useMemo(() => getActiveStepIds(state.modules), [state.modules]);
-  const displaySteps = useMemo(() => getDisplaySteps(state.modules), [state.modules]);
+  const setupMode = accountingOf(state).mode;
+  const activeIds = useMemo(
+    () => getActiveStepIds(state.modules, setupMode),
+    [state.modules, setupMode],
+  );
+  const displaySteps = useMemo(
+    () => getDisplaySteps(state.modules, setupMode),
+    [state.modules, setupMode],
+  );
 
   // Helper: find the next active step id after `c`, or stay if at end.
   const nextActiveId = (c: number) => {
@@ -367,6 +376,14 @@ export default function OnboardingApp() {
         xero: payload.xero?.connected
           ? { connected: true, org: payload.xero.org || prev.xero.org }
           : prev.xero,
+        // Step 4's answers (Accounting Setup); absent from an older API, which keeps the defaults.
+        accounting: payload.accounting
+          ? {
+              mode: payload.accounting.mode,
+              businessType: payload.accounting.business_type,
+              usesSalesCash: payload.accounting.uses_sales_cash,
+            }
+          : accountingOf(prev),
         // Converted: the API says first_name/last_name, the cards read first/last.
         // Written in raw, a resumed wizard showed every invitee with no name.
         invites: Array.isArray(payload.invites)
@@ -576,6 +593,9 @@ export default function OnboardingApp() {
             xero: { connected: true, org: xeroOrg, lastConnected: today },
           }));
         }
+        // Back from Xero: the person chose Xero on step 4.1, so step 4 opens on Connect to Xero
+        // even when the stashed session predates the choice (or there was none).
+        setState((prev) => ({ ...prev, accounting: { ...accountingOf(prev), mode: "xero" } }));
         setCurrent(4);
         setMaxReached((m) => Math.max(m, 4));
         return;
@@ -869,7 +889,8 @@ export default function OnboardingApp() {
       try {
         const connected = await verifyXeroConnection();
         if (cancelled) return;
-        if (current > 4) {
+        // A company keeping its books in Minty on its own has no Xero to lose.
+        if (current > 4 && !mintyOnItsOwn(stateRef.current)) {
           if (connected === "expired") {
             // Session lapsed under us — nudge the user to reconnect.
             setXeroPromptReason("expired");
@@ -1710,7 +1731,7 @@ export default function OnboardingApp() {
         {current === 1 && <StepCreateEntity {...stepProps} />}
         {current === 2 && <StepSelectModule {...stepProps} />}
         {current === 3 && <StepInvite {...stepProps} />}
-        {current === 4 && <StepConnectXero {...stepProps} />}
+        {current === 4 && <StepAccountingSetup {...stepProps} />}
         {current === 5 && <StepSalesSetting {...stepProps} />}
         {current === 6 && <StepAccountCode {...stepProps} />}
         {current === 7 && <StepOthers {...stepProps} />}

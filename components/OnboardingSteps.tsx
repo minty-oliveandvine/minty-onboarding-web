@@ -881,24 +881,6 @@ export function StepConnectXero({
             }}
           />
           Xero Integration
-          <span className="info-tip" tabIndex={0} aria-label="More info">
-            <Icon.Info />
-            <span className="info-tip-pop" role="tooltip">
-              <p>
-                Currently Minty can be used only by integrating to Xero. If you wish to be informed
-                about our feature update, please{" "}
-                <a
-                  href="https://www.xero.com/signup/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="pc-link"
-                >
-                  register here
-                </a>
-                .
-              </p>
-            </span>
-          </span>
         </h2>
       </div>
 

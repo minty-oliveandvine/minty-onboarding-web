@@ -1,4 +1,6 @@
-# Step 4 — Connect to Accounting System (Xero)
+# Step 4 — Connect to Xero
+
+Since 2026-11-10 this is the Xero path of step 4's Accounting Setup ([wizard.md](wizard.md#accounting-setup--step-4-xero-optional)): 4.1 _Connect with Xero_ opens it, and its Back returns to 4.1. A return from Xero opens it directly.
 
 The one step that leaves the wizard. `StepConnectXero` (`components/OnboardingSteps.tsx`)
 and the handlers in `components/OnboardingApp.tsx` (`connectXero`, `disconnectXero`, the

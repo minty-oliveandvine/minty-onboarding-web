@@ -41,6 +41,23 @@ export async function writeSavedStep(request: APIRequestContext, creds: Credenti
   return res.json();
 }
 
+/**
+ * Step 4.1's answer (Accounting Setup, Xero optional). The Xero specs need step 4 to open on
+ * Connect to Xero, so `land()` chooses Xero for any step from 4 on; accounting.spec.ts chooses
+ * Minty and puts Xero back.
+ */
+export async function chooseMode(
+  request: APIRequestContext,
+  creds: Credentials,
+  mode: "minty" | "xero",
+) {
+  const res = await request.post(`${ONBOARDING_API_URL}/api/onboarding/accounting/mode`, {
+    headers: auth(creds),
+    data: { entity_id: creds.entityId, mode },
+  });
+  expect(res.status(), `POST /accounting/mode ${mode}`).toBe(200);
+}
+
 /** A step the browser may safely be shown. Never 9 -- see the module header. */
 export const SAFE_STEP = 2;
 
@@ -58,6 +75,7 @@ export async function land(
   step: number = SAFE_STEP,
 ) {
   if (step === 9) throw new Error("refusing to land on step 9: arrival there finalizes the entity");
+  if (step >= 4) await chooseMode(request, creds, "xero");
   await writeSavedStep(request, creds, step);
   const code = await codeFor(page, creds.token);
   await page.goto(`/?${new URLSearchParams({ code, entity_id: creds.entityId })}`);

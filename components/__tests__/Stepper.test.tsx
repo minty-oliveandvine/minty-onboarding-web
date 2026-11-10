@@ -40,7 +40,7 @@ describe("rendering", () => {
   it("renders both the full and the tiny label for each tile", () => {
     // Which one shows is a CSS decision, so both are always in the DOM.
     setup();
-    expect(screen.getByText("Connect to Accounting System")).toBeInTheDocument();
+    expect(screen.getByText("Accounting Setup")).toBeInTheDocument();
     expect(screen.getByText("Accounting")).toBeInTheDocument();
   });
 

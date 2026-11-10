@@ -102,6 +102,13 @@ export type OnboardingState = {
   opening_balance: OpeningBalance | null;
   /** Empty when the caller may not list invites -- a permission gap must not fail resume. */
   invites: Invitation[];
+  /** Step 4's answers (Accounting Setup, Xero optional). Absent from an older API. */
+  accounting?: {
+    mode: "minty" | "xero" | null;
+    business_type: "fnb" | "retail" | "service" | "general" | null;
+    uses_sales_cash: boolean | null;
+    business_answered: boolean;
+  };
 };
 
 //  ── GET /plans ──────────────────────────────────────────────────────

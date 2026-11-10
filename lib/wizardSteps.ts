@@ -10,7 +10,7 @@
 // `max_reached` are used only to raise the ceiling on steps already unlocked.
 
 import type { ModuleId } from "./api";
-import type { DisplayStep, ResumeDecision, WizardState } from "./types";
+import type { AccountingForm, DisplayStep, ResumeDecision, SetupMode, WizardState } from "./types";
 import { isEmail, phoneOk } from "./validation";
 
 // Derive the frontend step id to land on from a backend /state payload. The
@@ -37,7 +37,8 @@ import { isEmail, phoneOk } from "./validation";
 //
 // Returns { step, needsXero }.
 export function deriveResumeStep(s: WizardState, savedStep: unknown): ResumeDecision {
-  const xeroConnected = !!(s.xero && s.xero.connected);
+  // A company keeping its books in Minty on its own needs no Xero past step 4.
+  const xeroConnected = !!(s.xero && s.xero.connected) || mintyOnItsOwn(s);
   const saved = Number(savedStep);
 
   // Honour the backend's recorded step when present and in range.
@@ -74,11 +75,22 @@ export function deriveResumeStep(s: WizardState, savedStep: unknown): ResumeDeci
   return { step: lastSaved, needsXero: false };
 }
 
+/** Step 4's answers, with an empty default for a session saved before they existed. */
+export function accountingOf(s: Pick<WizardState, "accounting">): AccountingForm {
+  return s.accounting || { mode: null, businessType: null, usesSalesCash: null };
+}
+
+/** The company keeps its books in Minty with no Xero (step 4.1, Xero optional): it skips the
+ * Xero-only steps (account codes, contacts) and needs no connection past step 4. */
+export function mintyOnItsOwn(s: Pick<WizardState, "accounting" | "xero">): boolean {
+  return accountingOf(s).mode === "minty" && !(s.xero && s.xero.connected);
+}
+
 export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
   { id: 1, label: "Basic Information" },
   { id: 2, label: "Select Module" },
   { id: 3, label: "User Invite" },
-  { id: 4, label: "Connect to Accounting System" },
+  { id: 4, label: "Accounting Setup" },
   { id: 5, label: "Sales Setting" },
   { id: 6, label: "Account Code Setting" },
   { id: 7, label: "Others" },
@@ -89,20 +101,25 @@ export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
 // Display-only structure: collapses Sales (5) + Account Code (6) + Others (7)
 // into a single "Petty Cash Settings" segment with sub-items. Petty Cash and
 // Bill segments only appear when their respective modules are selected on step 2.
-export function getDisplaySteps(modules: readonly ModuleId[]): DisplayStep[] {
+// A company keeping its books in Minty on its own chose its accounts in step 4, and has no Xero
+// contacts, so its Petty Cash Settings is step 5 alone.
+export function getDisplaySteps(
+  modules: readonly ModuleId[],
+  mode: SetupMode | null = null,
+): DisplayStep[] {
   const hasPetty = modules.includes("pettyCash");
   const hasBills = modules.includes("bills");
   const out: DisplayStep[] = [
     { label: "Basic Information", tiny: "Basic", ids: [1] },
     { label: "Select Module", tiny: "Module", ids: [2] },
     { label: "User Invite", tiny: "Invite", ids: [3] },
-    { label: "Connect to Accounting System", tiny: "Accounting", ids: [4] },
+    { label: "Accounting Setup", tiny: "Accounting", ids: [4] },
   ];
   if (hasPetty) {
     out.push({
       label: "Petty Cash Settings",
       tiny: "Petty Cash",
-      ids: [5, 6, 7],
+      ids: mode === "minty" ? [5] : [5, 6, 7],
     });
   }
   if (hasBills) {
@@ -113,11 +130,14 @@ export function getDisplaySteps(modules: readonly ModuleId[]): DisplayStep[] {
 }
 
 // Flat list of step ids that are part of the active flow given the selected modules.
-export function getActiveStepIds(modules: readonly ModuleId[]): number[] {
+export function getActiveStepIds(
+  modules: readonly ModuleId[],
+  mode: SetupMode | null = null,
+): number[] {
   const hasPetty = modules.includes("pettyCash");
   const hasBills = modules.includes("bills");
   const ids = [1, 2, 3, 4];
-  if (hasPetty) ids.push(5, 6, 7);
+  if (hasPetty) ids.push(...(mode === "minty" ? [5] : [5, 6, 7]));
   if (hasBills) ids.push(8);
   ids.push(9);
   return ids;
@@ -139,6 +159,7 @@ export const initialState = (): WizardState => ({
   },
   modules: [],
   xero: { connected: false, org: "" },
+  accounting: { mode: null, businessType: null, usesSalesCash: null },
   pettyCash: {
     float: 2000,
     claimLimit: 200,
@@ -190,7 +211,12 @@ export function isStepComplete(id: number, state: WizardState): boolean {
     case 3:
       return true; // Invite is optional
     case 4:
-      return !!(state.xero && state.xero.connected); // Accounting connection is required
+      // Xero connected, or (Xero optional) Minty on its own with the business questions answered;
+      // its accounts are chosen inside the step, and a missing one only warns.
+      return (
+        !!(state.xero && state.xero.connected) ||
+        (mintyOnItsOwn(state) && accountingOf(state).usesSalesCash !== null)
+      );
     case 5: {
       const b = state.pettyCash && state.pettyCash.openingBalance;
       return b !== undefined && b !== null && String(b).trim() !== "";

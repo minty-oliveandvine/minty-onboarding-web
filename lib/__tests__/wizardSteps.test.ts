@@ -437,3 +437,54 @@ describe("isStepComplete", () => {
     expect(isStepComplete(id, state())).toBe(false);
   });
 });
+
+// Accounting Setup (step 4, Xero optional, 2026-11-10): a company keeping its books in Minty on
+// its own chooses its accounts inside step 4 and has no Xero contacts, so it skips steps 6 and 7,
+// and it needs no Xero past step 4.
+describe("Minty on its own", () => {
+  const minty = { mode: "minty", businessType: "retail", usesSalesCash: true };
+
+  it("is past step 4 once it has answered the business questions, with no Xero", () => {
+    expect(isStepComplete(4, state({ accounting: { ...minty, usesSalesCash: null } }))).toBe(false);
+    expect(isStepComplete(4, state({ accounting: minty }))).toBe(true);
+    expect(isStepComplete(4, state({ accounting: { ...minty, mode: "xero" } }))).toBe(false);
+  });
+
+  it("'None of these' answers too: an empty business type with a cash answer", () => {
+    expect(
+      isStepComplete(
+        4,
+        state({ accounting: { mode: "minty", businessType: null, usesSalesCash: true } }),
+      ),
+    ).toBe(true);
+  });
+
+  it("skips the account-code and contacts steps", () => {
+    expect(getActiveStepIds(["pettyCash", "bills"], "minty")).toEqual([1, 2, 3, 4, 5, 8, 9]);
+    expect(getActiveStepIds(["pettyCash", "bills"], "xero")).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(getActiveStepIds(["pettyCash"])).toEqual([1, 2, 3, 4, 5, 6, 7, 9]);
+    const petty = getDisplaySteps(["pettyCash"], "minty").find(
+      (d) => d.label === "Petty Cash Settings",
+    );
+    expect(petty?.ids).toEqual([5]);
+    expect(getDisplaySteps([], null)[3].label).toBe("Accounting Setup");
+  });
+
+  it("resumes past step 4 without the needs-Xero prompt", () => {
+    expect(deriveResumeStep(payload({ accounting: minty }), 5)).toEqual({
+      step: 5,
+      needsXero: false,
+    });
+    expect(deriveResumeStep(payload({ accounting: { ...minty, mode: "xero" } }), 5)).toEqual({
+      step: 5,
+      needsXero: true,
+    });
+  });
+
+  it("a session saved before Accounting Setup existed reads as unanswered", () => {
+    const old = payload();
+    delete (old as Loose).accounting;
+    expect(isStepComplete(4, old)).toBe(false);
+    expect(deriveResumeStep(old, 5)).toEqual({ step: 5, needsXero: true });
+  });
+});

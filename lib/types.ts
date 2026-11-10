@@ -149,10 +149,23 @@ export type InviteRow = {
 };
 
 /** Everything the wizard remembers. `initialState()` in lib/wizardSteps builds it. */
+/** Step 4's answers (Accounting Setup, Xero optional): how Minty keeps the books, and the two
+ * business questions. `null` until answered. */
+export type SetupMode = "minty" | "xero";
+export type BusinessType = "fnb" | "retail" | "service" | "general";
+export type AccountingForm = {
+  mode: SetupMode | null;
+  /** `null` with `usesSalesCash` set is "None of these". */
+  businessType: BusinessType | null;
+  usesSalesCash: boolean | null;
+};
+
 export type WizardState = {
   entity: EntityForm;
   modules: ModuleId[];
   xero: XeroForm;
+  /** Absent in a session saved before Accounting Setup existed; read through `accountingOf`. */
+  accounting?: AccountingForm;
   pettyCash: PettyCashForm;
   bills: BillsForm;
   invites: InviteRow[];
