@@ -98,6 +98,15 @@ export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
   { id: 9, label: "All Set" },
 ];
 
+// Petty Cash Settings' steps by how Minty keeps the books. Both paths choose their accounts in step 4
+// (4.3-4.5, or Xero's X2-X4), so step 6 (account codes) is left only to a company that started
+// before step 4 asked; Minty on its own has no Xero contacts (7) either.
+function pettyIds(mode: SetupMode | null): number[] {
+  if (mode === "minty") return [5];
+  if (mode === "xero") return [5, 7];
+  return [5, 6, 7];
+}
+
 // Display-only structure: collapses Sales (5) + Account Code (6) + Others (7)
 // into a single "Petty Cash Settings" segment with sub-items. Petty Cash and
 // Bill segments only appear when their respective modules are selected on step 2.
@@ -119,7 +128,7 @@ export function getDisplaySteps(
     out.push({
       label: "Petty Cash Settings",
       tiny: "Petty Cash",
-      ids: mode === "minty" ? [5] : [5, 6, 7],
+      ids: pettyIds(mode),
     });
   }
   if (hasBills) {
@@ -137,7 +146,7 @@ export function getActiveStepIds(
   const hasPetty = modules.includes("pettyCash");
   const hasBills = modules.includes("bills");
   const ids = [1, 2, 3, 4];
-  if (hasPetty) ids.push(...(mode === "minty" ? [5] : [5, 6, 7]));
+  if (hasPetty) ids.push(...pettyIds(mode));
   if (hasBills) ids.push(8);
   ids.push(9);
   return ids;

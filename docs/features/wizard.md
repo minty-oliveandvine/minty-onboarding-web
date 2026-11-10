@@ -103,8 +103,18 @@ so Save & Next only moves on; the kicker counts them (_Accounting setup · 3 of 
   column from there. The cash question below it keeps its own cards (the frame does not draw it).
   It asks the business type (Restaurant & Food, Retail, Service, General, or _None of these_) and
   the cash question, asked of every company (owner, 2026-11-10): _We pay expenses from sales
-  cash_, _We bank all sales_, _Not sure_ (stored as with cash sales). Both required: a refused
+  cash_, _We bank all sales_, _Not sure_ (stored as with cash sales). "We bank all sales" turns the
+  company's Cash method off (onboarding-api), 4.5/X4 then ask for four accounts (no Cash sales:
+  the API sends no `cash_sale` slot), and step 7 (Contact Setup) asks for no Cash Sales contact.
+  The question's place (under the business type) and wording are the owner's choice (2026-11-10),
+  kept over the brief's "Do you pay expenses from the cash you take in from sales?" asked first. Both required: a refused
   Save & Next names them, with the error summary for two.
+- **4.3** is drawn as Figma 348:1209: a row card per sales account (`.acs-coa-row`) with its icon
+  (`public/accounting/glyph-{sales,delivery,other-income}.svg`, chosen by name/type: "deliver" the
+  scooter, other income the coins, the rest the bag), the code and description, a tick circle over
+  the real checkbox, and a menu (Edit, Remove = untick); the dashed "Add another sales category"
+  card; 904px wide from a 1024px window. 4.3 and 4.4 use Petty Cash Settings' `.autofill-btn` with
+  the design's logo (`public/accounting/autofill-logo.png`). 4.4 is not redrawn yet.
 - **4.3 / 4.4** the sales and expense accounts. _Auto Fill_ adds the template's ticked
   suggestions for the business (the General set for _None of these_) and then shows the rest
   unticked beside them; _Revert_ takes them out again (the ones already in use stay). A row's
@@ -119,8 +129,29 @@ so Save & Next only moves on; the kicker counts them (_Accounting setup · 3 of 
   (`isStepComplete`, `mintyOnItsOwn`), skips steps 6 and 7, and is never sent back to Xero by
   the needs-Xero prompt. The answers come back with `/state` (`accounting`).
 - **Not yet:** the template rows (the accounting team's 8 sheets), so Auto Fill says there are
-  no suggestions; Figma's X2–X4 (the Xero path's tick lists) are still step 6's account codes;
-  the Figma's illustrations (cats, the Xero art) are not drawn in this look.
+  no suggestions.
+- **4.4** is drawn as Figma 348:1267: a card per expense account in its group (`.acs-exp`; ticked =
+  teal edge and filled box, a suggestion grey), the icon chosen by name from the design's ten
+  (`public/accounting/exp-*.svg`; no match: cost of sales "products", else "other"), the menu
+  (Edit, Remove) in the card's corner - the frame draws none, but accounts must stay editable -
+  and the dashed "Add another category" card; two cards a row on phones, 214px cards from 768px.
+- **4.5 and X4** are drawn as Figma 348:1384 / 4.5a 348:1674 / 4.5b 348:1774: the readiness
+  banner (teal all ready, amber with "!" when one is missing), a card per role with its icon
+  (`public/accounting/slot-<role>.svg`), Ready / Not set up, and Change (a link) or Set up
+  (outlined); either opens the role's menu (`SlotMenu`: its accounts, then "+ Create a new
+  account", or on X4 "create it in Xero"). Save & Next with one missing asks first, in
+  minty-web's dialog: "Add it now" (opens that menu) or "Continue anyway". Ready/Change go under
+  the text below 600px.
+- **The Xero path (2026-11-10, Figma 348:1874 / 1949 / 2052):** 4.1 _Connect with Xero_ -> X1
+  (Connect to Xero) -> X2 the Xero sales accounts Minty uses -> X3 the expense ones -> X4 the five
+  daily-closing accounts (4.5's screen with Xero's accounts only, "Xero account: …", no create:
+  a missing one is made in Xero). X2/X3 (`XeroAccountsScreen`) are a searchable tick list of the
+  synced chart (`from_xero` rows; ticked = `used`), 10 rows then "Show more accounts", the
+  "Missing an account?" notice, and Refresh from Xero (`POST /accounting/xero-refresh`) on X2-X4;
+  Save & Next posts `/accounting/xero-accounts` (none ticked is refused with its sentence). X1's
+  Save & Next goes on to X2 once connected. Step 6 (Account Code Setting) is no longer in the
+  Xero path (`getActiveStepIds`: `[5, 7]`); it stays only for a company that started before step
+  4 asked how Minty works (no mode).
 
 ## Saving and resuming
 

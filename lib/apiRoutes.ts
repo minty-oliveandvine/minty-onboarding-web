@@ -76,6 +76,8 @@ const DJANGO_PATHS = [
   "/api/onboarding/accounting/accounts",
   "/api/onboarding/accounting/accounts/:accountId",
   "/api/onboarding/accounting/slots",
+  "/api/onboarding/accounting/xero-accounts",
+  "/api/onboarding/accounting/xero-refresh",
   "/api/onboarding/modules",
   "/api/onboarding/payment-method",
   "/api/onboarding/billing/payment-methods",

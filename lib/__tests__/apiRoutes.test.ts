@@ -71,6 +71,8 @@ const TO_DJANGO = [
   "/api/onboarding/accounting/accounts",
   "/api/onboarding/accounting/accounts/abc",
   "/api/onboarding/accounting/slots",
+  "/api/onboarding/accounting/xero-accounts",
+  "/api/onboarding/accounting/xero-refresh",
   "/api/onboarding/modules",
   "/api/onboarding/payment-method?entity_id=abc",
   "/api/onboarding/billing/payment-methods",

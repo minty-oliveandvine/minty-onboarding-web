@@ -20,6 +20,8 @@ export type Account = {
   /** 4.4's two headings, from the type: "cost_of_sales" or "running_costs". */
   group: "cost_of_sales" | "running_costs" | null;
   source: "template" | "user" | "xero";
+  /** In use: a row made in Minty always; a Xero row once ticked on X2/X3. */
+  used: boolean;
   is_system: boolean;
   from_xero: boolean;
 };
@@ -136,6 +138,16 @@ export const accountingApi = {
       "DELETE",
       `/accounts/${encodeURIComponent(accountId)}?${q(entityId)}`,
     ),
+  /** X2, X3: exactly these of the Xero chart's sales or expense accounts are Minty's. */
+  xeroTicks: (token: string, entityId: string, kind: AccountKind, accountIds: string[]) =>
+    call<AccountingSetup>(token, "POST", "/xero-accounts", {
+      entity_id: entityId,
+      kind,
+      account_ids: accountIds,
+    }),
+  /** Refresh from Xero: the chart synced now, then the whole step again. */
+  refreshXero: (token: string, entityId: string) =>
+    call<AccountingSetup>(token, "POST", "/xero-refresh", { entity_id: entityId }),
   setSlot: (token: string, entityId: string, role: SlotRole, accountId: string | null) =>
     call<{ account: Account | null }>(token, "POST", "/slots", {
       entity_id: entityId,

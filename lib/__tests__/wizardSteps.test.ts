@@ -461,7 +461,11 @@ describe("Minty on its own", () => {
 
   it("skips the account-code and contacts steps", () => {
     expect(getActiveStepIds(["pettyCash", "bills"], "minty")).toEqual([1, 2, 3, 4, 5, 8, 9]);
-    expect(getActiveStepIds(["pettyCash", "bills"], "xero")).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    // The Xero path chose its accounts in step 4 too (X2-X4, Figma 348:1874-2052): no step 6.
+    expect(getActiveStepIds(["pettyCash", "bills"], "xero")).toEqual([1, 2, 3, 4, 5, 7, 8, 9]);
+    expect(
+      getDisplaySteps(["pettyCash"], "xero").find((d) => d.label === "Petty Cash Settings")?.ids,
+    ).toEqual([5, 7]);
     expect(getActiveStepIds(["pettyCash"])).toEqual([1, 2, 3, 4, 5, 6, 7, 9]);
     const petty = getDisplaySteps(["pettyCash"], "minty").find(
       (d) => d.label === "Petty Cash Settings",

@@ -67,9 +67,9 @@ test("a phone walks Minty-on-its-own through 4.1, 4.2 and 4.3", async ({ page, r
   expect(await pageOverflow(page), "4.3 add form").toBeLessThanOrEqual(0);
   await page.getByLabel(/^Name/).fill(NAME);
   await page.getByRole("button", { name: "Add", exact: true }).click();
-  const row = page.locator(".acs-row", { hasText: NAME });
+  const row = page.locator(".acs-coa-row", { hasText: NAME });
   await expect(row).toBeVisible();
-  await row.getByRole("checkbox").click(); // the row goes once the server has taken it out
+  await row.locator(".acs-coa-check").click(); // the tick circle; the row goes once the server has taken it out
   await expect(row).toHaveCount(0);
 
   const state = await (

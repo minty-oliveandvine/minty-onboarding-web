@@ -3,6 +3,7 @@
 // Step content components. Each receives { state, set, next, back }.
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from "react";
 import { useAmountInput } from "@minty/shared/amountInput";
+import AutofillButton from "./AutofillButton";
 import Icon from "./Icon";
 import MintySelect from "./MintySelect";
 import PhoneField, { phoneFieldError } from "./PhoneField";
@@ -47,7 +48,7 @@ import type { BillsForm, EntityForm, PettyCashForm, StepProps } from "../lib/typ
 import type { CountryRow, CurrencyRow } from "../lib/refData";
 import type { PaymentMethod } from "../lib/billing";
 import type { ModuleId, Result, SetupGap } from "../lib/api";
-import { STEPS } from "../lib/wizardSteps";
+import { STEPS, accountingOf } from "../lib/wizardSteps";
 
 // entities.name's length, as the API's NAME_MAX (onboarding/api_entity.py).
 const NAME_MAX = 100;
@@ -1246,19 +1247,11 @@ export function StepSalesSetting({
   return (
     <>
       <div className="autofill-row">
-        <button
-          type="button"
-          className={"autofill-btn" + (isAutofilled ? " is-active" : "")}
+        <AutofillButton
+          active={isAutofilled}
           onClick={resetDefaults}
-          aria-pressed={isAutofilled}
-          aria-label={isAutofilled ? "Clear auto-filled methods" : "Auto fill default settings"}
-        >
-          <img src="/tab-logo-alt.png" alt="" className="autofill-logo" />
-          <span className="autofill-label">{isAutofilled ? "Revert" : "Auto Fill"}</span>
-          <span className="autofill-spark" aria-hidden>
-            <Icon.Sparkle />
-          </span>
-        </button>
+          label={isAutofilled ? "Clear auto-filled methods" : "Auto fill default settings"}
+        />
         <span className="autofill-hint">
           Not sure what to choose? I&apos;ll set some sensible defaults for you.
         </span>
@@ -1620,10 +1613,14 @@ export function StepOthers({
   const discrepancyContactRef = useRef<HTMLDivElement>(null);
 
   const contactLabels = ((accountOptions || {}).contacts || []).map((c) => c.label);
+  // A company that banks all its sales (4.2) records no cash sales: no cash-sale contact.
+  const cashSales = accountingOf(state).usesSalesCash !== false;
 
   const missingFields = [
     { key: "directorContact", empty: !p.directorContact, ref: directorContactRef },
-    { key: "cashSaleContact", empty: !p.cashSaleContact, ref: cashSaleContactRef },
+    ...(cashSales
+      ? [{ key: "cashSaleContact", empty: !p.cashSaleContact, ref: cashSaleContactRef }]
+      : []),
     { key: "discrepancyContact", empty: !p.discrepancyContact, ref: discrepancyContactRef },
   ];
 
@@ -1656,8 +1653,9 @@ export function StepOthers({
       <div className="page-head" style={{ textAlign: "left", marginBottom: 22 }}>
         <h2 style={{ fontSize: 30 }}>Contact Setup</h2>
         <p style={{ marginTop: 6 }}>
-          Choose the Xero contacts used for the director&apos;s account, cash sales, and cash
-          discrepancy.
+          {cashSales
+            ? "Choose the Xero contacts used for the director's account, cash sales, and cash discrepancy."
+            : "Choose the Xero contacts used for the director's account and cash discrepancy."}
         </p>
       </div>
 
@@ -1677,20 +1675,22 @@ export function StepOthers({
           ]}
         />
 
-        <PCSection
-          title="Cash Sales Contact"
-          cardRef={cashSaleContactRef}
-          fields={[
-            {
-              label: "Select the Customer contact for cash sales",
-              value: p.cashSaleContact || "",
-              onChange: (v) => upd("cashSaleContact", v),
-              options: contactLabels,
-              error: showErrors && !p.cashSaleContact,
-              onAddNew: createContact,
-            },
-          ]}
-        />
+        {cashSales && (
+          <PCSection
+            title="Cash Sales Contact"
+            cardRef={cashSaleContactRef}
+            fields={[
+              {
+                label: "Select the Customer contact for cash sales",
+                value: p.cashSaleContact || "",
+                onChange: (v) => upd("cashSaleContact", v),
+                options: contactLabels,
+                error: showErrors && !p.cashSaleContact,
+                onAddNew: createContact,
+              },
+            ]}
+          />
+        )}
 
         <PCSection
           title="Discrepancy Contact"
