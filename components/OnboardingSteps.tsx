@@ -1525,7 +1525,7 @@ export function StepAccountCode({
             </span>
           </div>
           <div className="pc-section-sub">
-            Only selected account code will appear when adding an expense in Petty Cash.
+            Only the ticked account codes appear when you add an expense in Petty Cash.
           </div>
         </div>
         <div ref={expenseCodesRef}>
@@ -1898,7 +1898,7 @@ export function StepBills({
                 </span>
               </div>
               <div className="acc-sub">
-                Only selected account code will appear when adding a payment in Payment.
+                Only the ticked account codes appear when you add a payment request.
               </div>
             </div>
           }
