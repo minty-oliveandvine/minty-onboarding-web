@@ -48,6 +48,7 @@ import {
   initialState,
   isStepComplete,
   mintyOnItsOwn,
+  pettyIds,
 } from "../lib/wizardSteps";
 import Stepper from "./Stepper";
 import { useToast } from "./Toast";
@@ -69,6 +70,7 @@ import type {
   OnboardingState,
   PlanCatalog,
   Result,
+  SalesCategory,
   SalesMethods,
 } from "../lib/api";
 import type {
@@ -88,6 +90,13 @@ const ACCENT_DEFAULTS = {
   accent: "#36c3b4",
   accentInk: "#0f7a6e",
   accentSoft: "#e6f7f4",
+};
+
+/** Petty Cash Settings' side menu: each sub-step's name. */
+const PETTY_SUB_LABEL: Record<number, string> = {
+  5: "Sales",
+  6: "Account Code",
+  7: "Contact Setup",
 };
 
 export default function OnboardingApp() {
@@ -188,6 +197,8 @@ export default function OnboardingApp() {
     () => getDisplaySteps(state.modules, setupMode),
     [state.modules, setupMode],
   );
+  // Petty Cash Settings' sub-steps by how Minty keeps the books (Minty's own: step 5 alone).
+  const pettySteps = pettyIds(setupMode);
 
   // Helper: find the next active step id after `c`, or stay if at end.
   const nextActiveId = (c: number) => {
@@ -1048,6 +1059,8 @@ export default function OnboardingApp() {
 
   const submitSalesMethods = async (): Promise<Result> => {
     if (!token || !state.entity.id) return { ok: true };
+    // With a mode, step 5's methods are step 4's sales categories (2026-11-11): nothing to save.
+    if (setupMode) return { ok: true };
     try {
       const res = await fetch(urlFor(`/api/onboarding/sales-methods`), {
         method: "POST",
@@ -1110,6 +1123,9 @@ export default function OnboardingApp() {
   useEffect(() => {
     if ((current !== 5 && current !== 6 && current !== 7) || accountLoadedRef.current) return;
     if (!token || !state.entity.id) return;
+    // Minty on its own chose its accounts in step 4 and has no Xero contacts: nothing to load (the
+    // read is Xero's, and would answer 409).
+    if (setupMode === "minty") return;
     accountLoadedRef.current = true;
     fetch(
       urlFor(`/api/onboarding/account-codes?entity_id=${encodeURIComponent(state.entity.id)}`),
@@ -1182,8 +1198,8 @@ export default function OnboardingApp() {
         accountLoadedRef.current = false;
         toast.error("I couldn't load your account codes. Mind refreshing the page?");
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; reload on step/entity only
-  }, [current, token, state.entity.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; reload on step/entity/mode only
+  }, [current, token, state.entity.id, setupMode]);
 
   const submitAccountCodes = async (): Promise<Result> => {
     if (!token || !state.entity.id) return { ok: true };
@@ -1229,9 +1245,12 @@ export default function OnboardingApp() {
       const found = label ? (accountOptions.contacts || []).find((o) => o.label === label) : null;
       return found ? found.id : "";
     };
+    // A company banking all its sales (step 4) has no cash-sale contact: none is sent.
     const contacts = {
       director: idFor(p.directorContact),
-      cash_sale: idFor(p.cashSaleContact),
+      ...(accountingOf(state).usesSalesCash === false
+        ? {}
+        : { cash_sale: idFor(p.cashSaleContact) }),
       discrepancy: idFor(p.discrepancyContact),
     };
     try {
@@ -1289,6 +1308,35 @@ export default function OnboardingApp() {
     }
   };
 
+  // Step 5's list for a company with a mode: step 4's sales categories, read fresh on every visit
+  // (step 4 may have changed them since).
+  const [salesCategories, setSalesCategories] = useState<SalesCategory[] | null>(null);
+  useEffect(() => {
+    if (current !== 5 || !setupMode || !token || !state.entity.id) return;
+    let live = true;
+    fetch(
+      urlFor(`/api/onboarding/sales-methods?entity_id=${encodeURIComponent(state.entity.id)}`),
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error(`sales methods answered ${res.status}`);
+        return res.json() as Promise<SalesMethods>;
+      })
+      .then((data) => {
+        if (live) setSalesCategories(data.categories || []);
+      })
+      .catch((err) => {
+        console.error("[onboarding] the sales categories did not load", err);
+        if (live) toast.error("I couldn't load your sales categories. Mind refreshing the page?");
+      });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; reload on step/entity/mode only
+  }, [current, token, state.entity.id, setupMode]);
+
   const billLoadedRef = useRef(false);
   useEffect(() => {
     if (current !== 8 || billLoadedRef.current) return;
@@ -1302,7 +1350,9 @@ export default function OnboardingApp() {
         return res.json() as Promise<BillCodesResponse>;
       })
       .then((data) => {
-        if (!data || !data.connected) return;
+        // Step 4's expense accounts (2026-11-11): Minty's own answer is "not connected" and is
+        // still the list.
+        if (!data) return;
         const bill = data.bill_codes || [];
         setAccountOptions((prev) => ({ ...prev, bill }));
         let billCodesVal;
@@ -1636,6 +1686,7 @@ export default function OnboardingApp() {
     submitSalesMethods,
     submitOpeningBalance,
     accountOptions,
+    salesCategories,
     submitAccountCodes,
     submitContacts,
     createContact,
@@ -1695,14 +1746,12 @@ export default function OnboardingApp() {
       />
 
       <main className="page" data-screen-label={`0${current} ${STEPS[current - 1].label}`}>
-        {(current === 5 || current === 6 || current === 7) && (
+        {pettySteps.length > 1 && pettySteps.includes(current) && (
           <aside className="pc-side-menu" aria-label="Petty Cash sub-steps">
             <div className="pc-side-title">Petty Cash Settings</div>
-            {[
-              { id: 5, num: "1", label: "Sales" },
-              { id: 6, num: "2", label: "Account Code" },
-              { id: 7, num: "3", label: "Others" },
-            ].map(({ id, num, label }) => {
+            {pettySteps.map((id, index) => {
+              const num = String(index + 1);
+              const label = PETTY_SUB_LABEL[id];
               // A sub-step is reachable once the user has been there. Forward
               // jumps to an incomplete step are still blocked inside goto(), so
               // clicking a not-yet-eligible item is a safe no-op; we disable it

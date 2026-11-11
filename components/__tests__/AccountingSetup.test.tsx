@@ -156,6 +156,13 @@ describe("4.1 How would you like Minty to work?", () => {
     expect(getState().accounting?.mode).toBe("xero");
   });
 
+  it("counts Connect to Xero as one of step 4's screens", async () => {
+    // Mode, X1 (Connect), X2, X3 and daily closing: X1 is 2 of 5, like the screens around it.
+    renderStep({ mode: "xero", businessType: null, usesSalesCash: null });
+    expect(await screen.findByText("Xero Integration")).toBeInTheDocument();
+    expect(screen.getByText(/Accounting setup · 2 of 5/i)).toBeInTheDocument();
+  });
+
   it("Use Minty independently goes on to the business questions", async () => {
     renderStep({ mode: null, businessType: null, usesSalesCash: null });
     fireEvent.click(screen.getByRole("radio", { name: /Use Minty independently/ }));

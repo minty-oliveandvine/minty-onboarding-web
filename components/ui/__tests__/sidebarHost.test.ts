@@ -69,7 +69,7 @@ describe("the menu's links", () => {
     const settings = new URL(sidebarHost.links.settings());
     expect(settings.origin + settings.pathname).toBe(HANDOFF);
     expect(settings.searchParams.get("next")).toBe(
-      "/entity/360812e1/olive-and-vine/settings/modules",
+      "/entity/360812e1/olive-and-vine/settings/general",
     );
     expect(settings.searchParams.get("entity_id")).toBe(ENTITY);
   });

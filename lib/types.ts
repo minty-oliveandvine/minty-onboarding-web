@@ -27,6 +27,7 @@ import type {
   ModuleId,
   PlanCatalog,
   Result,
+  SalesCategory,
 } from "./api";
 
 //  ── Wizard state ────────────────────────────────────────────────────
@@ -235,6 +236,8 @@ export type StepProps = {
   isLastContentStep: boolean;
   modulePlans: PlanCatalog | null;
   accountOptions: AccountOptions;
+  /** Step 5's list for a company with a mode: step 4's sales categories (null while loading). */
+  salesCategories: SalesCategory[] | null;
 
   submitEntity: () => Promise<EntityResult>;
   submitModule: () => Promise<Result>;

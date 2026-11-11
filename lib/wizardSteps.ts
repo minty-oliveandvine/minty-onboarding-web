@@ -93,7 +93,7 @@ export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
   { id: 4, label: "Accounting Setup" },
   { id: 5, label: "Sales Setting" },
   { id: 6, label: "Account Code Setting" },
-  { id: 7, label: "Others" },
+  { id: 7, label: "Contact Setup" },
   { id: 8, label: "Payment Request Settings" },
   { id: 9, label: "All Set" },
 ];
@@ -101,7 +101,7 @@ export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
 // Petty Cash Settings' steps by how Minty keeps the books. Both paths choose their accounts in step 4
 // (4.3-4.5, or Xero's X2-X4), so step 6 (account codes) is left only to a company that started
 // before step 4 asked; Minty on its own has no Xero contacts (7) either.
-function pettyIds(mode: SetupMode | null): number[] {
+export function pettyIds(mode: SetupMode | null): number[] {
   if (mode === "minty") return [5];
   if (mode === "xero") return [5, 7];
   return [5, 6, 7];

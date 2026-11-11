@@ -1707,6 +1707,35 @@ textarea {
   color: var(--muted);
   font-size: 13.5px;
 }
+/* Step 5's sales categories (2026-11-11): 4.3's rows, read-only, and the way back to step 4. */
+.pc-categories .acs-coa-row {
+  cursor: default;
+}
+.pc-categories-edit {
+  margin-top: 8px;
+}
+
+/* Payment Settings' empty list: the way back to Accounting Setup (2026-11-11). */
+.acc-empty-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 12px;
+}
+.acc-empty-link:hover {
+  text-decoration: underline;
+}
+.acc-empty-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
 
 .mint-check {
   width: 22px;

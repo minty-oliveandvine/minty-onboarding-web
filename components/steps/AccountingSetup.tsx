@@ -18,6 +18,7 @@ import { ErrorSummary, type SummaryItem } from "./ErrorSummary";
 import { SaveExitLink } from "./StepChrome";
 import {
   accountingApi,
+  salesGlyph,
   type Account,
   type AccountInput,
   type AccountingSetup as Setup,
@@ -236,9 +237,13 @@ export function StepAccountingSetup(props: Props) {
     go(i > 0 ? subs[i - 1] : "mode");
   };
 
+  const position = subs.indexOf(sub) + 1;
+  const kicker = `Accounting setup · ${position} of ${subs.length}`;
+
   if (sub === "xero") {
     return (
       <StepConnectXero
+        kicker={kicker}
         state={state}
         // Connected: on to X2, the Xero accounts Minty uses; not yet: the wizard goes on, as before.
         next={() => (state.xero.connected ? go("xsales") : next())}
@@ -257,8 +262,6 @@ export function StepAccountingSetup(props: Props) {
     );
   }
 
-  const position = subs.indexOf(sub) + 1;
-  const kicker = `Accounting setup · ${position} of ${subs.length}`;
   const nav = (onNext: () => void, busy = false) => (
     <div className="step-nav">
       <button className="btn btn-ghost" onClick={backward}>
@@ -873,15 +876,6 @@ function AccountForm({
 }
 
 // ---- 4.3 and 4.4 ------------------------------------------------------------------------------------
-
-// 4.3's row icon (Figma 348:1209 draws three): delivery by name, other income by type or name,
-// every other sales account the shop bag.
-const salesGlyph = (name: string, type: string) =>
-  /deliver/i.test(name)
-    ? "delivery"
-    : type === "other_income" || /\bother\b/i.test(name)
-      ? "other-income"
-      : "sales";
 
 // 4.4's card icon (Figma 348:1267 draws ten), by the account's name; a cost-of-sales account that
 // matches none is "products", anything else "other".

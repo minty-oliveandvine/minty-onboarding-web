@@ -20,7 +20,7 @@
 import { usePathname } from "next/navigation";
 
 import { moduleClaims } from "@minty/shared/auth";
-import { settingsSectionUrl, billsUrl } from "@minty/shared/companyRef";
+import { billsUrl, companyPath } from "@minty/shared/companyRef";
 import { hubHandoffUrl, logoutUrl, mintyEntryUrl } from "@minty/shared/handoff";
 import { setSidebarHost, type SidebarHost, type Viewer } from "@minty/shared/sidebar";
 
@@ -84,10 +84,16 @@ export const sidebarHost: SidebarHost = {
     pettyCashDashboard: () => enter(),
     pettyCashReports: (id) => enter(`/entity/${id}/petty-cash/reports`),
     bills: () => (companyId() ? billsUrl(FLASK_BASE, companyId()) : `${FLASK_BASE}/entity`),
-    /** This app has no settings page: minty-web's module settings for the new company. */
+    /** This app has no settings page: the hub's General tab for the new company (every company
+     * setting is minty-web's since 2026-11-10; General is its first tab). `@minty/shared` v0.15's
+     * `settingsSectionUrl` doesn't list "general" yet, so the same address is built here. */
     settings: () =>
       companyId()
-        ? settingsSectionUrl(FLASK_BASE, companyId(), companyName(), "modules")
+        ? hubHandoffUrl(
+            FLASK_BASE,
+            companyPath(companyId(), companyName(), "settings", "general"),
+            companyId(),
+          )
         : `${FLASK_BASE}/entity`,
   },
   usePathname: () => usePathname() ?? "",

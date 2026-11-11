@@ -49,6 +49,7 @@ import type { CountryRow, CurrencyRow } from "../lib/refData";
 import type { PaymentMethod } from "../lib/billing";
 import type { ModuleId, Result, SetupGap } from "../lib/api";
 import { STEPS, accountingOf } from "../lib/wizardSteps";
+import { salesGlyph } from "../lib/accountingApi";
 
 // entities.name's length, as the API's NAME_MAX (onboarding/api_entity.py).
 const NAME_MAX = 100;
@@ -767,7 +768,11 @@ export function StepConnectXero({
   clearXeroConflict,
   releaseXeroConflict,
   saveAndExit,
-}: Pick<
+  kicker,
+}: {
+  /** Accounting Setup's "Accounting setup · N of M" line: X1 is one of step 4's screens. */
+  kicker?: string;
+} & Pick<
   StepProps,
   | "state"
   | "next"
@@ -861,6 +866,7 @@ export function StepConnectXero({
         className="page-head"
         style={{ textAlign: "center", maxWidth: "none", marginBottom: 18 }}
       >
+        {kicker && <p className="acs-kicker">{kicker}</p>}
         <h2
           style={{
             fontSize: 30,
@@ -1053,10 +1059,16 @@ export function StepSalesSetting({
   submitSalesMethods,
   submitOpeningBalance,
   saveAndExit,
+  salesCategories = null,
+  returnToStep,
 }: Pick<
   StepProps,
   "state" | "set" | "next" | "back" | "submitSalesMethods" | "submitOpeningBalance" | "saveAndExit"
->) {
+> &
+  Partial<Pick<StepProps, "salesCategories" | "returnToStep">>) {
+  // With a mode (step 4 asked how Minty works), the methods are step 4's sales categories, shown
+  // read-only here (owner, 2026-11-11); a company that started before step 4 asked keeps its lists.
+  const fromStep4 = !!accountingOf(state).mode;
   // Save everything on this step: sales methods AND the opening balance/date.
   // submitOpeningBalance no-ops when the balance is empty, so a blank balance
   // never blocks Save & Next / Save & Exit — we persist whatever's filled in.
@@ -1239,51 +1251,107 @@ export function StepSalesSetting({
         ...p,
         electronicMethods: [...DEFAULT_ELECTRONIC],
         deliveryMethods: [...DEFAULT_DELIVERY],
-        expenseCodes: { all: true, selected: {} },
         openingDate: openingMaxDate || todayIso,
       },
     });
   };
+  const toStep4 = (
+    <button type="button" className="acc-empty-link" onClick={() => returnToStep?.(4)}>
+      Change them in Accounting Setup
+    </button>
+  );
   return (
     <>
-      <div className="autofill-row">
-        <AutofillButton
-          active={isAutofilled}
-          onClick={resetDefaults}
-          label={isAutofilled ? "Clear auto-filled methods" : "Auto fill default settings"}
-        />
-        <span className="autofill-hint">
-          Not sure what to choose? I&apos;ll set some sensible defaults for you.
-        </span>
-      </div>
-      <div className="page-head pc-page-head" style={{ textAlign: "left", marginBottom: 18 }}>
-        <div className="pc-head-row">
-          <h2 style={{ fontSize: 30 }}>Type of sales method of your company</h2>
+      {fromStep4 ? (
+        <div className="page-head pc-page-head" style={{ textAlign: "left", marginBottom: 18 }}>
+          <div className="pc-head-row">
+            <h2 style={{ fontSize: 30 }}>Your sales categories</h2>
+          </div>
+          <p style={{ marginTop: 6 }}>
+            From Accounting Setup - the sales you record at daily closing.
+          </p>
         </div>
-        <p style={{ marginTop: 6 }}>
-          Add the payment and delivery channels you accept. You can always go back to settings to
-          edit options
-        </p>
-      </div>
+      ) : (
+        <>
+          <div className="autofill-row">
+            <AutofillButton
+              active={isAutofilled}
+              onClick={resetDefaults}
+              label={isAutofilled ? "Clear auto-filled methods" : "Auto fill default settings"}
+            />
+            <span className="autofill-hint">
+              Not sure what to choose? I&apos;ll set some sensible defaults for you.
+            </span>
+          </div>
+          <div className="page-head pc-page-head" style={{ textAlign: "left", marginBottom: 18 }}>
+            <div className="pc-head-row">
+              <h2 style={{ fontSize: 30 }}>Type of sales method of your company</h2>
+            </div>
+            <p style={{ marginTop: 6 }}>
+              Add the payment and delivery channels you accept. You can always go back to settings
+              to edit options
+            </p>
+          </div>
+        </>
+      )}
 
       <div className="pc-stack">
-        <MethodList
-          title="Electronic"
-          placeholder="Enter payment method name"
-          methods={p.electronicMethods || []}
-          autoFilled={isAutofilled}
-          onAdd={(name) => upd("electronicMethods", [...(p.electronicMethods || []), name])}
-          onChange={(list) => upd("electronicMethods", list)}
-        />
+        {fromStep4 && (
+          <div className="pc-categories">
+            {salesCategories === null ? (
+              <p className="acc-empty">Loading your sales categories...</p>
+            ) : salesCategories.length === 0 ? (
+              <p className="acc-empty">Add a sales category in Accounting Setup first. {toStep4}</p>
+            ) : (
+              <>
+                <ul className="acs-coa" aria-label="Your sales categories">
+                  {salesCategories.map((c) => (
+                    <li key={c.account_id} className="acs-coa-row">
+                      <span
+                        className={"acs-coa-icon is-" + salesGlyph(c.name, "sales")}
+                        aria-hidden
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`/accounting/glyph-${salesGlyph(c.name, "sales")}.svg`}
+                          width={34}
+                          height={34}
+                          alt=""
+                        />
+                      </span>
+                      <span className="acs-coa-text">
+                        <span className="acs-coa-name">{c.name}</span>
+                        {c.code && <span className="acs-coa-meta">{c.code}</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="pc-categories-edit">{toStep4}</div>
+              </>
+            )}
+          </div>
+        )}
+        {!fromStep4 && (
+          <MethodList
+            title="Electronic"
+            placeholder="Enter payment method name"
+            methods={p.electronicMethods || []}
+            autoFilled={isAutofilled}
+            onAdd={(name) => upd("electronicMethods", [...(p.electronicMethods || []), name])}
+            onChange={(list) => upd("electronicMethods", list)}
+          />
+        )}
 
-        <MethodList
-          title="Delivery"
-          placeholder="Enter delivery method name"
-          methods={p.deliveryMethods || []}
-          autoFilled={isAutofilled}
-          onAdd={(name) => upd("deliveryMethods", [...(p.deliveryMethods || []), name])}
-          onChange={(list) => upd("deliveryMethods", list)}
-        />
+        {!fromStep4 && (
+          <MethodList
+            title="Delivery"
+            placeholder="Enter delivery method name"
+            methods={p.deliveryMethods || []}
+            autoFilled={isAutofilled}
+            onAdd={(name) => upd("deliveryMethods", [...(p.deliveryMethods || []), name])}
+            onChange={(list) => upd("deliveryMethods", list)}
+          />
+        )}
 
         <div className="pc-section-head">
           <div className="pc-section-title">Petty Cash Opening Balance</div>
@@ -1731,6 +1799,7 @@ export function StepBills({
   submitBills,
   saveAndExit,
   isLastContentStep,
+  returnToStep,
 }: Pick<
   StepProps,
   | "state"
@@ -1741,6 +1810,7 @@ export function StepBills({
   | "submitBills"
   | "saveAndExit"
   | "isLastContentStep"
+  | "returnToStep"
 >) {
   const stepSubmit = submitBills;
   const b = state.bills;
@@ -1793,7 +1863,7 @@ export function StepBills({
       <div className="page-head" style={{ textAlign: "left", marginBottom: 18 }}>
         <h2 style={{ fontSize: 30 }}>Payment Request Settings</h2>
         <p style={{ marginTop: 6 }}>
-          Choose account code for expenses that will incur with supporting documents.
+          Choose which of your expense accounts appear in Payment Request.
         </p>
       </div>
 
@@ -1808,6 +1878,14 @@ export function StepBills({
           searchLabels={false}
           labelAria={false}
           bodyStyle={{ display: "block" }}
+          empty={
+            <>
+              Add an expense account in Accounting Setup first.{" "}
+              <button type="button" className="acc-empty-link" onClick={() => returnToStep(4)}>
+                Go to Accounting Setup
+              </button>
+            </>
+          }
           header={
             <div
               className="method-head method-head-static"

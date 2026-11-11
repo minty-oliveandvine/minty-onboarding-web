@@ -271,6 +271,8 @@ type AccountCodesCardProps = {
   /** Account step labels the checkbox with the full label; Bill step with the bare code. */
   labelAria?: boolean;
   bodyStyle?: React.CSSProperties;
+  /** What an empty list says (Payment Settings: "Add an expense account in Accounting Setup first."). */
+  empty?: ReactNode;
 };
 
 export function AccountCodesCard({
@@ -282,6 +284,7 @@ export function AccountCodesCard({
   searchLabels = true,
   labelAria = true,
   bodyStyle = { padding: 20 },
+  empty,
 }: AccountCodesCardProps) {
   const [q, setQ] = useState("");
   const sel: Record<string, boolean> = value.selected || {};
@@ -360,7 +363,7 @@ export function AccountCodesCard({
             </li>
           ))}
           {codes.length === 0 && (
-            <li className="acc-empty">Connect to Xero to load account codes</li>
+            <li className="acc-empty">{empty ?? "Connect to Xero to load account codes"}</li>
           )}
           {codes.length > 0 && filtered.length === 0 && (
             <li className="acc-empty">No matching account code</li>

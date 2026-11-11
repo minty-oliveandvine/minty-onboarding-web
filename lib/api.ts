@@ -48,6 +48,16 @@ export type XeroState = {
 export type SalesMethods = {
   electronic: string[];
   delivery: string[];
+  /** Step 4's sales categories, each the sales method it is (2026-11-11; empty with no mode). */
+  categories?: SalesCategory[];
+};
+
+/** A sales category from Accounting Setup and the Petty Cash sales method it is. */
+export type SalesCategory = {
+  account_id: string;
+  code: string;
+  name: string;
+  method: string;
 };
 
 /**

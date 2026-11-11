@@ -155,3 +155,12 @@ export const accountingApi = {
       account_id: accountId,
     }),
 };
+
+// 4.3's row icon (Figma 348:1209 draws three): delivery by name, other income by type or name,
+// every other sales account the shop bag. Step 5's sales categories draw it too (2026-11-11).
+export const salesGlyph = (name: string, type: string) =>
+  /deliver/i.test(name)
+    ? "delivery"
+    : type === "other_income" || /\bother\b/i.test(name)
+      ? "other-income"
+      : "sales";

@@ -20,6 +20,7 @@ import {
   getDisplaySteps,
   initialState,
   isStepComplete,
+  pettyIds,
 } from "../wizardSteps";
 
 // The override parameter is loose ON PURPOSE. Several cases below hand the functions
@@ -211,6 +212,15 @@ describe("getDisplaySteps", () => {
     expect(petty).toBeDefined();
     expect(petty?.ids).toEqual([5, 6, 7]);
     expect(petty?.label).toBe("Petty Cash Settings");
+  });
+
+  it("names step 7 Contact Setup and keeps Petty Cash's sub-steps to what each path asks", () => {
+    // Step 4 chooses the accounts on both paths (2026-11-11): Minty's own has step 5 alone, Xero adds
+    // its contacts, and only a company that started before step 4 asked still has Account Code.
+    expect(STEPS[6].label).toBe("Contact Setup");
+    expect(pettyIds("minty")).toEqual([5]);
+    expect(pettyIds("xero")).toEqual([5, 7]);
+    expect(pettyIds(null)).toEqual([5, 6, 7]);
   });
 
   it("adds the Payment segment only for bills", () => {
