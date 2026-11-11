@@ -30,7 +30,8 @@ function show() {
 }
 
 async function writeAndSend() {
-  await userEvent.click(await screen.findByRole("button", { name: "Talk to Minty" }));
+  // the cat starts tucked; its tab brings it back with the pop-up open (@minty/shared v0.18)
+  await userEvent.click(await screen.findByRole("button", { name: "Bring Minty back" }));
   await userEvent.click(screen.getByRole("menuitem", { name: "Talk to Minty" }));
   const chat = within(screen.getByRole("dialog", { name: "Talk to Minty" }));
   await userEvent.click(chat.getByRole("button", { name: "Contact Support" }));
@@ -51,6 +52,8 @@ async function writeAndSend() {
 }
 
 beforeEach(() => {
+  // a fresh browser: the cat starts tucked (a test that brings it back stores "0")
+  localStorage.clear();
   vi.stubGlobal("fetch", fetchMock);
   setSidebarSession({
     token: "tok",
@@ -100,7 +103,8 @@ describe("the Minty cat in onboarding", () => {
       ),
     );
     show();
-    await userEvent.click(await screen.findByRole("button", { name: "Talk to Minty" }));
+    // the cat starts tucked; its tab brings it back with the pop-up open (@minty/shared v0.18)
+    await userEvent.click(await screen.findByRole("button", { name: "Bring Minty back" }));
     await userEvent.click(screen.getByRole("menuitem", { name: "Talk to Minty" }));
     const chat = within(screen.getByRole("dialog", { name: "Talk to Minty" }));
     // the wizard reads nothing for the chat until it is needed
