@@ -13,7 +13,7 @@ the nine screens, `components/Stepper.tsx` the rail. Every write goes to
 | 1   | Basic Information — name, country, currency (all three required), phone, email (optional). A new company starts **empty**, Country and Currency included, like the phone's code (owner, 2026-10-19; _Select a country_ / _Select a currency_); picking a country fills an empty currency with its own (`lib/countryCurrency.ts`) and moves the phone's code, and the company's timezone is the country's, set by the API with nothing on screen (owner, 2026-11-04; the browser's zone is no longer sent)                                                                                                                                                                            | `StepCreateEntity`                                                                | `POST /create` on the first advance, `PUT /entity/{id}` after                                                                                                                                                                                                                                                                                   |
 | 2   | Select Module — Petty Cash, Payment Request (cards in the old live app's design: accent gradient, large illustration, the description over the card on hover/focus, a teal gradient frame when picked); the price summary (01-A/B/C: the plan, the card under its network's mark, the after-trial price) and the billing sheet (`BillingSheet.tsx`: card capture through Stripe, consent); the click that picks the second module bursts confetti out from behind the cards' two top corners, gone within two seconds                                                                                                                                                                | `StepSelectModule`                                                                | `POST /modules`, the `billing/*` routes                                                                                                                                                                                                                                                                                                         |
 | 3   | User Invite — invite colleagues with a role; on arrival a prompt in minty-web's modal design (`components/ModalFrame.tsx`) recommends inviting the accountant, with Minty and Ollie under the title; its one button _Ok_ closes it (no Skip; _Add later_ at the foot of the page moves on); each pending row says when it expires (`inviteExpiryLabel`) and offers _Resend_                                                                                                                                                                                                                                                                                                          | `StepInvite`                                                                      | `POST /invite`, `/invite/cancel`, `/invite/resend`                                                                                                                                                                                                                                                                                              |
-| 4   | Accounting Setup (Xero optional, 2026-11-10; [below](#accounting-setup--step-4-xero-optional)) — 4.1 how Minty keeps the books; with Xero, Connect to Xero ([xero-step.md](xero-step.md)); on its own, 4.2 business type and cash question, 4.3 sales accounts, 4.4 expense accounts, 4.5 the five accounts daily closing needs (Petty Cash only)                                                                                                                                                                                                                                                                                                                                    | `StepAccountingSetup` (`components/steps/AccountingSetup.tsx`), `StepConnectXero` | `POST /accounting/*` ([the API](../../../minty-onboarding-api/docs/features/wizard-api.md)); Minty's `/xero_connect`                                                                                                                                                                                                                            |
+| 4   | Accounting Setup (Xero optional, 2026-11-10; [below](#accounting-setup--step-4-xero-optional)) — 4.1 how Minty keeps the books; with Xero, Connect to Xero ([xero-step.md](xero-step.md)); on its own, 4.2 business type and cash question (it brings the sales accounts and daily closing's accounts), 4.4 expense accounts; with Xero, X3 expense accounts (owner, 2026-11-11: 4.3, 4.5, X2 and X4 removed)                                                                                                                                                                                                                                                                        | `StepAccountingSetup` (`components/steps/AccountingSetup.tsx`), `StepConnectXero` | `POST /accounting/*` ([the API](../../../minty-onboarding-api/docs/features/wizard-api.md)); Minty's `/xero_connect`                                                                                                                                                                                                                            |
 | 5   | Sales Setting — electronic and delivery methods (both start empty; _Auto Fill_ fills Flask's default set, _Revert_ empties them again — a new company is seeded with Cash only), and the opening balance (the cash in the drawer on day one) and its date - defaulting to the server's Hong Kong "today" (`/server-time`, the same day that caps it; Hong Kong's date from the browser if that call fails), never the browser's clock, and only when no date is there yet (2026-10-26) - typed in the currency's decimal places (`currencyDecimals`; JPY is whole amounts), with commas as it is typed and the places padded on blur (`@minty/shared/amountInput`, owner 2026-10-26) | `StepSalesSetting`                                                                | `POST /sales-methods`, `POST /opening-balance`                                                                                                                                                                                                                                                                                                  |
 | 6   | Account Code Setting — the expense accounts and the petty-cash account mapping                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `StepAccountCode`                                                                 | `POST /account-codes`                                                                                                                                                                                                                                                                                                                           |
 | 7   | Contact Setup — the petty-cash contacts (director, discrepancy, and cash sale only for a company with cash sales; a new one can be created in Xero; the open list says to type a name to add one)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `StepOthers`                                                                      | `POST /contacts`, `/contacts/create`                                                                                                                                                                                                                                                                                                            |
@@ -104,27 +104,24 @@ so Save & Next only moves on; the kicker counts them (_Accounting setup · 3 of 
   It asks the business type (Restaurant & Food, Retail, Service, General, or _None of these_) and
   the cash question, asked of every company (owner, 2026-11-10): _We pay expenses from sales
   cash_, _We bank all sales_, _Not sure_ (stored as with cash sales). "We bank all sales" turns the
-  company's Cash method off (onboarding-api), 4.5/X4 then ask for four accounts (no Cash sales:
-  the API sends no `cash_sale` slot), and step 7 (Contact Setup) asks for no Cash Sales contact.
+  company's Cash method off (onboarding-api), daily closing then needs four accounts (no Cash
+  sales: step 6 hides the Cash Sales field), and step 7 (Contact Setup) asks for no Cash Sales
+  contact. On the Minty path the answer also adds that business type's sales accounts (the
+  accounting team's set; changing the answer swaps them) - there is no sales screen.
   The question's place (under the business type) and wording are the owner's choice (2026-11-10),
   kept over the brief's "Do you pay expenses from the cash you take in from sales?" asked first. Both required: a refused
   Save & Next names them, with the error summary for two.
-- **4.3** is drawn as Figma 348:1209: a row card per sales account (`.acs-coa-row`) with its icon
-  (`public/accounting/glyph-{sales,delivery,other-income}.svg`, chosen by name/type: "deliver" the
-  scooter, other income the coins, the rest the bag), the code and description, a tick circle over
-  the real checkbox, and a menu (Edit, Remove = untick); the dashed "Add another sales category"
-  card; 904px wide from a 1024px window. 4.3 and 4.4 use Petty Cash Settings' `.autofill-btn` with
-  the design's logo (`public/accounting/autofill-logo.png`). 4.4 is not redrawn yet.
-- **4.3 / 4.4** the sales and expense accounts. _Auto Fill_ adds the template's ticked
+- **No 4.3 or 4.5 (owner, 2026-11-11).** The Minty path is three screens - 4.1, 4.2, 4.4 ("3 of
+  3"); the Xero path 4.1, X1, X3. 4.3's row design (Figma 348:1209: `.acs-coa-row`, the bag or
+  scooter glyph, the dashed add row) moved to step 5's sales-method lists. 4.4 uses Petty Cash
+  Settings' `.autofill-btn` with the design's logo (`public/accounting/autofill-logo.png`).
+- **4.4** the expense accounts. _Auto Fill_ adds the template's ticked
   suggestions for the business (the General set for _None of these_) and then shows the rest
-  unticked beside them; _Revert_ takes them out again (the ones already in use stay). A row's
+  unticked beside them; _Revert_ takes them out again (the ones already in use stay). The list counts as filled only while it has a row Revert would take out (`auto_filled`), so a kept row such as Cash Over / Short (daily closing uses it) leaves the button on _Auto Fill_; Revert clears the shown suggestions only after the fresh list is in (2026-11-11). A row's
   tick removes it (archived if something uses it); _Edit_ and _Add another_ open the account
   form (code pre-filled with the next free code for the type, type, name; checked as you type,
   the empty ones on a refused save; the API's own sentences on a clash). Expense accounts sit
   under _Cost of what you sell_ (Direct costs) and _Running the business_, from their type.
-- **4.5** (Petty Cash on) the five accounts daily closing needs: each _Ready_ or _Not set up_,
-  _Change_ / _Set up_ lists the accounts of the right type and _Create a new account_. Missing
-  ones warn but don't block: Save & Next asks _Set it up now_ or _Continue anyway_.
 - A company keeping its books in Minty passes step 4 once it has answered 4.2
   (`isStepComplete`, `mintyOnItsOwn`), skips steps 6 and 7, and is never sent back to Xero by
   the needs-Xero prompt. The answers come back with `/state` (`accounting`).
@@ -135,44 +132,43 @@ so Save & Next only moves on; the kicker counts them (_Accounting setup · 3 of 
   (`public/accounting/exp-*.svg`; no match: cost of sales "products", else "other"), the menu
   (Edit, Remove) in the card's corner - the frame draws none, but accounts must stay editable -
   and the dashed "Add another category" card; two cards a row on phones, 214px cards from 768px.
-- **4.5 and X4** are drawn as Figma 348:1384 / 4.5a 348:1674 / 4.5b 348:1774: the readiness
-  banner (teal all ready, amber with "!" when one is missing), a card per role with its icon
-  (`public/accounting/slot-<role>.svg`), Ready / Not set up, and Change (a link) or Set up
-  (outlined); either opens the role's menu (`SlotMenu`: its accounts, then "+ Create a new
-  account", or on X4 "create it in Xero"). Save & Next with one missing asks first, in
-  minty-web's dialog: "Add it now" (opens that menu) or "Continue anyway". Ready/Change go under
-  the text below 600px.
-- **The Xero path (2026-11-10, Figma 348:1874 / 1949 / 2052):** 4.1 _Connect with Xero_ -> X1
-  (Connect to Xero) -> X2 the Xero sales accounts Minty uses -> X3 the expense ones -> X4 the five
-  daily-closing accounts (4.5's screen with Xero's accounts only, "Xero account: …", no create:
-  a missing one is made in Xero). X2/X3 (`XeroAccountsScreen`) are a searchable tick list of the
-  synced chart (`from_xero` rows; ticked = `used`), 10 rows then "Show more accounts", the
-  "Missing an account?" notice, and Refresh from Xero (`POST /accounting/xero-refresh`) on X2-X4;
-  Save & Next posts `/accounting/xero-accounts` (none ticked is refused with its sentence). X1's
-  Save & Next goes on to X2 once connected. Step 6 (Account Code Setting) is no longer in the
-  Xero path (`getActiveStepIds`: `[5, 7]`); it stays only for a company that started before step
-  4 asked how Minty works (no mode).
+- **Changing 4.1's answer is free during onboarding (owner, 2026-11-11):** choosing _Connect with Xero_
+  after the Minty path takes away the accounts Minty set up (the API does it, no confirmation) and
+  goes on to X1; only a company whose reports or bills already use them is refused, with the API's
+  sentence.
+- **The Xero path (2026-11-10, Figma 348:1874 / 1949; X2 and X4 removed 2026-11-11):** 4.1
+  _Connect with Xero_ -> X1 (Connect to Xero) -> X3 the Xero expense accounts Minty uses
+  (`XeroAccountsScreen`: a searchable tick list of the synced chart, `from_xero` rows, ticked =
+  `used`, 10 rows then "Show more accounts", the "Missing an account?" notice, Refresh from Xero
+  `POST /accounting/xero-refresh`); Save & Next posts `/accounting/xero-accounts` (none ticked is
+  refused with its sentence). X1's Save & Next goes on to X3 once connected. Petty Cash Settings
+  then mirrors the Minty path: 5 Sales, 6 Account Code (the five daily-closing accounts from
+  Xero only - X3 chose the expense accounts, so the codes list is hidden and the save posts the
+  mapping alone; Cash Sales only with cash sales), 7 Contact Setup.
 
 **The steps after step 4 follow it (owner, 2026-11-11).** Petty Cash Settings' side menu lists
-`pettyIds(mode)`: none for Minty on its own (step 5 alone), "1 Sales, 2 Contact Setup" on Xero,
-the old three for a company with no mode; step 7 is "Contact Setup". The account-codes read
+`pettyIds(mode)`: step 5 alone for Minty on its own, "1 Sales, 2 Account Code, 3 Contact Setup"
+on Xero and for a company with no mode (2026-11-11); step 7 is "Contact Setup". The account-codes read
 (steps 5-7) never runs for Minty on its own (it is Xero's, and answered 409 with an error toast).
 Step 5's Auto Fill no longer touches the old expense ticks; step 7 sends no cash-sale contact for
 a company banking all its sales (the API clears it anyway). Step 8 lists step 4's expense
 accounts (minty-onboarding-api's `/bill-codes`: 4.4's for Minty on its own, pre-ticked from the
 Payment Request flags; X3's ticks on Xero) and takes the answer whether or not Xero is connected;
 an empty list says "Add an expense account in Accounting Setup first." with a Go to Accounting
-Setup link (`AccountCodesCard`'s `empty`), never "Connect to Xero". Finalize's gaps for daily
-closing's accounts point to step 4. Tests: `components/__tests__/StepBillsFromAccounting.test.tsx`,
+Setup link (`AccountCodesCard`'s `empty`), never "Connect to Xero". Finalize's gaps for a Xero
+company's daily-closing accounts point to step 6 (2026-11-11). Tests: `components/__tests__/StepBillsFromAccounting.test.tsx`,
 `lib/__tests__/wizardSteps.test.ts`.
 
-**Step 5's sales methods are step 4's sales categories (owner, 2026-11-11).** With a mode, step 5
-shows "Your sales categories" - 4.3's rows (`salesGlyph`, name, code), read-only, one list - read
-fresh from `GET /sales-methods`' `categories` on every visit, with "Change them in Accounting Setup"
-(`returnToStep(4)`); an empty list says "Add a sales category in Accounting Setup first.". The
-Electronic / Delivery lists, Add New Method and step 5's Auto Fill are gone for it, and nothing is
-posted to `/sales-methods` (the API refuses it). A company with no mode keeps the old lists. Tests:
-`components/__tests__/StepSalesCategories.test.tsx`.
+**Step 5's sales methods follow the business type (owner, 2026-11-11).** "Type of sales method
+of your company", with Auto Fill, for every company: free lists (no account link) drawn as 4.3's
+rows (`MethodList` in `components/steps/pettyCashFields.tsx`: `ul.acs-coa` labelled
+"<title> methods", the bag or scooter glyph, remove, drag to reorder, "Add New Method" as the
+dashed add row). Restaurant & Food and a company with no business type: **Electronic** and
+**Delivery** (Auto Fill: the old defaults). A retail shop, a service or a general business
+(`isNonCash` in `lib/wizardSteps.ts`; the API's `groups` says the same): one **Non-cash** list
+(Auto Fill: Visa, Mastercard, UnionPay, Amex, Alipay, WeChat Pay, Octopus, FPS), posted as
+`electronic` with `delivery: []`. Petty Cash's daily closing, reports and Settings group them the
+same way. Tests: `components/__tests__/AccountingSetup.test.tsx`, `lib/__tests__/wizardSteps.test.ts`.
 
 ## Saving and resuming
 

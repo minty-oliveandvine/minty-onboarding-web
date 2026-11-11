@@ -48,8 +48,7 @@ import type { BillsForm, EntityForm, PettyCashForm, StepProps } from "../lib/typ
 import type { CountryRow, CurrencyRow } from "../lib/refData";
 import type { PaymentMethod } from "../lib/billing";
 import type { ModuleId, Result, SetupGap } from "../lib/api";
-import { STEPS, accountingOf } from "../lib/wizardSteps";
-import { salesGlyph } from "../lib/accountingApi";
+import { STEPS, accountingOf, isNonCash } from "../lib/wizardSteps";
 
 // entities.name's length, as the API's NAME_MAX (onboarding/api_entity.py).
 const NAME_MAX = 100;
@@ -1059,16 +1058,14 @@ export function StepSalesSetting({
   submitSalesMethods,
   submitOpeningBalance,
   saveAndExit,
-  salesCategories = null,
-  returnToStep,
 }: Pick<
   StepProps,
   "state" | "set" | "next" | "back" | "submitSalesMethods" | "submitOpeningBalance" | "saveAndExit"
-> &
-  Partial<Pick<StepProps, "salesCategories" | "returnToStep">>) {
-  // With a mode (step 4 asked how Minty works), the methods are step 4's sales categories, shown
-  // read-only here (owner, 2026-11-11); a company that started before step 4 asked keeps its lists.
-  const fromStep4 = !!accountingOf(state).mode;
+>) {
+  // The lists follow the business type (owner, 2026-11-11): Restaurant & Food keeps Electronic and
+  // Delivery; a retail shop, a service or a general business has one Non-cash list (sent as
+  // electronic). A company from before the question (no type) keeps both.
+  const nonCash = isNonCash(accountingOf(state).businessType);
   // Save everything on this step: sales methods AND the opening balance/date.
   // submitOpeningBalance no-ops when the balance is empty, so a blank balance
   // never blocks Save & Next / Save & Exit — we persist whatever's filled in.
@@ -1228,12 +1225,26 @@ export function StepSalesSetting({
   // rows instead of minting near-duplicates. Nothing is pre-seeded: both lists start empty
   // on a new company and only this button fills them.
   const DEFAULT_DELIVERY = ["Food Panda", "Keeta", "OpenRice"];
+  // A retail shop, a service or a general business: the cards and wallets it takes (owner, 2026-11-11).
+  const DEFAULT_NON_CASH = [
+    "Visa",
+    "Mastercard",
+    "UnionPay",
+    "Amex",
+    "Alipay",
+    "WeChat Pay",
+    "Octopus",
+    "FPS",
+  ];
+  const defaults = nonCash
+    ? { electronic: DEFAULT_NON_CASH, delivery: [] as string[] }
+    : { electronic: DEFAULT_ELECTRONIC, delivery: DEFAULT_DELIVERY };
   const todayIso = toIsoDate(new Date());
   const sameList = (a: string[], b: string[]) =>
     a.length === b.length && a.every((x, i) => x === b[i]);
   const isAutofilled =
-    sameList(p.electronicMethods || [], DEFAULT_ELECTRONIC) &&
-    sameList(p.deliveryMethods || [], DEFAULT_DELIVERY);
+    sameList(p.electronicMethods || [], defaults.electronic) &&
+    (nonCash || sameList(p.deliveryMethods || [], defaults.delivery));
 
   const resetDefaults = () => {
     if (isAutofilled) {
@@ -1249,102 +1260,49 @@ export function StepSalesSetting({
     set({
       pettyCash: {
         ...p,
-        electronicMethods: [...DEFAULT_ELECTRONIC],
-        deliveryMethods: [...DEFAULT_DELIVERY],
+        electronicMethods: [...defaults.electronic],
+        deliveryMethods: [...defaults.delivery],
         openingDate: openingMaxDate || todayIso,
       },
     });
   };
-  const toStep4 = (
-    <button type="button" className="acc-empty-link" onClick={() => returnToStep?.(4)}>
-      Change them in Accounting Setup
-    </button>
-  );
   return (
     <>
-      {fromStep4 ? (
-        <div className="page-head pc-page-head" style={{ textAlign: "left", marginBottom: 18 }}>
-          <div className="pc-head-row">
-            <h2 style={{ fontSize: 30 }}>Your sales categories</h2>
-          </div>
-          <p style={{ marginTop: 6 }}>
-            From Accounting Setup - the sales you record at daily closing.
-          </p>
+      <div className="autofill-row">
+        <AutofillButton
+          active={isAutofilled}
+          onClick={resetDefaults}
+          label={isAutofilled ? "Clear auto-filled methods" : "Auto fill default settings"}
+        />
+        <span className="autofill-hint">
+          Not sure what to choose? I&apos;ll set some sensible defaults for you.
+        </span>
+      </div>
+      <div className="page-head pc-page-head" style={{ textAlign: "left", marginBottom: 18 }}>
+        <div className="pc-head-row">
+          <h2 style={{ fontSize: 30 }}>Type of sales method of your company</h2>
         </div>
-      ) : (
-        <>
-          <div className="autofill-row">
-            <AutofillButton
-              active={isAutofilled}
-              onClick={resetDefaults}
-              label={isAutofilled ? "Clear auto-filled methods" : "Auto fill default settings"}
-            />
-            <span className="autofill-hint">
-              Not sure what to choose? I&apos;ll set some sensible defaults for you.
-            </span>
-          </div>
-          <div className="page-head pc-page-head" style={{ textAlign: "left", marginBottom: 18 }}>
-            <div className="pc-head-row">
-              <h2 style={{ fontSize: 30 }}>Type of sales method of your company</h2>
-            </div>
-            <p style={{ marginTop: 6 }}>
-              Add the payment and delivery channels you accept. You can always go back to settings
-              to edit options
-            </p>
-          </div>
-        </>
-      )}
+        <p style={{ marginTop: 6 }}>
+          {nonCash
+            ? "Add the ways customers pay you other than cash. You can always go back to settings to edit options"
+            : "Add the payment and delivery channels you accept. You can always go back to settings to edit options"}
+        </p>
+      </div>
 
       <div className="pc-stack">
-        {fromStep4 && (
-          <div className="pc-categories">
-            {salesCategories === null ? (
-              <p className="acc-empty">Loading your sales categories...</p>
-            ) : salesCategories.length === 0 ? (
-              <p className="acc-empty">Add a sales category in Accounting Setup first. {toStep4}</p>
-            ) : (
-              <>
-                <ul className="acs-coa" aria-label="Your sales categories">
-                  {salesCategories.map((c) => (
-                    <li key={c.account_id} className="acs-coa-row">
-                      <span
-                        className={"acs-coa-icon is-" + salesGlyph(c.name, "sales")}
-                        aria-hidden
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`/accounting/glyph-${salesGlyph(c.name, "sales")}.svg`}
-                          width={34}
-                          height={34}
-                          alt=""
-                        />
-                      </span>
-                      <span className="acs-coa-text">
-                        <span className="acs-coa-name">{c.name}</span>
-                        {c.code && <span className="acs-coa-meta">{c.code}</span>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="pc-categories-edit">{toStep4}</div>
-              </>
-            )}
-          </div>
-        )}
-        {!fromStep4 && (
-          <MethodList
-            title="Electronic"
-            placeholder="Enter payment method name"
-            methods={p.electronicMethods || []}
-            autoFilled={isAutofilled}
-            onAdd={(name) => upd("electronicMethods", [...(p.electronicMethods || []), name])}
-            onChange={(list) => upd("electronicMethods", list)}
-          />
-        )}
+        <MethodList
+          title={nonCash ? "Non-cash" : "Electronic"}
+          placeholder="Enter payment method name"
+          methods={p.electronicMethods || []}
+          autoFilled={isAutofilled}
+          onAdd={(name) => upd("electronicMethods", [...(p.electronicMethods || []), name])}
+          onChange={(list) => upd("electronicMethods", list)}
+        />
 
-        {!fromStep4 && (
+        {nonCash ? null : (
           <MethodList
             title="Delivery"
+            glyph="delivery"
             placeholder="Enter delivery method name"
             methods={p.deliveryMethods || []}
             autoFilled={isAutofilled}
@@ -1439,6 +1397,10 @@ export function StepAccountCode({
 >) {
   const stepSubmit = submitAccountCodes;
   const p = state.pettyCash;
+  // On the Xero path (owner, 2026-11-11) step 4 chose the expense accounts (X3): this step maps only
+  // the daily-closing accounts, and Cash Sales only for a company with cash sales.
+  const mappingOnly = accountingOf(state).mode === "xero";
+  const cashSales = accountingOf(state).usesSalesCash !== false;
   const upd = <K extends keyof PettyCashForm>(k: K, v: PettyCashForm[K]) =>
     set({ pettyCash: { ...p, [k]: v } });
   const [saving, setSaving] = useState(false);
@@ -1474,11 +1436,11 @@ export function StepAccountCode({
   const noCodeTicked = expenseCodes.length > 0 && !expenseCodes.some(codeOn);
 
   const missingFields = [
-    { key: "expenseCodes", empty: noCodeTicked, ref: expenseCodesRef },
+    { key: "expenseCodes", empty: !mappingOnly && noCodeTicked, ref: expenseCodesRef },
     { key: "pcAccount", empty: !p.pcAccount, ref: pcAccountRef },
     { key: "depositAccount", empty: !p.depositAccount, ref: depositAccountRef },
     { key: "directorCode", empty: !p.directorCode, ref: directorCodeRef },
-    { key: "cashSalesCode", empty: !p.cashSalesCode, ref: cashSalesCodeRef },
+    { key: "cashSalesCode", empty: cashSales && !p.cashSalesCode, ref: cashSalesCodeRef },
     { key: "discrepancyCode", empty: !p.discrepancyCode, ref: discrepancyCodeRef },
   ];
 
@@ -1511,36 +1473,41 @@ export function StepAccountCode({
       <div className="page-head" style={{ textAlign: "left", marginBottom: 18 }}>
         <h2 style={{ fontSize: 30 }}>Account Code Setting</h2>
         <p style={{ marginTop: 6 }}>
-          Map each cash flow to the right account in your ledger — these settings need manual input
-          from you.
+          {mappingOnly
+            ? "The Xero accounts daily closing posts to."
+            : "Map each cash flow to the right account in your ledger — these settings need manual input from you."}
         </p>
       </div>
 
       <div className="pc-stack">
-        <div className="pc-section-head" style={{ marginTop: 0, paddingTop: 0, border: 0 }}>
-          <div className="pc-section-title">
-            Petty Cash Account Codes
-            <span className="req" aria-hidden>
-              *
-            </span>
-          </div>
-          <div className="pc-section-sub">
-            Only the ticked account codes appear when you add an expense in Petty Cash.
-          </div>
-        </div>
-        <div ref={expenseCodesRef}>
-          <AccountCodesCard
-            codes={expenseCodes}
-            labels={expenseLabels}
-            value={ec}
-            onChange={(v) => upd("expenseCodes", v)}
-          />
-          {showErrors && noCodeTicked && (
-            <div className="field-required" role="alert">
-              Pick at least one account code.
+        {!mappingOnly && (
+          <>
+            <div className="pc-section-head" style={{ marginTop: 0, paddingTop: 0, border: 0 }}>
+              <div className="pc-section-title">
+                Petty Cash Account Codes
+                <span className="req" aria-hidden>
+                  *
+                </span>
+              </div>
+              <div className="pc-section-sub">
+                Only the ticked account codes appear when you add an expense in Petty Cash.
+              </div>
             </div>
-          )}
-        </div>
+            <div ref={expenseCodesRef}>
+              <AccountCodesCard
+                codes={expenseCodes}
+                labels={expenseLabels}
+                value={ec}
+                onChange={(v) => upd("expenseCodes", v)}
+              />
+              {showErrors && noCodeTicked && (
+                <div className="field-required" role="alert">
+                  Pick at least one account code.
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         <PCSection
           title="Petty Cash Account"
@@ -1590,19 +1557,21 @@ export function StepAccountCode({
           ]}
         />
 
-        <PCSection
-          title="Cash Sales"
-          cardRef={cashSalesCodeRef}
-          fields={[
-            {
-              label: "Select account code for cash sales",
-              value: p.cashSalesCode || "",
-              onChange: (v) => upd("cashSalesCode", v),
-              options: cashSaleLabels,
-              error: showErrors && !p.cashSalesCode,
-            },
-          ]}
-        />
+        {cashSales && (
+          <PCSection
+            title="Cash Sales"
+            cardRef={cashSalesCodeRef}
+            fields={[
+              {
+                label: "Select account code for cash sales",
+                value: p.cashSalesCode || "",
+                onChange: (v) => upd("cashSalesCode", v),
+                options: cashSaleLabels,
+                error: showErrors && !p.cashSalesCode,
+              },
+            ]}
+          />
+        )}
 
         <div className="pc-section-head">
           <div className="pc-section-title">

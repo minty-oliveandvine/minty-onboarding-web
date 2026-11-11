@@ -22,6 +22,8 @@ export type Account = {
   source: "template" | "user" | "xero";
   /** In use: a row made in Minty always; a Xero row once ticked on X2/X3. */
   used: boolean;
+  /** An Auto Fill row nothing uses yet - what Revert would take out (`GET /accounting`'s lists). */
+  auto_filled?: boolean;
   is_system: boolean;
   from_xero: boolean;
 };

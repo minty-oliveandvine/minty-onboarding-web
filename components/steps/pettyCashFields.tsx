@@ -54,6 +54,8 @@ type MethodListProps = {
   /** Receives a fresh array; the list never mutates the one it was given. */
   onChange: (methods: string[]) => void;
   autoFilled?: boolean;
+  /** The row icon: 4.3's sales bag, or its scooter for delivery. */
+  glyph?: "sales" | "delivery";
 };
 
 export function MethodList({
@@ -63,6 +65,7 @@ export function MethodList({
   onAdd,
   onChange,
   autoFilled = false,
+  glyph = "sales",
 }: MethodListProps) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -138,11 +141,12 @@ export function MethodList({
         </span>
       </div>
       <div className="method-body" style={{ display: "block" }}>
-        <ul className="method-list">
+        {/* 4.3's rows (owner, 2026-11-11: the sales-categories design moved here) */}
+        <ul className="acs-coa method-list" aria-label={`${title} methods`}>
           {methods.map((m, i) => (
             <li
               className={
-                "method-row" +
+                "acs-coa-row method-row" +
                 (dragIdx === i ? " is-dragging" : "") +
                 (overIdx === i && dragIdx !== i ? " is-drag-over" : "")
               }
@@ -153,7 +157,13 @@ export function MethodList({
                 if (overIdx === i) setOverIdx(null);
               }}
             >
-              <span className="method-name">{m}</span>
+              <span className={"acs-coa-icon is-" + glyph} aria-hidden>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/accounting/glyph-${glyph}.svg`} width={34} height={34} alt="" />
+              </span>
+              <span className="acs-coa-text">
+                <span className="acs-coa-name method-name">{m}</span>
+              </span>
               <div className="method-actions">
                 <button
                   type="button"
@@ -216,8 +226,11 @@ export function MethodList({
             </div>
           </div>
         ) : (
-          <button type="button" className="method-add" onClick={() => setAdding(true)}>
-            <Icon.Plus /> Add New Method
+          <button type="button" className="acs-add acs-coa-add" onClick={() => setAdding(true)}>
+            <span className="acs-coa-plus" aria-hidden>
+              +
+            </span>
+            Add New Method
           </button>
         )}
       </div>

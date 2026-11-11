@@ -1,5 +1,8 @@
 // Step 4 - Accounting Setup (Xero optional, Figma 348:1007). The API is minty-onboarding-api's
 // /accounting routes; fetch is mocked here, so these pin what the screens send and show.
+// Owner, 2026-11-11: three screens on each path - how Minty works, the business (or Connect), the
+// expense accounts. The business type brings the sales accounts and daily closing's defaults; Petty
+// Cash Settings maps a Xero company's daily-closing accounts.
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,7 +14,7 @@ import type { AccountingForm, StepProps, WizardState } from "../../lib/types";
 type Call = { url: string; method: string; body: Record<string, unknown> | null };
 let calls: Call[];
 let answers: Record<string, unknown>;
-let salesRows: ReturnType<typeof account>[];
+let expenseRows: ReturnType<typeof account>[];
 let connected: boolean;
 let bankAllSales: boolean;
 
@@ -49,7 +52,7 @@ function setupAnswer() {
     uses_sales_cash: true,
     business_answered: true,
     connected: connected,
-    accounts: { sales: salesRows, expense: [] },
+    accounts: { sales: [], expense: expenseRows },
     slots: {
       petty_cash: { account: petty, options: [petty] },
       bank: { account: null, options: [petty] },
@@ -67,7 +70,7 @@ function setupAnswer() {
 beforeEach(() => {
   calls = [];
   answers = {};
-  salesRows = [];
+  expenseRows = [];
   connected = false;
   bankAllSales = false;
   vi.stubGlobal(
@@ -157,10 +160,10 @@ describe("4.1 How would you like Minty to work?", () => {
   });
 
   it("counts Connect to Xero as one of step 4's screens", async () => {
-    // Mode, X1 (Connect), X2, X3 and daily closing: X1 is 2 of 5, like the screens around it.
+    // Mode, X1 (Connect), X3: X1 is 2 of 3, like the screens around it.
     renderStep({ mode: "xero", businessType: null, usesSalesCash: null });
     expect(await screen.findByText("Xero Integration")).toBeInTheDocument();
-    expect(screen.getByText(/Accounting setup · 2 of 5/i)).toBeInTheDocument();
+    expect(screen.getByText(/Accounting setup · 2 of 3/i)).toBeInTheDocument();
   });
 
   it("Use Minty independently goes on to the business questions", async () => {
@@ -184,7 +187,8 @@ describe("4.2 What best describes your business?", () => {
     fireEvent.click(screen.getByRole("radio", { name: /None of these/ }));
     fireEvent.click(screen.getByRole("radio", { name: /Not sure/ }));
     saveAndNext();
-    await screen.findByText("Your sales categories");
+    // no sales screen (owner, 2026-11-11): straight on to the expense accounts
+    await screen.findByText("What do you usually spend money on?");
     expect(calls[0]).toMatchObject({
       url: "/api/onboarding/accounting/business",
       body: { entity_id: "e-1", business_type: null, uses_sales_cash: true },
@@ -201,37 +205,119 @@ describe("4.2 What best describes your business?", () => {
   });
 });
 
-describe("4.3 the sales list", () => {
+describe("4.4 the expense list", () => {
   it("an empty list offers Auto Fill and adding your own", async () => {
     renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
-    expect(await screen.findByText("No sales categories yet")).toBeInTheDocument();
+    expect(await screen.findByText("What do you usually spend money on?")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Auto Fill/ })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Add another sales category/ }));
-    expect(screen.getByLabelText(/Code/)).toHaveValue("200");
+    fireEvent.click(screen.getByRole("button", { name: /Add another category/ }));
+    expect(screen.getByLabelText(/Code/)).toHaveValue("400");
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
     expect(
       screen.getByText("The name is still empty. Add a name to continue."),
     ).toBeInTheDocument();
   });
+
+  it("is the last screen: Save & Next leaves the step", async () => {
+    const { next } = renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
+    await screen.findByText("What do you usually spend money on?");
+    expect(screen.getByText(/Accounting setup · 3 of 3/i)).toBeInTheDocument();
+    saveAndNext();
+    await waitFor(() => expect(next).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(/accounts ready/)).toBeNull();
+  });
 });
 
-describe("4.3 a sales row (Figma 348:1209)", () => {
+describe("4.4 Auto Fill and Revert (owner, 2026-11-11)", () => {
+  const cashOverShort = {
+    ...account("s9", "6900", "Cash Over / Short", "expense"),
+    is_system: false,
+    auto_filled: false,
+  };
+
+  it("a row Revert had to keep (daily closing uses it) does not count as filled", async () => {
+    expenseRows = [cashOverShort];
+    renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
+    expect(await screen.findByText("Cash Over / Short")).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: /Auto Fill/ });
+    expect(button).toHaveAttribute("aria-pressed", "false");
+    // and the template's other suggestions are not fetched back beside it
+    expect(calls.some((c) => c.url.includes("/accounting/autofill"))).toBe(false);
+  });
+
+  it("an Auto Fill row nothing uses yet is filled: the button reads Revert", async () => {
+    expenseRows = [
+      cashOverShort,
+      { ...account("s1", "6000", "Rent", "expense"), is_system: false, auto_filled: true },
+    ];
+    renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
+    expect(await screen.findByText("Rent")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Revert/ })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("Revert leaves the list unfilled: the suggestions are not fetched back", async () => {
+    const rent = {
+      ...account("s1", "6000", "Rent", "expense"),
+      is_system: false,
+      auto_filled: true,
+    };
+    expenseRows = [cashOverShort, rent];
+    let reverted = false;
+    // the API takes Rent out and keeps Cash Over / Short (daily closing uses it)
+    Object.defineProperty(answers, "/api/onboarding/accounting/autofill/revert", {
+      get: () => {
+        expenseRows = [cashOverShort];
+        reverted = true;
+        return { removed: 1, kept: [cashOverShort] };
+      },
+    });
+    // the list's read after Revert takes a moment, as the real API's does
+    const instant = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      if (reverted && new URL(String(url)).pathname.endsWith("/accounting"))
+        await new Promise((r) => setTimeout(r, 50));
+      return instant(url, init);
+    });
+    answers["/api/onboarding/accounting/autofill"] = {
+      based_on: "retail",
+      options: [
+        {
+          template_id: "t1",
+          code: "6000",
+          name: "Rent",
+          type: "expense",
+          ticked: true,
+          added: true,
+        },
+      ],
+    };
+    renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
+    fireEvent.click(await screen.findByRole("button", { name: /Revert/ }));
+
+    const button = await screen.findByRole("button", { name: /Auto Fill/ });
+    await waitFor(() => expect(button).toHaveAttribute("aria-pressed", "false"));
+    expect(screen.queryByText("Rent")).toBeNull();
+    const revertAt = calls.findIndex((c) => c.url.endsWith("/autofill/revert"));
+    expect(
+      calls.slice(revertAt).some((c) => c.method === "GET" && c.url.endsWith("/autofill")),
+    ).toBe(false);
+  });
+});
+
+describe("4.4 an expense row", () => {
   it("shows its code and description, ticked, with Edit and Remove in its menu", async () => {
-    salesRows = [
+    expenseRows = [
       {
-        ...account("s1", "201", "Product sales", "sales"),
-        description: "Everything you sell over the counter.",
+        ...account("s1", "420", "Rent", "expense"),
+        description: "The shop's monthly rent.",
       },
     ];
     renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
-    expect(await screen.findByText("Product sales")).toBeInTheDocument();
-    expect(
-      screen.getByText(/201\s+·\s+Everything you sell over the counter\./),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /Product sales/ })).toBeChecked();
-    expect(screen.getByRole("button", { name: /Revert/ })).toBeInTheDocument();
+    expect(await screen.findByText("Rent")).toBeInTheDocument();
+    expect(screen.getByText(/The shop's monthly rent./)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /Rent/ })).toBeChecked();
 
-    const more = screen.getByRole("button", { name: "More for Product sales" });
+    const more = screen.getByRole("button", { name: "More for Rent" });
     fireEvent.click(more);
     expect(more).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
@@ -246,122 +332,66 @@ describe("4.3 a sales row (Figma 348:1209)", () => {
   });
 });
 
-describe("X2 the Xero sales accounts (Figma 348:1874)", () => {
+describe("X3 the Xero expense accounts (Figma 348:1949)", () => {
   const xeroRow = (id: string, code: string, name: string, used: boolean) => ({
-    ...account(id, code, name, "revenue"),
-    type_label: "Revenue",
+    ...account(id, code, name, "expense"),
+    type_label: "Expense",
     source: "xero",
     from_xero: true,
     used,
   });
 
-  it("follows Connect to Xero, starts from the saved ticks and saves exactly the ticked ones", async () => {
+  it("follows Connect to Xero, starts from the saved ticks, saves exactly the ticked ones and ends the step", async () => {
     connected = true;
-    salesRows = [
-      xeroRow("x1", "200", "Sales", true),
-      xeroRow("x2", "210", "Service Income", false),
-    ];
-    renderStep({ mode: "xero", businessType: null, usesSalesCash: null }, ["pettyCash"], {
-      connected: true,
-      org: "Demo",
-    });
+    expenseRows = [xeroRow("x1", "400", "Advertising", true), xeroRow("x2", "469", "Rent", false)];
+    const { next } = renderStep(
+      { mode: "xero", businessType: null, usesSalesCash: null },
+      ["pettyCash"],
+      {
+        connected: true,
+        org: "Demo",
+      },
+    );
     fireEvent.click(await screen.findByRole("button", { name: /Save & Next/ }));
-    expect(await screen.findByText("Which sales accounts should Minty use?")).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /Sales/ })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: /Service Income/ })).not.toBeChecked();
-    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(await screen.findByText("Which expense accounts should Minty use?")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /Advertising/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Rent/ })).not.toBeChecked();
 
     // Nothing ticked is refused here, with the sentence, before the API is asked.
-    fireEvent.click(screen.getByRole("checkbox", { name: /Sales/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Advertising/ }));
     saveAndNext();
     expect(
-      await screen.findByText("Tick at least one sales account to continue."),
+      await screen.findByText("Tick at least one expense account to continue."),
     ).toBeInTheDocument();
     expect(calls.some((c) => c.url.endsWith("/xero-accounts"))).toBe(false);
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /Service Income/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Rent/ }));
     saveAndNext();
     await waitFor(() => {
       const save = calls.find((c) => c.url.endsWith("/xero-accounts"));
-      expect(save?.body).toEqual({ entity_id: "e-1", kind: "sales", account_ids: ["x2"] });
+      expect(save?.body).toEqual({ entity_id: "e-1", kind: "expense", account_ids: ["x2"] });
     });
-    expect(await screen.findByText("Which expense accounts should Minty use?")).toBeInTheDocument();
+    await waitFor(() => expect(next).toHaveBeenCalledTimes(1));
   });
 
   it("searches by code or name and shows the rest behind Show more", async () => {
     connected = true;
-    salesRows = Array.from({ length: 12 }, (_, i) =>
-      xeroRow(`r${i}`, String(200 + i), `Income ${i}`, i === 0),
+    expenseRows = Array.from({ length: 12 }, (_, i) =>
+      xeroRow(`r${i}`, String(400 + i), `Cost ${i}`, i === 0),
     );
     renderStep({ mode: "xero", businessType: null, usesSalesCash: null }, ["pettyCash"], {
       connected: true,
       org: "Demo",
     });
     fireEvent.click(await screen.findByRole("button", { name: /Save & Next/ }));
-    await screen.findByText("Which sales accounts should Minty use?");
+    await screen.findByText("Which expense accounts should Minty use?");
     expect(screen.getAllByRole("checkbox")).toHaveLength(10);
     fireEvent.click(screen.getByRole("button", { name: /Show more accounts \(2\)/ }));
     expect(screen.getAllByRole("checkbox")).toHaveLength(12);
     fireEvent.change(screen.getByRole("searchbox", { name: "Search accounts" }), {
-      target: { value: "211" },
+      target: { value: "411" },
     });
     expect(screen.getAllByRole("checkbox")).toHaveLength(1);
-    expect(screen.getByRole("checkbox", { name: /Income 11/ })).toBeInTheDocument();
-  });
-});
-
-describe("4.5 the accounts daily closing needs", () => {
-  it("warns about the missing ones and lets you continue", async () => {
-    const { next } = renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
-    await screen.findByText("Your sales categories");
-    saveAndNext(); // to 4.4
-    await screen.findByText("What do you usually spend money on?");
-    saveAndNext(); // to 4.5
-    expect(await screen.findByText(/1 of 5 accounts ready/)).toBeInTheDocument();
-    saveAndNext();
-    expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Continue anyway" }));
-    expect(next).toHaveBeenCalledTimes(1);
-  });
-
-  it("Add them now opens the first missing account's list, with Create (Figma 4.5a, 4.5b)", async () => {
-    renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true });
-    await screen.findByText("Your sales categories");
-    saveAndNext();
-    await screen.findByText("What do you usually spend money on?");
-    saveAndNext();
-    await screen.findByText(/1 of 5 accounts ready/);
-    expect(screen.getByRole("button", { name: "Change petty cash" })).toBeInTheDocument();
-    saveAndNext();
-    fireEvent.click(await screen.findByRole("button", { name: "Add them now" }));
-    expect(screen.queryByRole("dialog")).toBeNull();
-    const menu = screen.getByRole("menu", { name: "Bank accounts" });
-    expect(menu).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: /Create a new account/ })).toBeInTheDocument();
-    fireEvent.keyDown(document, { key: "Escape" });
-    expect(screen.queryByRole("menu")).toBeNull();
-  });
-
-  it("asks a company that banks all its sales for four, with no Cash sales", async () => {
-    bankAllSales = true;
-    renderStep({ mode: "minty", businessType: "retail", usesSalesCash: false });
-    await screen.findByText("Your sales categories");
-    saveAndNext();
-    await screen.findByText("What do you usually spend money on?");
-    saveAndNext();
-    expect(await screen.findByText(/1 of 4 accounts ready/)).toBeInTheDocument();
-    expect(screen.queryByText("Cash sales")).toBeNull();
-  });
-
-  it("is left out when Petty Cash is off", async () => {
-    const { next } = renderStep({ mode: "minty", businessType: "retail", usesSalesCash: true }, [
-      "bills",
-    ]);
-    await screen.findByText("Your sales categories");
-    expect(screen.getByText(/Accounting setup · 3 of 4/i)).toBeInTheDocument();
-    saveAndNext();
-    await screen.findByText("What do you usually spend money on?");
-    saveAndNext();
-    expect(next).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("checkbox", { name: /Cost 11/ })).toBeInTheDocument();
   });
 });

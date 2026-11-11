@@ -11,7 +11,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AutofillButton from "../AutofillButton";
 import Icon from "../Icon";
 import MintySelect from "../MintySelect";
-import { ModalFrame } from "../ModalFrame";
 import { StepConnectXero } from "../OnboardingSteps";
 import { useToast } from "../Toast";
 import { ErrorSummary, type SummaryItem } from "./ErrorSummary";
@@ -24,13 +23,15 @@ import {
   type AccountingSetup as Setup,
   type AccountKind,
   type Answer,
-  type SlotRole,
   type Suggestion,
 } from "../../lib/accountingApi";
 import { accountingOf } from "../../lib/wizardSteps";
 import type { BusinessType, StepProps } from "../../lib/types";
 
-type Sub = "mode" | "xero" | "xsales" | "xexpense" | "business" | "sales" | "expense" | "closing";
+// Owner, 2026-11-11: no sales (4.3 / X2) or daily-closing (4.5 / X4) screen any more - the business
+// type's set brings the sales accounts and the daily-closing defaults (Minty), and Petty Cash Settings'
+// Account Code maps the daily-closing accounts from Xero (Xero).
+type Sub = "mode" | "xero" | "xexpense" | "business" | "expense";
 
 type Props = Pick<
   StepProps,
@@ -100,40 +101,6 @@ const KIND_TYPES: Record<AccountKind, string[]> = {
   sales: ["sales", "revenue", "other_income"],
   expense: ["expense", "direct_costs", "overheads"], // the form starts on Expense
 };
-const SLOTS: { role: SlotRole; title: string; body: string }[] = [
-  {
-    role: "petty_cash",
-    title: "Petty cash",
-    body: "The cash drawer or float you count at closing.",
-  },
-  { role: "bank", title: "Bank you deposit into", body: "Where cash goes when you bank it." },
-  { role: "cash_sale", title: "Cash sales", body: "Cash taken from customers at the till." },
-  {
-    role: "discrepancy",
-    title: "Cash difference",
-    body: "When the cash you count doesn't match what Minty expects.",
-  },
-  {
-    role: "director",
-    title: "Paid personally",
-    body: "When an owner or director pays for the business out of pocket.",
-  },
-];
-/** The heading over a slot's accounts in its menu (4.5a). */
-const SLOT_HEADING: Record<SlotRole, string> = {
-  petty_cash: "Bank accounts",
-  bank: "Bank accounts",
-  cash_sale: "Sales accounts",
-  discrepancy: "Expense accounts",
-  director: "Liability accounts",
-};
-const SLOT_TYPES: Record<SlotRole, string[]> = {
-  petty_cash: ["bank"],
-  bank: ["bank"],
-  cash_sale: KIND_TYPES.sales,
-  discrepancy: KIND_TYPES.expense,
-  director: ["current_liability", "liability", "term_liability", "current", "noncurrent"],
-};
 const CODE_MAX = 10;
 const NAME_MAX = 80;
 
@@ -159,20 +126,18 @@ const EMPTY_SETUP: Setup = {
 
 const without = (fields: Record<string, string>, key: string) =>
   Object.fromEntries(Object.entries(fields).filter(([k]) => k !== key));
-const label = (a: Account) => (a.code ? `${a.code} · ${a.name}` : a.name);
 
 function firstSub(state: Props["state"]): Sub {
   const a = accountingOf(state);
   if (state.xero.connected || a.mode === "xero") return a.mode ? "xero" : "mode";
   if (a.mode !== "minty") return "mode";
-  return a.usesSalesCash === null ? "business" : "sales";
+  return a.usesSalesCash === null ? "business" : "expense";
 }
 
 export function StepAccountingSetup(props: Props) {
   const { state, set, next, back, token, saveAndExit } = props;
   const entityId = state.entity.id || "";
   const accounting = accountingOf(state);
-  const hasPetty = state.modules.includes("pettyCash");
   const toast = useToast();
   const [sub, setSub] = useState<Sub>(() => firstSub(state));
   const [setup, setSetup] = useState<Setup | null>(null);
@@ -180,13 +145,8 @@ export function StepAccountingSetup(props: Props) {
 
   const xeroPath = accounting.mode === "xero";
   const subs: Sub[] = useMemo(
-    () => [
-      ...((xeroPath
-        ? ["mode", "xero", "xsales", "xexpense"]
-        : ["mode", "business", "sales", "expense"]) as Sub[]),
-      ...(hasPetty ? (["closing"] as Sub[]) : []),
-    ],
-    [hasPetty, xeroPath],
+    () => (xeroPath ? ["mode", "xero", "xexpense"] : ["mode", "business", "expense"]) as Sub[],
+    [xeroPath],
   );
 
   const reload = useCallback(async () => {
@@ -202,8 +162,7 @@ export function StepAccountingSetup(props: Props) {
 
   // The lists load when a list screen opens; changes reload through `reload`.
   useEffect(() => {
-    if (!["sales", "expense", "xsales", "xexpense", "closing"].includes(sub) || !token || !entityId)
-      return;
+    if (!["expense", "xexpense"].includes(sub) || !token || !entityId) return;
     let live = true;
     accountingApi.setup(token, entityId).then((answer) => {
       if (!live) return;
@@ -245,8 +204,8 @@ export function StepAccountingSetup(props: Props) {
       <StepConnectXero
         kicker={kicker}
         state={state}
-        // Connected: on to X2, the Xero accounts Minty uses; not yet: the wizard goes on, as before.
-        next={() => (state.xero.connected ? go("xsales") : next())}
+        // Connected: on to X3, the Xero expense accounts Minty uses; not yet: the wizard goes on.
+        next={() => (state.xero.connected ? go("xexpense") : next())}
         back={() => go("mode")}
         connectXero={props.connectXero}
         disconnectXero={props.disconnectXero}
@@ -352,22 +311,17 @@ export function StepAccountingSetup(props: Props) {
     setSetup(answer);
     toast.success("Your accounts are up to date with Xero.");
   };
-  if (sub === "xsales" || sub === "xexpense") {
+  if (sub === "xexpense") {
     return (
       <XeroAccountsScreen
         key={sub}
-        kind={sub === "xsales" ? "sales" : "expense"}
+        kind="expense"
         kicker={kicker}
         setup={view}
         nav={nav}
         onRefresh={refreshXero}
         onSave={async (ids) => {
-          const answer = await accountingApi.xeroTicks(
-            token,
-            entityId,
-            sub === "xsales" ? "sales" : "expense",
-            ids,
-          );
+          const answer = await accountingApi.xeroTicks(token, entityId, "expense", ids);
           if (!answer.ok) return answer.error;
           setSetup(answer);
           forward();
@@ -376,7 +330,7 @@ export function StepAccountingSetup(props: Props) {
       />
     );
   }
-  if (sub === "sales" || sub === "expense") {
+  if (sub === "expense") {
     return (
       <AccountsScreen
         key={sub}
@@ -391,19 +345,7 @@ export function StepAccountingSetup(props: Props) {
       />
     );
   }
-  return (
-    <ClosingScreen
-      kicker={kicker}
-      xero={xeroPath}
-      onRefresh={refreshXero}
-      setup={view}
-      token={token}
-      entityId={entityId}
-      reload={reload}
-      nav={nav}
-      onDone={next}
-    />
-  );
+  return null;
 }
 
 // ---- 4.1 ----------------------------------------------------------------------------------------
@@ -980,19 +922,25 @@ function AccountsScreen({
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
-  const filled =
-    accounts.some((a) => a.source === "template") ||
-    (suggestions !== null && suggestions.length > 0);
+  // Filled = something Revert would take out. A kept row (Cash Over / Short, which daily closing
+  // uses) is not Auto Fill's any more, or Revert would seem to fill the list again (2026-11-11).
+  const autoFilled = accounts.some((a) => a.auto_filled);
+  const filled = autoFilled || (suggestions !== null && suggestions.length > 0);
   const basedOn = BUSINESS_WORDS[businessType || "general"];
   const typeLabels = Object.fromEntries(setup.types.map((t) => [t.value, t.label]));
 
   // Once the list has Auto Fill rows, the template's other suggestions show unticked beside them.
   useEffect(() => {
-    if (suggestions !== null || !accounts.some((a) => a.source === "template")) return;
+    if (suggestions !== null || !autoFilled) return;
+    let current = true;
     void accountingApi
       .suggestions(token, entityId, kind)
-      .then((a) => a.ok && setSuggestions(a.options));
-  }, [accounts, suggestions, token, entityId, kind]);
+      .then((a) => current && a.ok && setSuggestions(a.options));
+    // a Revert in the meantime: the answer no longer belongs on the list
+    return () => {
+      current = false;
+    };
+  }, [autoFilled, suggestions, token, entityId, kind]);
 
   const autoFill = async () => {
     setBusy(true);
@@ -1025,8 +973,10 @@ function AccountsScreen({
       toast.info(
         `${answer.kept.length} stayed because Minty already uses them: ${answer.kept.map((k) => k.name).join(", ")}.`,
       );
-    setSuggestions(null);
+    // the fresh list first: cleared before it, the old Auto Fill rows would fetch the suggestions
+    // straight back and the list would read as filled again (2026-11-11)
     await reload();
+    setSuggestions(null);
     setBusy(false);
   };
 
@@ -1491,284 +1441,6 @@ function XeroAccountsScreen({
         </div>
       </div>
       {nav(save, saving)}
-    </div>
-  );
-}
-
-/** 4.5a's list under a card's Set up / Change (Figma 348:1767): the accounts of the right type,
- * then "+ Create a new account" (X4: create it in Xero instead). */
-function SlotMenu({
-  heading,
-  options,
-  current,
-  xero,
-  onClose,
-  onPick,
-  onCreate,
-}: {
-  heading: string;
-  options: Account[];
-  current: string | null;
-  xero: boolean;
-  onClose: () => void;
-  onPick: (id: string) => void;
-  onCreate: () => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const away = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) onClose();
-    };
-    const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    // a tick later, so the click that opened it doesn't close it
-    const t = window.setTimeout(() => document.addEventListener("mousedown", away), 0);
-    document.addEventListener("keydown", esc);
-    return () => {
-      window.clearTimeout(t);
-      document.removeEventListener("mousedown", away);
-      document.removeEventListener("keydown", esc);
-    };
-  }, [onClose]);
-  return (
-    <div className="acs-slot-pop" ref={ref} role="menu" aria-label={heading}>
-      <p className="acs-slot-pop-head">{heading}</p>
-      {options.length > 0 ? (
-        options.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            role="menuitemradio"
-            aria-checked={current === o.id}
-            className={"acs-slot-pop-item" + (current === o.id ? " is-on" : "")}
-            onClick={() => onPick(o.id)}
-          >
-            {label(o)}
-          </button>
-        ))
-      ) : (
-        <p className="acs-slot-pop-none">No account of the right type yet.</p>
-      )}
-      {xero ? (
-        <p className="acs-slot-pop-none is-foot">
-          Missing one? Create it in Xero, then press Refresh from Xero.
-        </p>
-      ) : (
-        <button type="button" role="menuitem" className="acs-slot-pop-create" onClick={onCreate}>
-          + Create a new account
-        </button>
-      )}
-    </div>
-  );
-}
-
-function ClosingScreen({
-  kicker,
-  xero = false,
-  onRefresh,
-  setup,
-  token,
-  entityId,
-  reload,
-  nav,
-  onDone,
-}: {
-  kicker: string;
-  /** X4: the accounts come from the Xero chart, and a missing one is made in Xero. */
-  xero?: boolean;
-  onRefresh?: () => Promise<void>;
-  setup: Setup;
-  token: string;
-  entityId: string;
-  reload: () => Promise<void>;
-  nav: (onNext: () => void, busy?: boolean) => React.ReactNode;
-  onDone: () => void;
-}) {
-  const toast = useToast();
-  const [open, setOpen] = useState<SlotRole | null>(null);
-  const [creating, setCreating] = useState<SlotRole | null>(null);
-  const [warn, setWarn] = useState(false);
-  const typeLabels = Object.fromEntries(setup.types.map((t) => [t.value, t.label]));
-  // The roles the API sends: a company that banks all its sales has no cash-sale one.
-  const roles = SLOTS.filter((s) => s.role in setup.slots);
-  const missing = roles.filter((s) => !setup.slots[s.role].account);
-  const ready = roles.length - missing.length;
-
-  const choose = async (role: SlotRole, accountId: string) => {
-    const answer = await accountingApi.setSlot(token, entityId, role, accountId);
-    if (!answer.ok) toast.error(answer.error);
-    setOpen(null);
-    await reload();
-  };
-
-  const optionsOf = (role: SlotRole) =>
-    xero ? setup.slots[role].options.filter((o) => o.from_xero) : setup.slots[role].options;
-
-  return (
-    <div className="acs acs-closing">
-      <div className="page-head acs-head acs-mode-head">
-        <p className="acs-kicker">{kicker}</p>
-        <h2>Accounts Minty uses every day</h2>
-        <p>
-          {xero
-            ? "Daily closing needs one Xero account for each of these."
-            : "Daily closing needs one account for each of these. Pick one from your list, or create it here."}
-        </p>
-      </div>
-      {xero && onRefresh && <XeroRefresh onRefresh={onRefresh} />}
-      {/* Figma 348:1384 (all ready), 348:1674 (4.5a, one missing) */}
-      <div className={"acs-ready" + (missing.length ? " is-warn" : "")} role="status">
-        <span className="acs-ready-badge" aria-hidden>
-          {missing.length ? "!" : "✓"}
-        </span>
-        <div className="acs-ready-text">
-          <p className="acs-ready-title">
-            {missing.length === 0
-              ? `All ${roles.length}${xero ? " Xero" : ""} accounts are ready for daily closing`
-              : ready === 0
-                ? `None of the ${roles.length} accounts is set up yet`
-                : `${ready} of ${roles.length} accounts ready · ${missing.map((m) => m.title).join(", ")} ${
-                    missing.length === 1 ? "has" : "have"
-                  } no account yet`}
-          </p>
-          <p>
-            {missing.length === 0
-              ? "You can change any of them later in Settings."
-              : "You can still continue. Minty asks again before your first daily closing."}
-          </p>
-        </div>
-      </div>
-      <ul className="acs-roles">
-        {roles.map((s) => {
-          const slot = setup.slots[s.role];
-          const isOpen = open === s.role;
-          const options = optionsOf(s.role);
-          return (
-            <li key={s.role} className={"acs-role" + (slot.account ? "" : " is-missing")}>
-              <div className="acs-role-card">
-                <span className={`acs-role-icon is-${s.role}`} aria-hidden>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/accounting/slot-${s.role}.svg`} width={37} height={37} alt="" />
-                </span>
-                <div className="acs-role-text">
-                  <p className="acs-role-title">{s.title}</p>
-                  <p className="acs-role-body">{s.body}</p>
-                  <p className="acs-role-account">
-                    {slot.account
-                      ? `${xero ? "Xero" : "Minty"} account: ${label(slot.account)}`
-                      : "No account chosen yet"}
-                  </p>
-                </div>
-                <div className="acs-role-side">
-                  <span className="acs-role-status">
-                    <span className="acs-role-dot" aria-hidden>
-                      {slot.account ? <Icon.CheckSm width={11} height={11} /> : "!"}
-                    </span>
-                    {slot.account ? "Ready" : "Not set up"}
-                  </span>
-                  <button
-                    type="button"
-                    className={slot.account ? "acs-role-change" : "acs-role-setup"}
-                    aria-haspopup="menu"
-                    aria-expanded={isOpen}
-                    aria-label={`${slot.account ? "Change" : "Set up"} ${s.title.toLowerCase()}`}
-                    onClick={() => {
-                      setOpen(isOpen ? null : s.role);
-                      setCreating(null);
-                    }}
-                  >
-                    {slot.account ? "Change" : "Set up"}
-                  </button>
-                </div>
-              </div>
-              {isOpen && (
-                <SlotMenu
-                  heading={SLOT_HEADING[s.role]}
-                  options={options}
-                  current={slot.account?.id ?? null}
-                  xero={xero}
-                  onClose={() => setOpen(null)}
-                  onPick={(id) => void choose(s.role, id)}
-                  onCreate={() => {
-                    setOpen(null);
-                    setCreating(s.role);
-                  }}
-                />
-              )}
-              {creating === s.role && (
-                <div className="acs-role-create">
-                  <AccountForm
-                    idPrefix={`acs-slot-new-${s.role}`}
-                    title={`New account for ${s.title.toLowerCase()}`}
-                    types={SLOT_TYPES[s.role]}
-                    typeLabels={typeLabels}
-                    nextCode={setup.next_code}
-                    submitLabel="Create and use"
-                    onCancel={() => setCreating(null)}
-                    onSave={async (input) => {
-                      const answer = await accountingApi.create(token, entityId, {
-                        ...input,
-                        role: s.role,
-                      });
-                      if (answer.ok) {
-                        setCreating(null);
-                        await reload();
-                      }
-                      return answer;
-                    }}
-                  />
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      {nav(() => (missing.length ? setWarn(true) : onDone()))}
-      {warn && (
-        <ModalFrame
-          labelledBy="acs-warn-title"
-          onDismiss={() => setWarn(false)}
-          className="mw-dialog"
-        >
-          <div className="mw-dialog-head">
-            <div className="mw-dialog-head-text">
-              <h2 id="acs-warn-title" className="mw-dialog-title">
-                {missing.length === 1
-                  ? `${missing[0].title} still needs an account`
-                  : `${missing.length} accounts for daily closing aren't set up yet`}
-              </h2>
-            </div>
-          </div>
-          <p className="mw-dialog-body">
-            {`${ready === 0 ? "" : `The other ${ready} ${ready === 1 ? "is" : "are"} ready. `}Add ${
-              missing.length === 1 ? "this one" : "them"
-            } now, or continue and Minty will ask again before your first daily closing.`}
-          </p>
-          <div className="mw-dialog-actions">
-            <button
-              type="button"
-              className="mw-dialog-btn is-grey"
-              onClick={() => {
-                setWarn(false);
-                onDone();
-              }}
-            >
-              Continue anyway
-            </button>
-            <button
-              type="button"
-              className="mw-dialog-btn is-teal"
-              onClick={() => {
-                setWarn(false);
-                setOpen(missing[0].role);
-              }}
-            >
-              {missing.length === 1 ? "Add it now" : "Add them now"}
-            </button>
-          </div>
-        </ModalFrame>
-      )}
     </div>
   );
 }

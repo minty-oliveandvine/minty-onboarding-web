@@ -47,6 +47,7 @@ import {
   getDisplaySteps,
   initialState,
   isStepComplete,
+  isNonCash,
   mintyOnItsOwn,
   pettyIds,
 } from "../lib/wizardSteps";
@@ -70,7 +71,6 @@ import type {
   OnboardingState,
   PlanCatalog,
   Result,
-  SalesCategory,
   SalesMethods,
 } from "../lib/api";
 import type {
@@ -1059,8 +1059,6 @@ export default function OnboardingApp() {
 
   const submitSalesMethods = async (): Promise<Result> => {
     if (!token || !state.entity.id) return { ok: true };
-    // With a mode, step 5's methods are step 4's sales categories (2026-11-11): nothing to save.
-    if (setupMode) return { ok: true };
     try {
       const res = await fetch(urlFor(`/api/onboarding/sales-methods`), {
         method: "POST",
@@ -1068,7 +1066,10 @@ export default function OnboardingApp() {
         body: JSON.stringify({
           entity_id: state.entity.id,
           electronic: state.pettyCash.electronicMethods || [],
-          delivery: state.pettyCash.deliveryMethods || [],
+          // One Non-cash list (retail, service, general; owner 2026-11-11): no delivery methods.
+          delivery: isNonCash(accountingOf(state).businessType)
+            ? []
+            : state.pettyCash.deliveryMethods || [],
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1212,9 +1213,15 @@ export default function OnboardingApp() {
       pettycash: idFor(accountOptions.bank, p.pcAccount),
       deposit: idFor(accountOptions.bank, p.depositAccount),
       director: idFor(accountOptions.director, p.directorCode),
-      cash_sale: idFor(accountOptions.cashSale, p.cashSalesCode),
+      cash_sale:
+        accountingOf(state).usesSalesCash === false
+          ? ""
+          : idFor(accountOptions.cashSale, p.cashSalesCode),
       discrepancy: idFor(accountOptions.discrepancy, p.discrepancyCode),
     };
+    // The Xero path (owner, 2026-11-11): X3 chose the expense accounts, so step 6 sends the mapping
+    // alone and the API leaves the ticks as they are.
+    const mappingOnly = accountingOf(state).mode === "xero";
     const allCodes = (accountOptions.expense || []).map((e) => e.code);
     const ec = p.expenseCodes || { all: true, selected: {} };
     const isAll = ec.all !== false;
@@ -1224,7 +1231,11 @@ export default function OnboardingApp() {
       const res = await fetch(urlFor(`/api/onboarding/account-codes`), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ entity_id: state.entity.id, expense_codes: selectedCodes, mapping }),
+        body: JSON.stringify(
+          mappingOnly
+            ? { entity_id: state.entity.id, mapping }
+            : { entity_id: state.entity.id, expense_codes: selectedCodes, mapping },
+        ),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok)
@@ -1307,35 +1318,6 @@ export default function OnboardingApp() {
       return { ok: false, error: "I couldn't reach the server. Mind trying again?" };
     }
   };
-
-  // Step 5's list for a company with a mode: step 4's sales categories, read fresh on every visit
-  // (step 4 may have changed them since).
-  const [salesCategories, setSalesCategories] = useState<SalesCategory[] | null>(null);
-  useEffect(() => {
-    if (current !== 5 || !setupMode || !token || !state.entity.id) return;
-    let live = true;
-    fetch(
-      urlFor(`/api/onboarding/sales-methods?entity_id=${encodeURIComponent(state.entity.id)}`),
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error(`sales methods answered ${res.status}`);
-        return res.json() as Promise<SalesMethods>;
-      })
-      .then((data) => {
-        if (live) setSalesCategories(data.categories || []);
-      })
-      .catch((err) => {
-        console.error("[onboarding] the sales categories did not load", err);
-        if (live) toast.error("I couldn't load your sales categories. Mind refreshing the page?");
-      });
-    return () => {
-      live = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; reload on step/entity/mode only
-  }, [current, token, state.entity.id, setupMode]);
 
   const billLoadedRef = useRef(false);
   useEffect(() => {
@@ -1686,7 +1668,6 @@ export default function OnboardingApp() {
     submitSalesMethods,
     submitOpeningBalance,
     accountOptions,
-    salesCategories,
     submitAccountCodes,
     submitContacts,
     createContact,

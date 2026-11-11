@@ -98,12 +98,19 @@ export const STEPS: ReadonlyArray<{ id: number; label: string }> = [
   { id: 9, label: "All Set" },
 ];
 
-// Petty Cash Settings' steps by how Minty keeps the books. Both paths choose their accounts in step 4
-// (4.3-4.5, or Xero's X2-X4), so step 6 (account codes) is left only to a company that started
-// before step 4 asked; Minty on its own has no Xero contacts (7) either.
+// Petty Cash Settings' steps by how Minty keeps the books (owner, 2026-11-11). Minty on its own: step 5
+// alone - the business type brought the daily-closing accounts, and there are no Xero contacts. Xero:
+// Sales (5), Account Code (6: the five daily-closing accounts from Xero - step 4 has no daily-closing
+// screen) and Contact Setup (7), as before step 4 asked how Minty works.
+/** Step 5's lists and Petty Cash's (owner, 2026-11-11): one Non-cash list for a retail shop, a
+ * service or a general business; Electronic and Delivery for Restaurant & Food and a company from
+ * before the question. */
+export function isNonCash(businessType: string | null | undefined): boolean {
+  return businessType === "retail" || businessType === "service" || businessType === "general";
+}
+
 export function pettyIds(mode: SetupMode | null): number[] {
   if (mode === "minty") return [5];
-  if (mode === "xero") return [5, 7];
   return [5, 6, 7];
 }
 
