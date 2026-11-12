@@ -15,7 +15,7 @@ import { setSidebarSession } from "../ui/sidebarHost";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
 
-const VIEWER = { name: "Ann Lee", initials: "AL" };
+const VIEWER = { name: "Ann Lee", initials: "AL", can_view_subscriptions: true };
 const PROFILE = {
   user: {
     first_name: "Ann",

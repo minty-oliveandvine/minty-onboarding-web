@@ -1611,8 +1611,14 @@ export default function OnboardingApp() {
   // from here. The company is the menu's only once onboarding is finished ("All Set"), so its
   // modules and Settings wait for step 9; the person is the signed-in user, never the company.
   const viewerName = user.name || `${user.first} ${user.last}`.trim();
+  // `can_view_subscriptions` (@minty/shared v0.19): the person walking the wizard is the company's
+  // creator, made its admin (onboarding-api's CREATOR_ROLE), so the menu offers Manage
+  // subscriptions - admins, accountants and subscribers see it (owner, 2026-11-12).
   const viewer = useMemo(
-    () => (viewerName ? { name: viewerName, initials: profileInitials } : null),
+    () =>
+      viewerName
+        ? { name: viewerName, initials: profileInitials, can_view_subscriptions: true }
+        : null,
     [viewerName, profileInitials],
   );
   const menuModules = useMemo(
